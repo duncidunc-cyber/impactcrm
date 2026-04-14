@@ -279,7 +279,7 @@ select.fs{padding:6px 8px;border-radius:var(--r);border:.5px solid var(--brd2);b
     <div class="sf-o" id="sb-org">Your Organization</div>
     <div class="sf-s" id="sb-email">White-label CRM</div>
     <div style="margin-top:8px;display:flex;gap:5px;align-items:center">
-      <button class="btn btn-sm" id="gdrive-btn" onclick="gdriveAction()" style="font-size:10px;flex:1">☁ Connect Drive</button>
+      <button class="btn btn-sm" id="gdrive-btn" onclick="gdriveConnectOrPush()" style="font-size:10px;flex:1">☁ Connect Drive</button>
       <span id="gdrive-status" style="font-size:9px;color:var(--tx3)"></span>
     </div>
   </div>
@@ -500,25 +500,30 @@ select.fs{padding:6px 8px;border-radius:var(--r);border:.5px solid var(--brd2);b
           <div style="font-size:12px;font-weight:600;margin-bottom:9px">Google Drive sync</div>
           <div style="background:var(--sur);border:.5px solid var(--brd);border-radius:var(--rl);padding:13px 15px;margin-bottom:12px">
             <div style="font-size:11px;color:var(--tx2);line-height:1.65;margin-bottom:10px;background:var(--t50);border-radius:var(--r);padding:8px 10px">
-              Connect Google Drive to sync your CRM data across any device or login. Your data is saved as a JSON file in your Drive. <strong>Requires a Google Cloud project with Drive API enabled.</strong> See instructions below.
+              Syncs your CRM data as a JSON file in your Google Drive — accessible from any device or login. Uses Google's official sign-in library (no server needed).
             </div>
             <div class="cg"><div class="cl">Google OAuth Client ID</div><input class="ci" id="s-goog-cid" placeholder="xxxxxxxx.apps.googleusercontent.com"></div>
-            <div style="display:flex;gap:7px;margin-top:2px">
-              <button class="btn btn-sm btn-p" onclick="gdriveAction()">Connect / Sync Drive</button>
-              <button class="btn btn-sm" onclick="gdriveUpload()">Push to Drive ↑</button>
-              <button class="btn btn-sm" onclick="gdriveDownload()">Pull from Drive ↓</button>
+            <div style="display:flex;gap:7px;margin-top:4px;flex-wrap:wrap">
+              <button class="btn btn-sm btn-p" id="gdrive-connect-btn" onclick="gdriveConnect()">☁ Sign in with Google</button>
+              <button class="btn btn-sm" onclick="gdriveUpload()" id="gdrive-push-btn" style="display:none">Push to Drive ↑</button>
+              <button class="btn btn-sm" onclick="gdriveDownload()" id="gdrive-pull-btn" style="display:none">Pull from Drive ↓</button>
+              <button class="btn btn-sm" onclick="gdriveDisconnect()" id="gdrive-disc-btn" style="display:none;color:var(--tx3)">Disconnect</button>
             </div>
-            <div id="gdrive-detail-status" style="font-size:11px;color:var(--tx2);margin-top:6px"></div>
+            <div id="gdrive-detail-status" style="font-size:11px;color:var(--tx2);margin-top:8px"></div>
             <details style="margin-top:10px">
-              <summary style="font-size:11px;color:var(--tx2);cursor:pointer">Setup instructions ▸</summary>
-              <div style="font-size:11px;color:var(--tx2);line-height:1.75;margin-top:8px;padding-left:6px">
-                1. Go to <a href="https://console.cloud.google.com" target="_blank" style="color:var(--b600)">console.cloud.google.com</a><br>
-                2. Create a project → Enable <strong>Google Drive API</strong><br>
-                3. OAuth consent screen → External → add your email as test user<br>
-                4. Credentials → Create OAuth Client ID → <strong>Web application</strong><br>
-                5. Add <strong>Authorised JavaScript origin</strong>: the full path to this HTML file (e.g. <code>file://</code> won't work — host it on a simple local server or use GitHub Pages)<br>
-                6. Paste Client ID above and save settings<br>
-                <em>Tip: For local use, run <code>npx serve .</code> in the folder and use http://localhost:3000</em>
+              <summary style="font-size:11px;color:var(--tx2);cursor:pointer;font-weight:600">▸ One-time Google Cloud setup (5 min)</summary>
+              <div style="font-size:11px;color:var(--tx2);line-height:1.85;margin-top:8px;padding:8px 10px;background:var(--bg2);border-radius:var(--r)">
+                <strong>Step 1</strong> — <a href="https://console.cloud.google.com" target="_blank" style="color:var(--b600)">console.cloud.google.com</a> → New project<br>
+                <strong>Step 2</strong> — APIs &amp; Services → Enable APIs → search <em>Google Drive API</em> → Enable<br>
+                <strong>Step 3</strong> — OAuth consent screen → External → App name: ImpactCRM → add your Gmail as test user → Save<br>
+                <strong>Step 4</strong> — Credentials → + Create Credentials → OAuth client ID → <strong>Web application</strong><br>
+                <strong>Step 5</strong> — Authorised JavaScript origins: add the URL you open this file from.<br>
+                &nbsp;&nbsp;• If opened as a file: use <code style="font-family:var(--fm)">http://localhost:PORT</code> (run <code style="font-family:var(--fm)">npx serve .</code> in the folder)<br>
+                &nbsp;&nbsp;• If hosted online: add that URL (e.g. GitHub Pages)<br>
+                &nbsp;&nbsp;• <strong>No redirect URI needed</strong> — leave it blank<br>
+                <strong>Step 6</strong> — Copy the Client ID → paste above → Save all settings → click Sign in with Google<br>
+                <br>
+                <em>⚠ <code style="font-family:var(--fm)">file://</code> paths do not work with OAuth. You must open via http://localhost.</em>
               </div>
             </details>
           </div>
@@ -710,7 +715,7 @@ const D_TMPLS=[
 
 // ═══════════════ PERSISTENCE ═══════════════
 const ld=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch{return d;}};
-const sv=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch{}};
+const sv=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch{}if(gdriveToken)_scheduleAutoPush();};
 let COS=ld('crm7_co',D_COMPANIES);
 let TMPLS=ld('crm7_tmpls',D_TMPLS);
 let SETTINGS=ld('crm7_set',{crmName:'ImpactCRM',tag:'NGO Partner Suite',org:'Your Organization',acc:'#1D9E75',rgb:'29,158,117',email:'',sender:''});
@@ -1618,144 +1623,227 @@ async function testEmailJS(){
   }
 }
 
-// ═══════════════ GOOGLE DRIVE SYNC ═══════════════
+// ═══════════════ GOOGLE DRIVE AUTO-SYNC ═══════════════
+// Uses Google Identity Services (GSI) token client — works from https:// origins.
+// On connect: auto-pulls from Drive if a file exists, otherwise creates one.
+// On every save (sv): debounced auto-push to Drive (3 sec after last change).
+// Token stored in memory only (expires after ~1hr); fileId cached in localStorage.
+
 const GDRIVE_FILE_NAME='ImpactCRM_data.json';
 const GDRIVE_SCOPE='https://www.googleapis.com/auth/drive.file';
 let gdriveToken=null;
 let gdriveFileId=localStorage.getItem('crm9_gdrive_fid')||null;
+let _gisInited=false;
+let _gisClient=null;
+let _driveAutoSaveTimer=null;
+let _driveConnecting=false;
+
+// ── Auto-push scheduler (called by sv on every data change) ──
+
+function _scheduleAutoPush(){
+  clearTimeout(_driveAutoSaveTimer);
+  _driveAutoSaveTimer=setTimeout(()=>gdriveUpload(true),3000);
+}
+
+function _gisLoad(cb){
+  if(typeof google!=='undefined'&&google.accounts){cb();return;}
+  const s=document.createElement('script');
+  s.src='https://accounts.google.com/gsi/client';
+  s.onload=cb;
+  s.onerror=()=>{_setDriveStatus('✗ Could not load Google sign-in library. Check internet.',true);};
+  document.head.appendChild(s);
+}
+
+function _initGisClient(){
+  const cid=SETTINGS.googleClientId||document.getElementById('s-goog-cid')?.value.trim();
+  if(!cid)return null;
+  _gisClient=google.accounts.oauth2.initTokenClient({
+    client_id:cid,
+    scope:GDRIVE_SCOPE,
+    callback:async(resp)=>{
+      _driveConnecting=false;
+      if(resp.error){
+        _setDriveStatus('✗ Sign-in failed: '+resp.error,true);
+        toast('Google sign-in failed');
+        return;
+      }
+      gdriveToken=resp.access_token;
+      updDriveStatus();
+      toast('✓ Google Drive connected — syncing…');
+      // Auto-pull on connect if file exists, otherwise push current data
+      const found=await gdriveFindFile();
+      if(found){
+        await gdriveDownload(true); // silent auto-pull
+      } else {
+        await gdriveUpload(true);   // create file with current data
+        toast('✓ CRM data saved to Google Drive');
+      }
+    }
+  });
+  return _gisClient;
+}
+
+function gdriveConnect(){
+  const cid=document.getElementById('s-goog-cid')?.value.trim()||SETTINGS.googleClientId;
+  if(!cid){
+    toast('Paste your Google Client ID in Settings first');
+    nav('settings',document.querySelector('[onclick*=settings]'));
+    return;
+  }
+  SETTINGS.googleClientId=cid;
+  _gisClient=null;
+  _driveConnecting=true;
+  _setDriveStatus('Opening Google sign-in…',false);
+  _gisLoad(()=>{
+    try{
+      const c=_initGisClient();
+      if(!c){_setDriveStatus('✗ Could not init Google client — check Client ID',true);return;}
+      c.requestAccessToken({prompt:'select_account'});
+    }catch(e){
+      _driveConnecting=false;
+      _setDriveStatus('✗ Error: '+e.message,true);
+    }
+  });
+}
+
+function gdriveConnectOrPush(){
+  if(gdriveToken){gdriveUpload(false);}
+  else{gdriveConnect();}
+}
+
+function gdriveDisconnect(){
+  if(gdriveToken&&typeof google!=='undefined'){
+    try{google.accounts.oauth2.revoke(gdriveToken,()=>{});}catch(e){}
+  }
+  gdriveToken=null;_gisClient=null;clearTimeout(_driveAutoSaveTimer);
+  updDriveStatus();
+  _setDriveStatus('Disconnected from Google Drive.',false);
+  toast('Drive disconnected');
+}
+
+function _setDriveStatus(msg,isError){
+  ['gdrive-detail-status'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.textContent=msg;el.style.color=isError?'var(--c400)':msg.startsWith('✓')?'var(--t600)':'var(--tx2)';}
+  });
+}
 
 function updDriveStatus(){
   const btn=document.getElementById('gdrive-btn');
   const st=document.getElementById('gdrive-status');
-  const det=document.getElementById('gdrive-detail-status');
-  if(!SETTINGS.googleClientId){
-    if(btn)btn.textContent='☁ Connect Drive';
-    if(st)st.textContent='';
-    return;
-  }
+  const cb=document.getElementById('gdrive-connect-btn');
+  const pb=document.getElementById('gdrive-push-btn');
+  const plb=document.getElementById('gdrive-pull-btn');
+  const db=document.getElementById('gdrive-disc-btn');
   if(gdriveToken){
-    if(btn){btn.textContent='☁ Sync Drive';btn.style.background='var(--t50)';btn.style.color='var(--t600)';}
-    if(st)st.textContent='✓ connected';
-    if(det)det.textContent='Connected. Use Push/Pull to sync data.';
+    if(btn){btn.textContent='☁ Synced ✓';btn.style.background='var(--t50)';btn.style.color='var(--t600)';}
+    if(st)st.textContent='✓ auto-sync on';
+    if(cb)cb.style.display='none';
+    if(pb){pb.style.display='';pb.textContent='Push now ↑';}
+    if(plb){plb.style.display='';plb.textContent='Pull now ↓';}
+    if(db)db.style.display='';
   } else {
-    if(btn)btn.textContent='☁ Connect Drive';
+    if(btn){btn.textContent='☁ Connect Drive';btn.style.background='';btn.style.color='';}
     if(st)st.textContent='';
+    if(cb)cb.style.display='';
+    if(pb)pb.style.display='none';
+    if(plb)plb.style.display='none';
+    if(db)db.style.display='none';
   }
 }
 
-function gdriveAction(){
-  if(!SETTINGS.googleClientId){
-    toast('Enter your Google Client ID in Settings first');
-    nav('settings',document.querySelector('[onclick*=settings]'));
-    return;
-  }
-  if(gdriveToken){gdriveUpload();return;}
-  // OAuth popup
-  const params=new URLSearchParams({
-    client_id:SETTINGS.googleClientId,
-    redirect_uri:location.origin+location.pathname,
-    response_type:'token',
-    scope:GDRIVE_SCOPE,
-    prompt:'select_account'
-  });
-  const w=window.open('https://accounts.google.com/o/oauth2/v2/auth?'+params,'_blank','width=500,height=600');
-  // Listen for token via URL hash in the popup — use a message or polling approach
-  const poll=setInterval(()=>{
-    try{
-      const hash=w?.location?.hash;
-      if(hash&&hash.includes('access_token')){
-        clearInterval(poll);
-        const p=new URLSearchParams(hash.slice(1));
-        gdriveToken=p.get('access_token');
-        w.close();
-        updDriveStatus();
-        toast('✓ Google Drive connected');
-        gdriveFindOrCreate();
-      }
-    }catch(e){/* cross-origin, keep polling */}
-    if(w?.closed){clearInterval(poll);}
-  },500);
-}
-
-async function gdriveApiFetch(url,opts={}){
+async function _driveApiFetch(url,opts={}){
   const res=await fetch(url,{...opts,headers:{...(opts.headers||{}),Authorization:'Bearer '+gdriveToken}});
-  if(res.status===401){gdriveToken=null;updDriveStatus();toast('Drive session expired — reconnect');throw new Error('401');}
+  if(res.status===401){
+    gdriveToken=null;updDriveStatus();
+    _setDriveStatus('Session expired — click Connect Drive to reconnect',true);
+    throw new Error('401');
+  }
   return res;
 }
 
-async function gdriveFindOrCreate(){
-  // Search for existing file
-  const q=encodeURIComponent(`name='${GDRIVE_FILE_NAME}' and trashed=false`);
-  const res=await gdriveApiFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`);
-  const data=await res.json();
-  if(data.files&&data.files.length){
-    gdriveFileId=data.files[0].id;
-    localStorage.setItem('crm9_gdrive_fid',gdriveFileId);
-    const det=document.getElementById('gdrive-detail-status');
-    if(det)det.textContent=`Found existing file (${gdriveFileId.slice(0,8)}…). Ready to push/pull.`;
-  } else {
-    gdriveFileId=null;
-    localStorage.removeItem('crm9_gdrive_fid');
-    const det=document.getElementById('gdrive-detail-status');
-    if(det)det.textContent='No existing file found. Push to Drive to create one.';
-  }
+async function gdriveFindFile(){
+  try{
+    // First try cached file ID
+    if(gdriveFileId){
+      const r=await _driveApiFetch(`https://www.googleapis.com/drive/v3/files/${gdriveFileId}?fields=id,trashed`);
+      if(r.ok){const d=await r.json();if(!d.trashed)return gdriveFileId;}
+    }
+    // Search by name
+    const q=encodeURIComponent(`name='${GDRIVE_FILE_NAME}' and trashed=false`);
+    const r=await _driveApiFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,modifiedTime)&orderBy=modifiedTime desc`);
+    const d=await r.json();
+    if(d.files&&d.files.length){
+      gdriveFileId=d.files[0].id;
+      localStorage.setItem('crm9_gdrive_fid',gdriveFileId);
+      return gdriveFileId;
+    }
+    gdriveFileId=null;localStorage.removeItem('crm9_gdrive_fid');
+    return null;
+  }catch(e){return null;}
 }
 
-async function gdriveUpload(){
-  if(!gdriveToken){gdriveAction();return;}
-  const det=document.getElementById('gdrive-detail-status');
-  if(det)det.textContent='Uploading…';
+async function gdriveUpload(silent=false){
+  if(!gdriveToken){gdriveConnect();return;}
+  if(!silent)_setDriveStatus('Saving to Drive…',false);
   const payload=JSON.stringify({companies:COS,templates:TMPLS,settings:SETTINGS,date:new Date().toISOString()},null,2);
   const blob=new Blob([payload],{type:'application/json'});
   try{
     let res;
     if(gdriveFileId){
-      // Update existing
-      res=await gdriveApiFetch(`https://www.googleapis.com/upload/drive/v3/files/${gdriveFileId}?uploadType=media`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:blob});
+      res=await _driveApiFetch(
+        `https://www.googleapis.com/upload/drive/v3/files/${gdriveFileId}?uploadType=media`,
+        {method:'PATCH',headers:{'Content-Type':'application/json'},body:blob}
+      );
     } else {
-      // Create new (multipart)
+      const boundary='crm_boundary_'+Date.now();
       const meta=JSON.stringify({name:GDRIVE_FILE_NAME,mimeType:'application/json'});
-      const form=new FormData();
-      form.append('metadata',new Blob([meta],{type:'application/json'}));
-      form.append('file',blob);
-      res=await gdriveApiFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',body:form});
+      const body=`--${boundary}\r\nContent-Type: application/json\r\n\r\n${meta}\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${payload}\r\n--${boundary}--`;
+      res=await _driveApiFetch(
+        'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',
+        {method:'POST',headers:{'Content-Type':`multipart/related; boundary=${boundary}`},body}
+      );
       const d=await res.json();
       gdriveFileId=d.id;
       localStorage.setItem('crm9_gdrive_fid',gdriveFileId);
     }
-    if(det)det.textContent=`✓ Pushed to Drive at ${new Date().toLocaleTimeString()}`;
-    toast('✓ Data pushed to Google Drive');
+    const t=new Date().toLocaleTimeString();
+    _setDriveStatus(`✓ Auto-saved to Drive at ${t}`,false);
+    if(!silent)toast('✓ Saved to Google Drive');
   }catch(e){
-    if(det)det.textContent='✗ Upload failed: '+e.message;
-    toast('Drive upload failed');
+    if(e.message!=='401')_setDriveStatus('✗ Save failed: '+e.message,true);
   }
 }
 
-async function gdriveDownload(){
-  if(!gdriveToken){gdriveAction();return;}
-  const det=document.getElementById('gdrive-detail-status');
-  if(det)det.textContent='Downloading…';
+async function gdriveDownload(silent=false){
+  if(!gdriveToken){gdriveConnect();return;}
+  if(!silent)_setDriveStatus('Loading from Drive…',false);
   try{
-    // Find file if we don't have ID
-    if(!gdriveFileId){await gdriveFindOrCreate();}
-    if(!gdriveFileId){det&&(det.textContent='No file found on Drive. Push first.');return;}
-    const res=await gdriveApiFetch(`https://www.googleapis.com/drive/v3/files/${gdriveFileId}?alt=media`);
+    const fid=await gdriveFindFile();
+    if(!fid){
+      _setDriveStatus('No Drive file found — your data will be pushed on next save.',false);
+      return;
+    }
+    const res=await _driveApiFetch(`https://www.googleapis.com/drive/v3/files/${fid}?alt=media`);
     const data=await res.json();
     if(data.companies){
-      if(!confirm(`Pull from Drive? This will overwrite your local data (${data.companies.length} companies from ${data.date?.slice(0,10)||'unknown date'}).`))return;
+      if(!silent){
+        if(!confirm(`Load from Drive?\n${data.companies.length} companies, saved ${data.date?.slice(0,16)||'unknown'}\n\nThis replaces your current local data.`))return;
+      }
       COS.length=0;COS.push(...data.companies);
       if(data.templates){TMPLS.length=0;TMPLS.push(...data.templates);}
       if(data.settings){Object.assign(SETTINGS,data.settings);}
-      sv('crm7_co',COS);sv('crm7_tmpls',TMPLS);sv('crm7_set',SETTINGS);
-      buildInds();refreshCounts();renderDash();renderCo();renderTmpls();applySettings();
-      det.textContent=`✓ Pulled from Drive at ${new Date().toLocaleTimeString()}`;
-      toast(`✓ Loaded ${data.companies.length} companies from Drive`);
+      try{localStorage.setItem('crm7_co',JSON.stringify(COS));localStorage.setItem('crm7_tmpls',JSON.stringify(TMPLS));localStorage.setItem('crm7_set',JSON.stringify(SETTINGS));}catch{}
+      buildInds();refreshCounts();renderDash();renderCo();renderTmpls();buildTmplSelects();applySettings();
+      const t=new Date().toLocaleTimeString();
+      _setDriveStatus(`✓ Loaded from Drive at ${t} — ${data.companies.length} companies`,false);
+      if(!silent)toast(`✓ Loaded ${data.companies.length} companies from Drive`);
+      else toast(`✓ Drive sync: ${data.companies.length} companies loaded`);
     } else {
-      det.textContent='✗ File found but data is invalid';
+      _setDriveStatus('✗ Drive file found but data looks invalid',true);
     }
   }catch(e){
-    if(det)det.textContent='✗ Download failed: '+e.message;
-    toast('Drive download failed');
+    if(e.message!=='401')_setDriveStatus('✗ Load failed: '+e.message,true);
   }
 }
 
