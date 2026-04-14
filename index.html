@@ -1,0 +1,1765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ImpactCRM v9</title>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --acc:#1D9E75;--acc2:#0F6E56;--acc-r:29;--acc-g:158;--acc-b:117;
+  --t50:#E1F5EE;--t100:#9FE1CB;--t400:#1D9E75;--t600:#0F6E56;
+  --b50:#E6F1FB;--b400:#378ADD;--b600:#185FA5;
+  --a50:#FAEEDA;--a400:#BA7517;--a800:#633806;
+  --c50:#FAECE7;--c400:#D85A30;--c800:#712B13;
+  --p50:#FBEAF0;--p400:#D4537E;--p800:#72243E;
+  --g50:#F1EFE8;--g100:#D3D1C7;--g400:#888780;--g600:#5F5E5A;
+  --bg:#f7f7f5;--bg2:#efefeb;--bg3:#e5e5e0;
+  --sur:#fff;--brd:rgba(0,0,0,.09);--brd2:rgba(0,0,0,.16);
+  --tx:#1a1a18;--tx2:#66665e;--tx3:#9a9a92;
+  --r:8px;--rl:12px;
+  --f:'Segoe UI',system-ui,sans-serif;--fm:'Consolas',monospace;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#1c1c1a;--bg2:#242422;--bg3:#2e2e2a;--sur:#242422;
+  --brd:rgba(255,255,255,.09);--brd2:rgba(255,255,255,.18);
+  --tx:#f0efe9;--tx2:#a0a098;--tx3:#66665e;
+  --t50:rgba(29,158,117,.15);--t100:rgba(29,158,117,.28);
+  --b50:rgba(55,138,221,.15);--a50:rgba(186,117,23,.15);--c50:rgba(216,90,48,.15);--p50:rgba(212,83,126,.15);--g50:rgba(136,135,128,.15);
+}}
+body{font-family:var(--f);font-size:13px;background:var(--bg);color:var(--tx);overflow:hidden;height:100vh}
+.app{display:flex;height:100vh}
+/* SIDEBAR */
+.sb{width:208px;flex-shrink:0;background:var(--sur);border-right:.5px solid var(--brd);display:flex;flex-direction:column}
+.sb-top{padding:13px 14px 11px;border-bottom:.5px solid var(--brd);display:flex;align-items:center;gap:9px}
+.sb-ico{width:30px;height:30px;border-radius:8px;background:var(--acc);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sb-ico svg{width:15px;height:15px}
+.sb-nm{font-size:13px;font-weight:600;line-height:1.2}
+.sb-tg{font-size:10px;color:var(--tx2)}
+.ns{padding:9px 7px 2px}
+.nl{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;padding:0 7px 4px;font-weight:600}
+.ni{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--r);cursor:pointer;font-size:12px;color:var(--tx2);margin-bottom:1px;transition:all .1s;user-select:none}
+.ni:hover{background:var(--bg2);color:var(--tx)}
+.ni.active{background:var(--t50);color:var(--t600);font-weight:600}
+.ni svg{width:13px;height:13px;flex-shrink:0}
+.nb{margin-left:auto;font-size:10px;font-weight:600;padding:2px 5px;border-radius:20px;background:var(--t50);color:var(--t600)}
+.nb-w{background:var(--a50);color:var(--a800)}
+.sb-ft{margin-top:auto;padding:11px 14px;border-top:.5px solid var(--brd);font-size:11px}
+.sf-o{font-weight:600;color:var(--tx)}
+.sf-s{color:var(--tx2);margin-top:2px}
+/* MAIN */
+.main{flex:1;overflow:hidden;display:flex;flex-direction:column;min-width:0;position:relative}
+.topbar{height:46px;background:var(--sur);border-bottom:.5px solid var(--brd);display:flex;align-items:center;padding:0 18px;gap:8px;flex-shrink:0}
+.topbar h2{font-size:13px;font-weight:600;flex:1}
+.content{flex:1;overflow-y:auto;padding:16px 18px}
+.page{display:none}.page.active{display:block}
+/* BUTTONS */
+.btn{padding:5px 12px;border-radius:var(--r);font-size:12px;cursor:pointer;border:.5px solid var(--brd2);background:var(--sur);color:var(--tx);font-family:var(--f);transition:all .12s;font-weight:500}
+.btn:hover{background:var(--bg2)}
+.btn-p{background:var(--acc);color:#fff;border-color:var(--acc);font-weight:600}
+.btn-p:hover{background:var(--acc2);border-color:var(--acc2)}
+.btn-sm{padding:3px 9px;font-size:11px}
+.btn-del{background:var(--c50);color:var(--c400);border-color:var(--c400)}
+.btn-del:hover{background:var(--c400);color:#fff}
+/* FORMS */
+.cg{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.cl{font-size:10px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px}
+.ci{padding:6px 10px;border-radius:var(--r);border:.5px solid var(--brd2);background:var(--sur);color:var(--tx);font-size:12px;font-family:var(--f);outline:none;width:100%}
+.ci:focus{border-color:var(--acc);outline:2px solid rgba(var(--acc-r),var(--acc-g),var(--acc-b),.12)}
+textarea.ci{resize:vertical;min-height:66px;line-height:1.6}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.fg4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{padding:3px 9px;border-radius:20px;font-size:11px;border:.5px solid var(--brd2);cursor:pointer;color:var(--tx2);background:transparent;font-family:var(--f);transition:all .1s;font-weight:500}
+.chip:hover,.chip.sel{background:var(--t50);color:var(--t600);border-color:var(--t100)}
+/* BADGES */
+.badge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap}
+.b-business{background:var(--b50);color:var(--b600)}
+.b-csr{background:var(--t50);color:var(--t600)}
+.b-civil{background:var(--p50);color:var(--p800)}
+.b-other{background:var(--g50);color:var(--g600)}
+.b-mature{background:var(--t50);color:var(--t600)}
+.b-promising{background:var(--b50);color:var(--b600)}
+.b-novice{background:var(--a50);color:var(--a800)}
+.b-unknown{background:var(--g50);color:var(--g600)}
+.b-hostile{background:var(--c50);color:var(--c400)}
+.b-offer{background:var(--g50);color:var(--g600)}
+.b-email{background:var(--b50);color:var(--b600)}
+.b-fu{background:var(--a50);color:var(--a800)}
+.b-replied{background:var(--t50);color:var(--t600)}
+.b-off{background:var(--c50);color:var(--c400)}
+/* FILTERS */
+.fr{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+.si{flex:1;min-width:130px;padding:6px 10px;border-radius:var(--r);border:.5px solid var(--brd2);background:var(--sur);color:var(--tx);font-size:12px;font-family:var(--f);outline:none}
+.si:focus{border-color:var(--acc)}
+select.fs{padding:6px 8px;border-radius:var(--r);border:.5px solid var(--brd2);background:var(--sur);color:var(--tx2);font-size:12px;font-family:var(--f);cursor:pointer;outline:none}
+/* COMPANY CARDS */
+.co-card{background:var(--sur);border:.5px solid var(--brd);border-radius:var(--rl);margin-bottom:8px;overflow:hidden;transition:border-color .1s}
+.co-card:hover{border-color:var(--brd2)}
+.co-card.selected{border-color:var(--acc);border-width:1px;background:rgba(var(--acc-r),var(--acc-g),var(--acc-b),.03)}
+.co-hdr{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;user-select:none}
+.co-hdr:hover{background:var(--bg2)}
+.co-sel{width:16px;height:16px;border-radius:4px;border:.5px solid var(--brd2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;background:var(--sur);transition:all .1s}
+.co-sel:hover{border-color:var(--acc)}
+.co-sel.checked{background:var(--acc);border-color:var(--acc);color:#fff}
+.co-sel svg{width:10px;height:10px}
+.co-av{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;color:#fff}
+.co-info{flex:1;min-width:0}
+.co-nm{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
+.co-meta{font-size:11px;color:var(--tx2);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.co-actions{display:flex;gap:5px;flex-shrink:0}
+.co-arr{width:16px;height:16px;display:flex;align-items:center;justify-content:center;color:var(--tx3);transition:transform .15s;flex-shrink:0}
+.co-arr.open{transform:rotate(90deg)}
+.co-body{border-top:.5px solid var(--brd);display:none}
+.co-body.open{display:block}
+.co-details{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:10px 14px;border-bottom:.5px solid var(--brd);background:var(--bg2)}
+.cd-lbl{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
+.cd-val{font-size:12px;color:var(--tx);font-weight:500}
+.cd-val.big{font-size:15px;font-weight:700;color:var(--t600)}
+/* PEOPLE TABLE in company */
+.ppl-hdr{display:grid;align-items:center;padding:6px 14px;font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.4px;background:var(--bg2);border-bottom:.5px solid var(--brd)}
+.ppl-row{display:grid;align-items:center;padding:8px 14px;border-bottom:.5px solid var(--brd);gap:8px;transition:background .08s}
+.ppl-row:last-of-type{border-bottom:none}
+.ppl-row:hover{background:var(--bg2)}
+.ppl-cols{grid-template-columns:18px 22px 1fr 1fr 1fr .9fr auto}
+.ppl-hdr-cols{grid-template-columns:18px 22px 1fr 1fr 1fr .9fr auto}
+.p-sel{width:14px;height:14px;border-radius:3px;border:.5px solid var(--brd2);display:flex;align-items:center;justify-content:center;cursor:pointer;background:var(--sur);transition:all .1s;flex-shrink:0;font-size:9px}
+.p-sel:hover{border-color:var(--acc)}
+.p-sel.checked{background:var(--acc);border-color:var(--acc);color:#fff}
+.p-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;color:#fff}
+.p-nm{font-size:12px;font-weight:600;color:var(--tx)}
+.p-pos{font-size:11px;color:var(--tx2)}
+.p-email{font-size:11px;color:var(--b600);font-family:var(--fm);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.p-phone{font-size:11px;color:var(--tx2);font-family:var(--fm)}
+.add-p-row{padding:8px 14px;display:flex;align-items:center;gap:7px;font-size:11px;color:var(--tx2);cursor:pointer;border-top:.5px dashed var(--brd);background:var(--bg2)}
+.add-p-row:hover{color:var(--t600);background:var(--t50)}
+/* BULK ACTION BAR */
+.bulk-bar{background:var(--acc);color:#fff;padding:10px 16px;border-radius:var(--r);margin-bottom:10px;display:none;align-items:center;gap:10px;font-size:12px;font-weight:600}
+.bulk-bar.vis{display:flex}
+.bulk-btn{padding:5px 12px;border-radius:var(--r);font-size:11px;cursor:pointer;border:.5px solid rgba(255,255,255,.4);background:rgba(255,255,255,.2);color:#fff;font-family:var(--f);font-weight:600;transition:all .12s}
+.bulk-btn:hover{background:rgba(255,255,255,.35)}
+.bulk-btn-del{border-color:rgba(255,100,60,.6);background:rgba(255,80,40,.3)}
+/* STAT CARDS */
+.sr{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.sc{background:var(--bg2);border-radius:var(--r);padding:12px 14px}
+.sl{font-size:11px;color:var(--tx2);margin-bottom:3px}
+.sv{font-size:21px;font-weight:700}
+.ss{font-size:10px;color:var(--tx2);margin-top:2px}
+/* MODAL */
+.modal-bg{display:none;position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:50;align-items:flex-start;justify-content:center;padding-top:32px;overflow-y:auto}
+.modal-bg.open{display:flex}
+.modal{background:var(--sur);border-radius:var(--rl);border:.5px solid var(--brd);width:560px;max-width:95vw;padding:20px 22px;margin-bottom:40px}
+.modal h3{font-size:14px;font-weight:700;margin-bottom:16px}
+.modal-ft{display:flex;justify-content:flex-end;gap:7px;margin-top:16px;padding-top:12px;border-top:.5px solid var(--brd)}
+/* COMPOSE RECIPIENT BOX */
+.rcpt-box{background:var(--bg2);border:.5px solid var(--brd2);border-radius:var(--r);padding:8px 10px;min-height:50px;max-height:120px;overflow-y:auto;display:flex;flex-wrap:wrap;gap:5px;align-content:flex-start}
+.rcpt-tag{display:inline-flex;align-items:center;gap:5px;background:var(--t50);color:var(--t600);border-radius:20px;padding:2px 8px;font-size:11px;font-weight:600;cursor:pointer}
+.rcpt-tag span{font-size:10px;opacity:.7;margin-left:2px}
+/* CONTACT PICKER MODAL */
+.picker-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.picker-item{padding:8px 10px;border-radius:var(--r);border:.5px solid var(--brd);cursor:pointer;transition:all .1s}
+.picker-item:hover{border-color:var(--brd2)}
+.picker-item.picked{border-color:var(--acc);background:var(--t50)}
+.pi-nm{font-size:12px;font-weight:600}
+.pi-co{font-size:10px;color:var(--tx2)}
+.pi-em{font-size:10px;color:var(--b600);font-family:var(--fm);margin-top:1px}
+/* TEMPLATES */
+.tmpl-card{background:var(--sur);border:.5px solid var(--brd);border-radius:var(--rl);padding:12px 14px;margin-bottom:9px}
+.ph{display:inline-block;background:var(--t50);color:var(--t600);border-radius:4px;padding:0 4px;font-size:10px;font-weight:600;font-family:var(--fm)}
+.ph-btn{padding:3px 7px;border-radius:20px;font-size:10px;border:.5px solid var(--t100);background:var(--t50);color:var(--t600);cursor:pointer;font-family:var(--fm);font-weight:600;transition:all .1s}
+.ph-btn:hover{background:var(--acc);color:#fff}
+.prev-box{background:var(--bg2);border-radius:var(--r);padding:11px;border:.5px solid var(--brd);min-height:80px}
+.prev-subj{font-weight:600;margin-bottom:6px;font-size:12px}
+.prev-body{color:var(--tx2);font-size:11px;white-space:pre-wrap;line-height:1.7}
+.ail{display:none;align-items:center;gap:8px;font-size:11px;color:var(--tx2);padding:5px 0}
+.ail.vis{display:flex}
+.dots span{width:5px;height:5px;border-radius:50%;background:var(--acc);animation:pulse 1.2s infinite;display:inline-block;margin:0 1px}
+.dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
+/* IMPORT UPLOAD */
+.uz{border:1.5px dashed var(--brd2);border-radius:var(--rl);padding:24px;text-align:center;cursor:pointer;position:relative;transition:all .12s;margin-bottom:14px}
+.uz:hover{border-color:var(--acc);background:var(--t50)}
+.uz input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+/* TOAST */
+.toast{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);background:#1a1a18;color:#fff;padding:9px 18px;border-radius:var(--r);font-size:12px;font-weight:600;z-index:60;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+/* PG */
+.pg{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:11px;color:var(--tx2)}
+.pg-btn{padding:3px 9px;border-radius:var(--r);border:.5px solid var(--brd2);background:var(--sur);cursor:pointer;font-size:11px;font-family:var(--f)}
+.pg-btn:hover{background:var(--bg2)}
+
+/* ── PIPELINE KANBAN ── */
+.pipeline-wrap{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(170px,1fr);gap:10px;overflow-x:auto;padding-bottom:8px;align-items:start}
+.pl-col{background:var(--bg2);border-radius:var(--rl);padding:10px 8px;min-height:80px}
+.pl-hdr{display:flex;align-items:center;justify-content:space-between;padding:0 4px 8px;margin-bottom:4px;border-bottom:.5px solid var(--brd)}
+.pl-title{font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px}
+.pl-cnt{font-size:10px;font-weight:600;padding:2px 6px;border-radius:20px;background:var(--sur);color:var(--tx2)}
+.pl-card{background:var(--sur);border:.5px solid var(--brd);border-radius:var(--r);padding:9px 10px;margin-bottom:7px;cursor:grab;transition:box-shadow .1s,border-color .1s;position:relative}
+.pl-card:active{cursor:grabbing}
+.pl-card:hover{border-color:var(--brd2)}
+.pl-card.drag-over-card{border-color:var(--acc);border-style:dashed}
+.pl-col.drag-over{background:var(--t50);border:.5px dashed var(--acc)}
+.pl-nm{font-size:12px;font-weight:700;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl-meta{font-size:10px;color:var(--tx2);line-height:1.5}
+.pl-fee{font-size:11px;font-weight:700;color:var(--t600);margin-top:4px}
+.pl-due{font-size:10px;font-weight:600;margin-top:4px;padding:2px 6px;border-radius:20px;display:inline-block}
+.pl-due.overdue{background:var(--c50);color:var(--c400)}
+.pl-due.today{background:var(--a50);color:var(--a800)}
+.pl-due.soon{background:var(--b50);color:var(--b600)}
+.pl-due.future{background:var(--g50);color:var(--g600)}
+.pl-actions{display:flex;gap:4px;margin-top:7px}
+.pl-view-toggle{display:flex;gap:6px;margin-bottom:12px;background:var(--bg2);border-radius:var(--r);padding:3px;width:fit-content}
+.pl-vbtn{padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;border:none;background:transparent;color:var(--tx2);font-family:var(--f);font-weight:500;transition:all .1s}
+.pl-vbtn.active{background:var(--sur);color:var(--tx);font-weight:600;box-shadow:0 .5px 2px rgba(0,0,0,.1)}
+
+/* ── ACTIVITY LOG ── */
+.act-feed{padding:0 14px}
+.act-item{display:flex;gap:10px;padding:10px 0;border-bottom:.5px solid var(--brd);position:relative}
+.act-item:last-child{border-bottom:none}
+.act-item:not(:last-child)::after{content:'';position:absolute;left:15px;top:32px;bottom:0;width:1px;background:var(--brd)}
+.act-dot{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;z-index:1;margin-top:1px}
+.act-note{background:var(--g50);color:var(--g600)}
+.act-call{background:var(--t50);color:var(--t600)}
+.act-meeting{background:var(--b50);color:var(--b600)}
+.act-email{background:var(--a50);color:var(--a800)}
+.act-reply{background:var(--t50);color:var(--t600)}
+.act-win{background:var(--t50);color:var(--t600)}
+.act-ttl{font-size:12px;font-weight:600;color:var(--tx)}
+.act-when{font-size:10px;color:var(--tx3);margin-top:1px}
+.act-body{font-size:11px;color:var(--tx2);margin-top:3px;line-height:1.55}
+.act-del{margin-left:auto;font-size:11px;color:var(--tx3);cursor:pointer;padding:0 4px;flex-shrink:0;align-self:flex-start;margin-top:2px}
+.act-del:hover{color:var(--c400)}
+.act-quick{display:flex;gap:5px;padding:8px 14px 12px;border-top:.5px dashed var(--brd);background:var(--bg2);flex-wrap:wrap}
+.act-type-btn{padding:4px 9px;border-radius:20px;font-size:11px;border:.5px solid var(--brd2);cursor:pointer;font-family:var(--f);background:var(--sur);color:var(--tx2);font-weight:500;transition:all .1s}
+.act-type-btn:hover,.act-type-btn.sel{background:var(--t50);color:var(--t600);border-color:var(--t100)}
+
+/* ── FOLLOW-UP / NEXT ACTION ── */
+.due-row{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--sur);border:.5px solid var(--brd);border-radius:var(--r);margin-bottom:7px;cursor:pointer;transition:border-color .1s}
+.due-row:hover{border-color:var(--brd2)}
+.due-row.overdue{border-left:3px solid var(--c400);background:var(--c50)}
+.due-row.today{border-left:3px solid var(--a400);background:var(--a50)}
+.due-row.soon{border-left:3px solid var(--b400)}
+.due-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.due-nm{font-size:12px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.due-note{font-size:11px;color:var(--tx2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px}
+.due-date{font-size:10px;font-weight:600;white-space:nowrap;flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="app">
+<!-- SIDEBAR -->
+<div class="sb">
+  <div class="sb-top">
+    <div class="sb-ico" id="sb-ico"><svg viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="6" stroke="white" stroke-width="1.4"/><path d="M5 7.5l2.2 2.2 3.3-3.3" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div><div class="sb-nm" id="sb-nm">ImpactCRM</div><div class="sb-tg" id="sb-tg">NGO Partner Suite</div></div>
+  </div>
+  <div class="ns">
+    <div class="nl">Overview</div>
+    <div class="ni active" onclick="nav('dashboard',this)"><svg viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" fill="currentColor" opacity=".8"/><rect x="8" y="1" width="5" height="5" rx="1" fill="currentColor" opacity=".4"/><rect x="1" y="8" width="5" height="5" rx="1" fill="currentColor" opacity=".4"/><rect x="8" y="8" width="5" height="5" rx="1" fill="currentColor" opacity=".4"/></svg>Dashboard</div>
+  </div>
+  <div class="ns">
+    <div class="nl">Database</div>
+    <div class="ni" onclick="nav('pipeline',this)"><svg viewBox="0 0 14 14" fill="none"><rect x="1" y="3" width="3" height="8" rx="1" fill="currentColor" opacity=".5"/><rect x="5.5" y="1.5" width="3" height="9.5" rx="1" fill="currentColor" opacity=".7"/><rect x="10" y="4" width="3" height="7" rx="1" fill="currentColor" opacity=".4"/></svg>Pipeline <span class="nb nb-w" id="nb-due">0</span></div>
+    <div class="ni" onclick="nav('companies',this)"><svg viewBox="0 0 14 14" fill="none"><rect x="2" y="1" width="10" height="12" rx="1.2" stroke="currentColor" stroke-width="1.1" fill="none"/><path d="M4.5 4h5M4.5 6.5h5M4.5 9h3" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>Companies &amp; Contacts <span class="nb" id="nb-co">0</span></div>
+    <div class="ni" onclick="nav('import',this)"><svg viewBox="0 0 14 14" fill="none"><path d="M2.5 11h9M7 2.5v7M4.5 7l2.5 2.5 2.5-2.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>Import Excel / CSV</div>
+  </div>
+  <div class="ns">
+    <div class="nl">Outreach</div>
+    <div class="ni" onclick="nav('compose',this)"><svg viewBox="0 0 14 14" fill="none"><path d="M2 11l1.8-1.8 7-7 1.8 1.8-7 7L2 11z" stroke="currentColor" stroke-width="1.1" fill="none" stroke-linejoin="round"/><path d="M9 3.2l1.8 1.8" stroke="currentColor" stroke-width="1.1"/></svg>Compose Email</div>
+    <div class="ni" onclick="nav('templates',this)"><svg viewBox="0 0 14 14" fill="none"><rect x="1.5" y="2" width="11" height="10" rx="1.2" stroke="currentColor" stroke-width="1.1" fill="none"/><path d="M4 5h6M4 7.5h6M4 10h4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>Email Templates <span class="nb" id="nb-tmpl">0</span></div>
+    <div class="ni" onclick="nav('export',this)"><svg viewBox="0 0 14 14" fill="none"><path d="M2.5 11h9M7 9V2.5M4.5 5l2.5-2.5 2.5 2.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>Export CSV</div>
+  </div>
+  <div class="ns">
+    <div class="nl">System</div>
+    <div class="ni" onclick="nav('settings',this)"><svg viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="2.2" stroke="currentColor" stroke-width="1.1" fill="none"/><path d="M7 1v2M7 11v2M1 7h2M11 7h2M3 3l1.4 1.4M9.6 9.6L11 11M11 3l-1.4 1.4M4.4 9.6L3 11" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>Settings</div>
+  </div>
+  <div class="sb-ft">
+    <div class="sf-o" id="sb-org">Your Organization</div>
+    <div class="sf-s" id="sb-email">White-label CRM</div>
+    <div style="margin-top:8px;display:flex;gap:5px;align-items:center">
+      <button class="btn btn-sm" id="gdrive-btn" onclick="gdriveAction()" style="font-size:10px;flex:1">☁ Connect Drive</button>
+      <span id="gdrive-status" style="font-size:9px;color:var(--tx3)"></span>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <h2 id="page-title">Dashboard</h2>
+    <button class="btn" onclick="openCoModal(null)">+ Add company</button>
+    <button class="btn btn-p" onclick="openCompose()">Compose email ↗</button>
+  </div>
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="sr">
+        <div class="sc"><div class="sl">Companies</div><div class="sv" id="d-co">0</div><div class="ss">in database</div></div>
+        <div class="sc"><div class="sl">Total contacts</div><div class="sv" id="d-ppl">0</div><div class="ss">across all companies</div></div>
+        <div class="sc"><div class="sl">CSR / outreach contacts</div><div class="sv" id="d-csr">0</div><div class="ss">with outreach history</div></div>
+        <div class="sc"><div class="sl">Missing emails</div><div class="sv" style="color:var(--a400)" id="d-noemail">0</div><div class="ss">contacts to complete</div></div>
+      </div>
+      <div class="sr" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:0">
+        <div class="sc"><div class="sl">Follow-ups overdue</div><div class="sv" style="color:var(--c400)" id="d-overdue">0</div><div class="ss">past due date · <span style="color:var(--t600);cursor:pointer" onclick="nav('pipeline',document.querySelector('[onclick*=pipeline]'))">view pipeline ↗</span></div></div>
+        <div class="sc"><div class="sl">Due this week</div><div class="sv" style="color:var(--a400)" id="d-week">0</div><div class="ss">upcoming actions</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+        <div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:8px">By partnership type</div>
+          <div style="background:var(--sur);border:.5px solid var(--brd);border-radius:var(--rl);overflow:hidden;margin-bottom:12px"><table style="width:100%;border-collapse:collapse"><thead><tr><th style="padding:6px 11px;text-align:left;font-size:10px;font-weight:600;color:var(--tx2);background:var(--bg2);border-bottom:.5px solid var(--brd);text-transform:uppercase;letter-spacing:.4px">Type</th><th style="padding:6px 11px;font-size:10px;font-weight:600;color:var(--tx2);background:var(--bg2);border-bottom:.5px solid var(--brd);text-transform:uppercase;letter-spacing:.4px">Count</th></tr></thead><tbody id="d-bytype"></tbody></table></div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:8px">Outreach status (contacts)</div>
+          <div style="background:var(--sur);border:.5px solid var(--brd);border-radius:var(--rl);overflow:hidden"><table style="width:100%;border-collapse:collapse"><thead><tr><th style="padding:6px 11px;text-align:left;font-size:10px;font-weight:600;color:var(--tx2);background:var(--bg2);border-bottom:.5px solid var(--brd);text-transform:uppercase;letter-spacing:.4px">Status</th><th style="padding:6px 11px;font-size:10px;font-weight:600;color:var(--tx2);background:var(--bg2);border-bottom:.5px solid var(--brd);text-transform:uppercase;letter-spacing:.4px">Count</th></tr></thead><tbody id="d-bystatus"></tbody></table></div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:8px">By industry (top 10)</div>
+          <div style="background:var(--sur);border:.5px solid var(--brd);border-radius:var(--rl);overflow:hidden"><table style="width:100%;border-collapse:collapse"><thead><tr><th style="padding:6px 11px;text-align:left;font-size:10px;font-weight:600;color:var(--tx2);background:var(--bg2);border-bottom:.5px solid var(--brd);text-transform:uppercase;letter-spacing:.4px">Industry</th><th style="padding:6px 11px;font-size:10px;font-weight:600;color:var(--tx2);background:var(--bg2);border-bottom:.5px solid var(--brd);text-transform:uppercase;letter-spacing:.4px">Count</th></tr></thead><tbody id="d-byind"></tbody></table></div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:8px">Recently touched</div>
+          <div id="d-recent"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPANIES & CONTACTS -->
+    <div class="page" id="page-companies">
+      <!-- BULK ACTION BAR -->
+      <div class="bulk-bar" id="bulk-bar">
+        <span id="bulk-count">0 selected</span>
+        <button class="bulk-btn" onclick="bulkCompose()">Compose email to selected ↗</button>
+        <button class="bulk-btn" onclick="bulkExport()">Export selected ↓</button>
+        <button class="bulk-btn" onclick="bulkStatus()">Set status…</button>
+        <button class="bulk-btn bulk-btn-del" onclick="bulkDelete()">Delete selected</button>
+        <button class="bulk-btn" style="margin-left:auto" onclick="clearSelection()">Clear ×</button>
+      </div>
+      <div class="fr">
+        <input class="si" type="text" id="co-q" placeholder="Search company, contact, email, notes…" oninput="renderCo()">
+        <select class="fs" id="co-type" onchange="renderCo()"><option value="">All types</option><option value="Business">Business partner</option><option value="CSR">CSR partner</option><option value="Civil">Civil partner</option><option value="Other">Other</option></select>
+        <select class="fs" id="co-ind" onchange="renderCo()"><option value="">All industries</option></select>
+        <select class="fs" id="co-cult" onchange="renderCo()"><option value="">All cultures</option><option>Mature</option><option>Promising</option><option>Novice</option><option>Unknown</option><option>Hostile</option></select>
+        <select class="fs" id="co-status" onchange="renderCo()"><option value="">All statuses</option><option value="offer_sent">Offer sent</option><option value="email_sent">Email sent</option><option value="followup_sent">Follow-up sent</option><option value="replied">Replied</option><option value="off">Closed / off</option><option value="none">Not contacted</option></select>
+        <button class="btn" onclick="selectAll()">Select all</button>
+        <button class="btn btn-p" onclick="openCoModal(null)">+ Add</button>
+      </div>
+      <div style="font-size:11px;color:var(--tx2);margin-bottom:9px" id="co-lbl"></div>
+      <div id="co-list"></div>
+      <div class="pg" id="co-pg" style="display:none">
+        <button class="pg-btn" onclick="coPg(-1)">← Prev</button>
+        <span id="co-pg-info"></span>
+        <button class="pg-btn" onclick="coPg(1)">Next →</button>
+        <span id="co-pg-tot" style="margin-left:10px;color:var(--tx3)"></span>
+      </div>
+    </div>
+
+    <!-- IMPORT -->
+    <div class="page" id="page-import">
+      <div class="uz" id="uz">
+        <input type="file" accept=".xlsx,.xls,.csv" onchange="handleFile(this.files[0])">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" style="display:block;margin:0 auto 9px;color:var(--tx2)"><rect x="4" y="5" width="24" height="22" rx="2.5" stroke="currentColor" stroke-width="1.4"/><path d="M4 11h24" stroke="currentColor" stroke-width="1.4"/><path d="M16 17v8M13 22l3 3 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div style="font-size:13px;font-weight:600;margin-bottom:3px">Drop your Excel or CSV file here</div>
+        <div style="font-size:11px;color:var(--tx2)">Supports .xlsx, .xls, .csv · Data stays on your device</div>
+      </div>
+      <div id="import-section" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px"><div style="font-size:12px;font-weight:600">Map columns</div><div style="font-size:11px;color:var(--tx2)" id="import-info"></div></div>
+        <div style="background:var(--sur);border:.5px solid var(--brd);border-radius:var(--rl);padding:13px 15px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px" id="map-rows"></div>
+          <div style="background:var(--bg2);border-radius:var(--r);padding:8px;font-size:10px;font-family:var(--fm);color:var(--tx2);margin-bottom:9px;max-height:54px;overflow-y:auto;white-space:nowrap;overflow-x:auto" id="import-prev"></div>
+          <div style="display:flex;gap:7px"><button class="btn btn-p" onclick="doImport()">Import</button><button class="btn" onclick="resetImport()">Cancel</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPOSE -->
+    <div class="page" id="page-compose">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div>
+          <!-- RECIPIENTS -->
+          <div class="cg">
+            <div class="cl" style="display:flex;align-items:center;justify-content:space-between">
+              Recipients
+              <div style="display:flex;gap:5px">
+                <button class="btn btn-sm" onclick="openPickerModal('manual')">+ Add from contacts</button>
+                <button class="btn btn-sm" onclick="openPickerModal('status')">+ By status / group</button>
+              </div>
+            </div>
+            <div class="rcpt-box" id="rcpt-box"><span style="font-size:11px;color:var(--tx3);padding:4px 2px" id="rcpt-placeholder">No recipients yet — add from contacts or type below</span></div>
+            <div style="display:flex;gap:6px;margin-top:4px">
+              <input class="ci" id="rcpt-manual" placeholder="Or type an email address and press Enter…" style="flex:1;font-size:11px" onkeydown="if(event.key==='Enter')addRcptManual()">
+              <button class="btn btn-sm" onclick="addRcptManual()">Add</button>
+            </div>
+          </div>
+          <div class="cg"><div class="cl">Use a saved template</div><select class="ci fs" id="tmpl-sel" style="width:100%" onchange="loadTmpl()"><option value="">— or write from scratch —</option></select></div>
+          <div class="cg"><div class="cl">Language</div><div class="chips"><button class="chip" onclick="selLang(this,'en')">English</button><button class="chip sel" onclick="selLang(this,'hu')">Magyar</button></div></div>
+          <div class="cg"><div class="cl">Context / key message</div><textarea class="ci" id="c-msg" placeholder="Describe the value proposition, specific angle, or context…"></textarea></div>
+          <div style="display:flex;gap:7px;margin-top:2px">
+            <button class="btn btn-p" onclick="generateEmail()" style="flex:1">Generate with AI ↗</button>
+            <button class="btn" onclick="copyEmail()">Copy ↓</button>
+            <button class="btn" onclick="saveAsTmpl()">Save as template</button>
+          </div>
+          <div class="ail" id="ai-load"><div class="dots"><span></span><span></span><span></span></div><span>Generating…</span></div>
+          <div style="margin-top:10px;padding-top:10px;border-top:.5px solid var(--brd)">
+            <button class="btn btn-p" onclick="sendEmailJS()" style="width:100%;font-size:12px">📤 Send via Hostinger email</button>
+            <div id="send-status" style="font-size:11px;color:var(--tx2);margin-top:5px;text-align:center"></div>
+          </div>
+        </div>
+        <div>
+          <div class="cg"><div class="cl">Subject</div><input class="ci" id="c-subj" placeholder="Subject line…"></div>
+          <div class="cg"><div class="cl">Body</div><textarea class="ci" id="c-body" style="min-height:190px;font-family:var(--fm);font-size:11px;line-height:1.7" placeholder="Email body…"></textarea></div>
+          <div class="cg"><div class="cl">Insert placeholder at cursor</div>
+            <div class="chips">
+              <button class="ph-btn" onclick="iPH('c-body','{first_name}')">first_name</button>
+              <button class="ph-btn" onclick="iPH('c-body','{last_name}')">last_name</button>
+              <button class="ph-btn" onclick="iPH('c-body','{company}')">company</button>
+              <button class="ph-btn" onclick="iPH('c-body','{position}')">position</button>
+              <button class="ph-btn" onclick="iPH('c-body','{your_org}')">your_org</button>
+              <button class="ph-btn" onclick="iPH('c-body','{mmk_count}')">mmk_count</button>
+              <button class="ph-btn" onclick="iPH('c-body','{rehab_fee}')">rehab_fee</button>
+              <button class="ph-btn" onclick="iPH('c-body','{sender_name}')">sender_name</button>
+            </div>
+          </div>
+          <div class="cg" style="margin-top:4px"><div class="cl">Preview — <span style="color:var(--tx3);font-weight:400;text-transform:none;letter-spacing:0">sample values, click button below to fill</span></div>
+            <div class="prev-box"><div class="prev-subj" id="c-prev-subj"></div><div class="prev-body" id="c-prev-body"></div></div>
+          </div>
+          <button class="btn btn-sm btn-p" onclick="fillPrev()" style="margin-top:5px">Preview with sample values ↗</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEMPLATES -->
+    <div class="page" id="page-templates">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:13px">
+        <div style="font-size:12px;font-weight:600" id="tmpl-lbl">Email templates</div>
+        <div style="display:flex;gap:7px"><input class="si" type="text" id="tmpl-q" placeholder="Search…" oninput="renderTmpls()" style="flex:none;width:155px"><button class="btn btn-p" onclick="openTmplModal(null)">+ New template</button></div>
+      </div>
+      <div id="tmpl-list"></div>
+    </div>
+
+    <!-- EXPORT -->
+    <div class="page" id="page-export">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:9px">Export</div>
+          <div style="background:var(--sur);border:.5px solid var(--brd);border-radius:var(--rl);padding:13px 15px;margin-bottom:12px">
+            <div class="fg2"><div class="cg"><div class="cl">Partnership type</div><select class="ci fs" id="ex-type" style="width:100%" onchange="updEx()"><option value="">All</option><option value="Business">Business</option><option value="CSR">CSR</option><option value="Civil">Civil</option><option value="Other">Other</option></select></div><div class="cg"><div class="cl">Industry</div><select class="ci fs" id="ex-ind" style="width:100%" onchange="updEx()"><option value="">All</option></select></div></div>
+            <div style="font-size:10px;color:var(--tx2);margin-bottom:8px" id="ex-count"></div>
+            <div style="display:flex;gap:7px">
+              <button class="btn btn-p" onclick="exportCos()" style="flex:1">Export companies ↓</button>
+              <button class="btn btn-p" onclick="exportPeople()" style="flex:1">Export all contacts ↓</button>
+            </div>
+          </div>
+          <div style="background:var(--sur);border:.5px solid var(--brd);border-radius:var(--rl);padding:13px 15px">
+            <div style="font-size:12px;font-weight:600;margin-bottom:9px">Backup &amp; restore</div>
+            <div style="font-size:12px;color:var(--tx2);line-height:1.7;margin-bottom:9px">All data saved automatically in browser. Download JSON backup anytime.</div>
+            <div style="display:flex;gap:7px"><button class="btn btn-p" onclick="backupAll()">Download backup ↓</button><button class="btn btn-del" onclick="clearAll()">Reset to defaults</button></div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:9px">Preview</div>
+          <div style="background:var(--sur);border:.5px solid var(--brd);border-radius:var(--rl);padding:13px 15px">
+            <div style="font-size:11px;color:var(--tx2);margin-bottom:7px" id="ex-lbl">Configure filters to preview.</div>
+            <div style="background:var(--bg2);border-radius:var(--r);padding:9px;font-size:10px;font-family:var(--fm);color:var(--tx2);min-height:90px;max-height:280px;overflow:auto;white-space:pre" id="ex-prev"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:9px">Branding</div>
+          <div style="background:var(--sur);border:.5px solid var(--brd);border-radius:var(--rl);padding:13px 15px;margin-bottom:12px">
+            <div class="cg"><div class="cl">CRM name</div><input class="ci" id="s-crm" placeholder="ImpactCRM" oninput="updBrand()"></div>
+            <div class="cg"><div class="cl">Tagline</div><input class="ci" id="s-tag" placeholder="NGO Partner Suite" oninput="updBrand()"></div>
+            <div class="cg"><div class="cl">Organization name</div><input class="ci" id="s-org" placeholder="Your NGO" oninput="updBrand()"></div>
+            <div class="cg"><div class="cl">Accent color</div><div class="chips"><button class="chip sel" onclick="setAcc(this,'#1D9E75','29,158,117')">Teal</button><button class="chip" onclick="setAcc(this,'#378ADD','55,138,221')">Blue</button><button class="chip" onclick="setAcc(this,'#D4537E','212,83,126')">Pink</button><button class="chip" onclick="setAcc(this,'#BA7517','186,117,23')">Amber</button><button class="chip" onclick="setAcc(this,'#5F5E5A','95,94,90')">Slate</button></div></div>
+          </div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:9px">Email sending — EmailJS</div>
+          <div style="background:var(--sur);border:.5px solid var(--brd);border-radius:var(--rl);padding:13px 15px;margin-bottom:12px">
+            <div style="font-size:11px;color:var(--tx2);line-height:1.65;margin-bottom:10px;background:var(--b50);border-radius:var(--r);padding:8px 10px">
+              <strong>Setup:</strong> Create a free account at <a href="https://emailjs.com" target="_blank" style="color:var(--b600)">emailjs.com</a> → add your Hostinger SMTP service (smtp.hostinger.com, port 465, SSL) → create an email template → paste the IDs below. Emails will send directly from your browser via your Hostinger account.
+            </div>
+            <div class="fg2" style="margin-bottom:8px">
+              <div class="cg"><div class="cl">EmailJS Service ID</div><input class="ci" id="s-ejs-svc" placeholder="service_xxxxxxx"></div>
+              <div class="cg"><div class="cl">EmailJS Template ID</div><input class="ci" id="s-ejs-tpl" placeholder="template_xxxxxxx"></div>
+            </div>
+            <div class="cg" style="margin-bottom:8px"><div class="cl">EmailJS Public Key</div><input class="ci" id="s-ejs-key" placeholder="your_public_key_here"></div>
+            <div style="font-size:10px;color:var(--tx3);margin-bottom:8px;line-height:1.75;background:var(--bg2);border-radius:var(--r);padding:7px 9px">
+              In your EmailJS template use: <code style="font-family:var(--fm)">{{to_email}}</code> <code style="font-family:var(--fm)">{{to_name}}</code> <code style="font-family:var(--fm)">{{from_name}}</code> <code style="font-family:var(--fm)">{{subject}}</code> <code style="font-family:var(--fm)">{{message}}</code> <code style="font-family:var(--fm)">{{reply_to}}</code>
+            </div>
+            <div class="fg2" style="margin-bottom:8px">
+              <div class="cg"><div class="cl">From email address</div><input class="ci" id="s-email" type="email" placeholder="you@yourdomain.com" oninput="updBrand()"></div>
+              <div class="cg"><div class="cl">Sender name</div><input class="ci" id="s-sender" placeholder="Your name · Your NGO"></div>
+            </div>
+            <button class="btn btn-sm" onclick="testEmailJS()">Send test email ↗</button>
+            <div id="ejs-status" style="font-size:11px;color:var(--tx2);margin-top:6px"></div>
+          </div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:9px">Google Drive sync</div>
+          <div style="background:var(--sur);border:.5px solid var(--brd);border-radius:var(--rl);padding:13px 15px;margin-bottom:12px">
+            <div style="font-size:11px;color:var(--tx2);line-height:1.65;margin-bottom:10px;background:var(--t50);border-radius:var(--r);padding:8px 10px">
+              Connect Google Drive to sync your CRM data across any device or login. Your data is saved as a JSON file in your Drive. <strong>Requires a Google Cloud project with Drive API enabled.</strong> See instructions below.
+            </div>
+            <div class="cg"><div class="cl">Google OAuth Client ID</div><input class="ci" id="s-goog-cid" placeholder="xxxxxxxx.apps.googleusercontent.com"></div>
+            <div style="display:flex;gap:7px;margin-top:2px">
+              <button class="btn btn-sm btn-p" onclick="gdriveAction()">Connect / Sync Drive</button>
+              <button class="btn btn-sm" onclick="gdriveUpload()">Push to Drive ↑</button>
+              <button class="btn btn-sm" onclick="gdriveDownload()">Pull from Drive ↓</button>
+            </div>
+            <div id="gdrive-detail-status" style="font-size:11px;color:var(--tx2);margin-top:6px"></div>
+            <details style="margin-top:10px">
+              <summary style="font-size:11px;color:var(--tx2);cursor:pointer">Setup instructions ▸</summary>
+              <div style="font-size:11px;color:var(--tx2);line-height:1.75;margin-top:8px;padding-left:6px">
+                1. Go to <a href="https://console.cloud.google.com" target="_blank" style="color:var(--b600)">console.cloud.google.com</a><br>
+                2. Create a project → Enable <strong>Google Drive API</strong><br>
+                3. OAuth consent screen → External → add your email as test user<br>
+                4. Credentials → Create OAuth Client ID → <strong>Web application</strong><br>
+                5. Add <strong>Authorised JavaScript origin</strong>: the full path to this HTML file (e.g. <code>file://</code> won't work — host it on a simple local server or use GitHub Pages)<br>
+                6. Paste Client ID above and save settings<br>
+                <em>Tip: For local use, run <code>npx serve .</code> in the folder and use http://localhost:3000</em>
+              </div>
+            </details>
+          </div>
+          <div class="cg"><div class="cl">Anthropic API key (AI email generation)</div><input class="ci" id="s-key" type="password" placeholder="sk-ant-..." oninput="syncKey()"></div>
+          <div style="display:flex;gap:7px;margin-top:4px">
+            <button class="btn btn-p" onclick="saveSettings()" style="flex:1">Save all settings</button>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:9px">Live preview</div>
+          <div style="background:var(--bg2);border:.5px solid var(--brd);border-radius:var(--rl);padding:18px;text-align:center">
+            <div id="bp-ico" style="width:50px;height:50px;border-radius:11px;margin:0 auto 9px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:#fff;background:#1D9E75">IC</div>
+            <div style="font-size:15px;font-weight:700;margin-bottom:2px" id="bp-nm">ImpactCRM</div>
+            <div style="font-size:11px;color:var(--tx2)" id="bp-tg">NGO Partner Suite</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- PIPELINE -->
+    <div class="page" id="page-pipeline">
+      <div class="pl-view-toggle">
+        <button class="pl-vbtn active" id="pl-kanban-btn" onclick="switchPipelineView('kanban')">Kanban board</button>
+        <button class="pl-vbtn" id="pl-list-btn" onclick="switchPipelineView('list')">Due list</button>
+      </div>
+      <div id="pipeline-kanban"></div>
+      <div id="pipeline-due" style="display:none">
+        <div style="font-size:12px;font-weight:600;margin-bottom:10px">Follow-ups due</div>
+        <div id="due-list"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- COMPANY MODAL -->
+<div class="modal-bg" id="co-modal">
+  <div class="modal">
+    <h3 id="com-ttl">Add company</h3>
+    <div class="fg2"><div class="cg"><div class="cl">Company name *</div><input class="ci" id="com-name" placeholder="e.g. Erste Bank"><datalist id="dl-ind-c"></datalist></div><div class="cg"><div class="cl">Industry</div><input class="ci" id="com-ind" placeholder="e.g. Banking" list="dl-ind-c"></div></div>
+    <div class="fg2"><div class="cg"><div class="cl">Partnership type</div><select class="ci fs" id="com-type" style="width:100%"><option value="Business">Business partner</option><option value="CSR">CSR partner</option><option value="Civil">Civil partner</option><option value="Other">Other</option></select></div><div class="cg"><div class="cl">Culture readiness</div><select class="ci fs" id="com-cult" style="width:100%"><option value="">—</option><option>Mature</option><option>Promising</option><option>Novice</option><option>Unknown</option><option>Hostile</option></select></div></div>
+    <div class="fg3"><div class="cg"><div class="cl">Headcount (HU)</div><input class="ci" id="com-hc" placeholder="e.g. 500"></div><div class="cg"><div class="cl">Rehab fee (M HUF)</div><input class="ci" id="com-rf" placeholder="e.g. 58.0"></div><div class="cg"><div class="cl">Last touchpoint</div><input class="ci" type="date" id="com-touch"></div></div>
+    <div class="fg2"><div class="cg"><div class="cl">Pipeline stage</div><select class="ci fs" id="com-stage" style="width:100%"><option value="prospecting">Prospecting</option><option value="offer_sent">Offer sent</option><option value="negotiation">Negotiation</option><option value="active">Active partner</option><option value="dormant">Dormant</option><option value="closed_lost">Closed / lost</option></select></div><div class="cg"><div class="cl">Next action date</div><input class="ci" type="date" id="com-na-date"></div></div>
+    <div class="cg"><div class="cl">Next action note</div><input class="ci" id="com-na-note" placeholder="e.g. Follow up on proposal, Call to confirm interest…"></div>
+    <div class="cg"><div class="cl">Website</div><input class="ci" id="com-web" placeholder="https://…"></div>
+    <div class="cg"><div class="cl">ESG / sustainability notes</div><input class="ci" id="com-esg" placeholder="e.g. Environmental, ESG / Sustainable finance…"></div>
+    <div class="cg"><div class="cl">Tags (comma-separated)</div><input class="ci" id="com-tags" placeholder="e.g. rehab, training, priority, banking"></div>
+    <div class="cg"><div class="cl">Internal notes</div><textarea class="ci" id="com-notes" style="min-height:54px" placeholder="Notes about this company…"></textarea></div>
+    <input type="hidden" id="com-idx" value="-1">
+    <div class="modal-ft"><button class="btn btn-del" id="com-del" onclick="deleteCo()" style="margin-right:auto;display:none">Delete company</button><button class="btn" onclick="closeCoModal()">Cancel</button><button class="btn btn-p" onclick="saveCo()">Save company</button></div>
+  </div>
+</div>
+
+<!-- PERSON MODAL -->
+<div class="modal-bg" id="p-modal">
+  <div class="modal" style="width:480px">
+    <h3 id="pm-ttl">Add contact person</h3>
+    <div class="fg2"><div class="cg"><div class="cl">First name</div><input class="ci" id="pm-fn" placeholder="Anna"></div><div class="cg"><div class="cl">Last name / surname *</div><input class="ci" id="pm-ln" placeholder="Kovács"></div></div>
+    <div class="cg"><div class="cl">Position / title</div><input class="ci" id="pm-pos" placeholder="HR Manager"></div>
+    <div class="fg2"><div class="cg"><div class="cl">Email</div><input class="ci" id="pm-em" type="email" placeholder="anna@company.com"></div><div class="cg"><div class="cl">Phone</div><input class="ci" id="pm-ph" placeholder="+36 20 123 4567"></div></div>
+    <div class="fg2"><div class="cg"><div class="cl">Outreach status</div><select class="ci fs" id="pm-st" style="width:100%"><option value="">Not contacted</option><option value="offer_sent">Offer sent</option><option value="email_sent">Email sent</option><option value="followup_sent">Follow-up sent</option><option value="replied">Replied</option><option value="meeting">Meeting scheduled</option><option value="off">Closed / off</option></select></div><div class="cg"><div class="cl">MMK needed</div><input class="ci" id="pm-mmk" placeholder="e.g. 25"></div></div>
+    <div class="cg"><div class="cl">Notes</div><textarea class="ci" id="pm-notes" style="min-height:54px" placeholder="Notes about this person…"></textarea></div>
+    <input type="hidden" id="pm-co-idx" value="-1">
+    <input type="hidden" id="pm-p-idx" value="-1">
+    <div class="modal-ft"><button class="btn btn-del" id="pm-del" onclick="deletePerson()" style="margin-right:auto;display:none">Delete</button><button class="btn" onclick="closePModal()">Cancel</button><button class="btn btn-p" onclick="savePerson()">Save person</button></div>
+  </div>
+</div>
+
+<!-- CONTACT PICKER MODAL -->
+<div class="modal-bg" id="picker-modal">
+  <div class="modal" style="width:640px">
+    <h3 id="picker-ttl">Add recipients from contacts</h3>
+    <div class="fr" style="margin-bottom:10px">
+      <input class="si" type="text" id="picker-q" placeholder="Search name, company, email…" oninput="renderPicker()">
+      <select class="fs" id="picker-type" onchange="renderPicker()"><option value="">All types</option><option value="Business">Business</option><option value="CSR">CSR</option><option value="Civil">Civil</option></select>
+      <select class="fs" id="picker-status" onchange="renderPicker()"><option value="">All statuses</option><option value="none">Not contacted</option><option value="offer_sent">Offer sent</option><option value="email_sent">Email sent</option><option value="followup_sent">Follow-up sent</option><option value="replied">Replied</option><option value="off">Closed / off</option></select>
+      <select class="fs" id="picker-ind" onchange="renderPicker()"><option value="">All industries</option></select>
+    </div>
+    <div style="display:flex;gap:7px;margin-bottom:8px"><button class="btn btn-sm" onclick="pickerSelectAll()">Select all visible</button><button class="btn btn-sm" onclick="pickerClear()">Clear</button><span style="font-size:11px;color:var(--tx2);align-self:center" id="picker-sel-count"></span></div>
+    <div id="picker-list" style="max-height:320px;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;gap:6px"></div>
+    <div style="font-size:10px;color:var(--tx3);margin-top:6px">Contacts without an email address are shown greyed out and cannot be selected.</div>
+    <div class="modal-ft"><button class="btn" onclick="closePickerModal()">Cancel</button><button class="btn btn-p" onclick="applyPicker()">Add selected recipients ↗</button></div>
+  </div>
+</div>
+
+<!-- BULK STATUS MODAL -->
+<div class="modal-bg" id="bulk-status-modal">
+  <div class="modal" style="width:380px">
+    <h3>Set outreach status</h3>
+    <div style="font-size:12px;color:var(--tx2);margin-bottom:12px" id="bulk-status-info"></div>
+    <div class="cg"><div class="cl">New status for all selected contacts</div>
+      <select class="ci fs" id="bulk-status-sel" style="width:100%"><option value="">Not contacted</option><option value="offer_sent">Offer sent</option><option value="email_sent">Email sent</option><option value="followup_sent">Follow-up sent</option><option value="replied">Replied</option><option value="meeting">Meeting scheduled</option><option value="off">Closed / off</option></select>
+    </div>
+    <div class="modal-ft"><button class="btn" onclick="closeBulkStatus()">Cancel</button><button class="btn btn-p" onclick="applyBulkStatus()">Apply status</button></div>
+  </div>
+</div>
+
+<!-- TEMPLATE MODAL -->
+<div class="modal-bg" id="tmpl-modal">
+  <div class="modal" style="width:580px">
+    <h3 id="tm-ttl">New template</h3>
+    <div class="fg2"><div class="cg"><div class="cl">Name *</div><input class="ci" id="tm-name" placeholder="e.g. Cold outreach — CSR"></div><div class="cg"><div class="cl">Type</div><select class="ci fs" id="tm-type" style="width:100%"><option>Cold outreach</option><option>Follow-up</option><option>Fundraising</option><option>Service offer</option><option>Newsletter</option><option>Holiday wishes</option><option>Annual report</option><option>Thank you</option><option>Custom</option></select></div></div>
+    <div class="fg2"><div class="cg"><div class="cl">Language</div><select class="ci fs" id="tm-lang" style="width:100%"><option value="en">English</option><option value="hu">Magyar</option><option value="both">Both</option></select></div><div class="cg"><div class="cl">Tags</div><input class="ci" id="tm-tags" placeholder="e.g. csr, rehab, banking"></div></div>
+    <div class="cg"><div class="cl">Subject</div><input class="ci" id="tm-subj" placeholder="Subject with {placeholders}…" oninput="updTmPrev()"></div>
+    <div class="cg">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><div class="cl" style="margin-bottom:0">Body</div>
+        <div class="chips" style="gap:4px">
+          <button class="ph-btn" onclick="iPH('tm-body','{first_name}')">first_name</button>
+          <button class="ph-btn" onclick="iPH('tm-body','{last_name}')">last_name</button>
+          <button class="ph-btn" onclick="iPH('tm-body','{company}')">company</button>
+          <button class="ph-btn" onclick="iPH('tm-body','{position}')">position</button>
+          <button class="ph-btn" onclick="iPH('tm-body','{your_org}')">your_org</button>
+          <button class="ph-btn" onclick="iPH('tm-body','{mmk_count}')">mmk_count</button>
+          <button class="ph-btn" onclick="iPH('tm-body','{rehab_fee}')">rehab_fee</button>
+          <button class="ph-btn" onclick="iPH('tm-body','{sender_name}')">sender_name</button>
+        </div>
+      </div>
+      <textarea class="ci" id="tm-body" style="min-height:150px;font-family:var(--fm);font-size:11px;line-height:1.7" placeholder="Template body…" oninput="updTmPrev()"></textarea>
+    </div>
+    <div class="cg"><div class="cl">Preview</div><div class="prev-box"><div class="prev-subj" id="tm-prev-subj" style="margin-bottom:4px;font-size:11px"></div><div class="prev-body" id="tm-prev-body" style="font-size:10px"></div></div></div>
+    <input type="hidden" id="tm-idx" value="-1">
+    <div class="modal-ft"><button class="btn btn-del" id="tm-del" onclick="deleteTmpl()" style="margin-right:auto;display:none">Delete</button><button class="btn" onclick="closeTmplModal()">Cancel</button><button class="btn btn-p" onclick="saveTmpl()">Save template</button></div>
+  </div>
+</div>
+
+
+<!-- ACTIVITY LOG MODAL -->
+<div class="modal-bg" id="act-modal">
+  <div class="modal" style="width:520px">
+    <h3 id="act-modal-ttl">Activity log</h3>
+    <div id="act-modal-feed" style="max-height:300px;overflow-y:auto;margin-bottom:12px"></div>
+    <!-- Quick add -->
+    <div style="border-top:.5px solid var(--brd);padding-top:12px">
+      <div class="cl" style="margin-bottom:7px">Log new activity</div>
+      <div class="act-quick" style="padding:0;background:transparent;margin-bottom:8px">
+        <button class="act-type-btn sel" data-type="note" onclick="selActType(this)">📝 Note</button>
+        <button class="act-type-btn" data-type="call" onclick="selActType(this)">📞 Call</button>
+        <button class="act-type-btn" data-type="meeting" onclick="selActType(this)">🤝 Meeting</button>
+        <button class="act-type-btn" data-type="email" onclick="selActType(this)">📧 Email sent</button>
+        <button class="act-type-btn" data-type="reply" onclick="selActType(this)">↩ Reply received</button>
+        <button class="act-type-btn" data-type="win" onclick="selActType(this)">🎉 Partnership won</button>
+      </div>
+      <textarea class="ci" id="act-text" placeholder="What happened? Who was involved? Any outcomes…" style="min-height:62px"></textarea>
+      <div style="display:flex;gap:7px;margin-top:8px;align-items:center">
+        <input type="date" class="ci" id="act-date" style="width:150px">
+        <button class="btn btn-p" style="flex:1" onclick="saveActivity()">Add to log</button>
+      </div>
+    </div>
+    <input type="hidden" id="act-co-idx" value="-1">
+    <div class="modal-ft" style="padding-top:8px">
+      <button class="btn" onclick="closeActModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEXT ACTION MODAL -->
+<div class="modal-bg" id="na-modal">
+  <div class="modal" style="width:400px">
+    <h3 id="na-modal-ttl">Set next action</h3>
+    <div class="cg"><div class="cl">Due date</div><input class="ci" type="date" id="na-date"></div>
+    <div class="cg"><div class="cl">What needs to happen?</div><input class="ci" id="na-note" placeholder="e.g. Follow up on proposal, Call to confirm meeting…"></div>
+    <div class="cg"><div class="cl">Assigned to</div><input class="ci" id="na-owner" placeholder="e.g. Your name"></div>
+    <input type="hidden" id="na-co-idx" value="-1">
+    <div class="modal-ft">
+      <button class="btn btn-del" id="na-clear" onclick="clearNextAction()" style="margin-right:auto">Clear reminder</button>
+      <button class="btn" onclick="closeNAModal()">Cancel</button>
+      <button class="btn btn-p" onclick="saveNextAction()">Save reminder</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+// ═══════════════ DATA ═══════════════
+const D_COMPANIES=JSON.parse(`[{"name":"ALDI","industry":"Retail","type":"CSR","culture":"Unknown","headcount":"6000","rehab_fee":"696","last_touchpoint":"2020-07-23","website":"https://www.aldi.hu/hu/homepage.html","esg":"Environmental","status_note":"","tags":"","notes":"ALDI SOUTH Group set science-based climate targets in 2024.","people":[{"fname":"Orsolya","lname":"Mikola","pos":"Area Manager","email":"orsolya.mikola@aldi.hu","phone":"","status":"offer_sent","mmk":"","notes":"nem jó az email · mehet, még nem küldtünk semmit"}]},{"name":"Allianz","industry":"Insurance","type":"CSR","culture":"","headcount":"","rehab_fee":"","last_touchpoint":"","website":"","esg":"ESG / Sustainable finance","status_note":"","tags":"","notes":"","people":[{"fname":"Emese","lname":"Pályu","pos":"HR, toborzás, kiválasztás","email":"","phone":"","status":"email_sent","mmk":"","notes":"kaptak ajánlatot dec 4-én, followup szükséges"},{"fname":"Hajnalka","lname":"Szigeti-Bodnár","pos":"HR, toborzás, kiválasztás","email":"","phone":"","status":"email_sent","mmk":"","notes":""},{"fname":"Zsófia","lname":"Czéhmester","pos":"Gyakornok","email":"zsofia.czehmester@allianz.hu","phone":"","status":"email_sent","mmk":"","notes":""}]},{"name":"AMC Networks","industry":"Entertainment","type":"Business","culture":"Promising","headcount":"230","rehab_fee":"26.68","last_touchpoint":"2025-10-20","website":"https://www.amcnetworks.com/","esg":"","status_note":"","tags":"","notes":"","people":[]},{"name":"Anda Present","industry":"Manufacturing","type":"Business","culture":"Mature","headcount":"600","rehab_fee":"69.6","last_touchpoint":"2024-07-03","website":"","esg":"","status_note":"","tags":"","notes":"600 fős cég, ~10 MMK munkatárs","people":[]},{"name":"Attrecto","industry":"IT","type":"Business","culture":"Promising","headcount":"61","rehab_fee":"7.08","last_touchpoint":"2026-01-29","website":"https://attrecto.com/about-us/","esg":"","status_note":"P, D, O","tags":"","notes":"","people":[{"fname":"","lname":"","pos":"","email":"lilla.papp@attrecto.com","phone":"","status":"","mmk":"","notes":""},{"fname":"","lname":"","pos":"CEO","email":"shi.robson@attrecto.com","phone":"","status":"","mmk":"","notes":""}]},{"name":"Babka Budapest","industry":"Hospitality","type":"Business","culture":"Promising","headcount":"31","rehab_fee":"3.60","last_touchpoint":"2025-07-25","website":"https://www.babkabudapest.hu/","esg":"","status_note":"","tags":"","notes":"","people":[{"fname":"","lname":"","pos":"","email":"attila@babkabudapest.hu","phone":"","status":"","mmk":"","notes":""},{"fname":"","lname":"","pos":"HR","email":"reka@babkabudapest.hu","phone":"","status":"","mmk":"","notes":""}]},{"name":"Baker Hughes","industry":"Energy","type":"CSR","culture":"Unknown","headcount":"500","rehab_fee":"58","last_touchpoint":"2021-05-18","website":"https://www.bakerhughes.com/","esg":"Environmental","status_note":"","tags":"","notes":"","people":[{"fname":"Repnik-Gyorki","lname":"Mariann","pos":"HR Partner","email":"mariann.repnik-gyoerki@bakerhughes.com","phone":"","status":"followup_sent","mmk":"13","notes":"JD küldenek ők, de majd jövőre kapcsolódunk"}]},{"name":"BCG","industry":"Consulting","type":"Business","culture":"Promising","headcount":"150","rehab_fee":"17.4","last_touchpoint":"2023-07-24","website":"https://www.bcg.com/hungary","esg":"Environmental","status_note":"","tags":"","notes":"DEI, akadálymentesség globálisan","people":[]},{"name":"BCSDH","industry":"Business community","type":"Business","culture":"Unknown","headcount":"-","rehab_fee":"","last_touchpoint":"2024-04-09","website":"https://bcsdh.hu/","esg":"","status_note":"","tags":"","notes":"","people":[]},{"name":"Biotech USA","industry":"Food","type":"CSR","culture":"Promising","headcount":"1663","rehab_fee":"192.91","last_touchpoint":"2026-03-24","website":"www.biotechusa.hu","esg":"","status_note":"","tags":"csr","notes":"Head of CSR kapcsolat","people":[{"fname":"","lname":"","pos":"Head of CSR","email":"pinter.daniel@biotechusa.com","phone":"","status":"","mmk":"","notes":""},{"fname":"","lname":"","pos":"","email":"halasz.adrienn@biotechusa.com","phone":"","status":"","mmk":"","notes":""}]},{"name":"Bourns","industry":"Manufacturing","type":"CSR","culture":"Unknown","headcount":"638","rehab_fee":"74.01","last_touchpoint":"2023-04-20","website":"https://bourns.hu/","esg":"","status_note":"","tags":"","notes":"","people":[{"fname":"Hajnalka","lname":"Rózsás","pos":"HR Manager","email":"hajnalka.rozsas@bourns.com","phone":"","status":"followup_sent","mmk":"25","notes":"már kaptak"}]},{"name":"BTA","industry":"Consulting","type":"Business","culture":"Promising","headcount":"3","rehab_fee":"0","last_touchpoint":"2023-07-15","website":"https://bta.co.hu/hu/","esg":"","status_note":"","tags":"","notes":"","people":[]},{"name":"Calzedonia","industry":"Retail","type":"Business","culture":"Promising","headcount":"400","rehab_fee":"46.4","last_touchpoint":"2024-01-16","website":"","esg":"","status_note":"","tags":"","notes":"","people":[{"fname":"Ágnes","lname":"Nyester","pos":"HR vezető","email":"agnes.nyester@calzedonia.hu","phone":"","status":"","mmk":"","notes":""}]},{"name":"CCC","industry":"Retail","type":"Business","culture":"Promising","headcount":"744","rehab_fee":"86.30","last_touchpoint":"2025-08-15","website":"https://ccc.eu/hu/","esg":"","status_note":"","tags":"","notes":"Modivo, Half Price is hozzájuk tartozik","people":[{"fname":"","lname":"","pos":"HR admin manager","email":"szilvia.szabo@ccc.eu","phone":"","status":"email_sent","mmk":"","notes":""},{"fname":"","lname":"","pos":"HR business partner","email":"orsolya.poczik@ccc.eu","phone":"","status":"","mmk":"","notes":""}]},{"name":"CIB Bank","industry":"Banking","type":"CSR","culture":"Mature","headcount":"2295","rehab_fee":"266.22","last_touchpoint":"2026-03-05","website":"https://www.cib.hu/","esg":"","status_note":"","tags":"csr,banking","notes":"","people":[{"fname":"Ádám","lname":"Szinai","pos":"Marketingkommunikáció és PR vezető","email":"szinai.adam@cib.hu","phone":"","status":"offer_sent","mmk":"87","notes":"27-én küldeni"}]},{"name":"Clario","industry":"Healthcare","type":"Business","culture":"Promising","headcount":"130","rehab_fee":"15.08","last_touchpoint":"2025-06-03","website":"https://clario.com/","esg":"","status_note":"","tags":"","notes":"280 → 500 főre duzzadnak 2027-re","people":[{"fname":"","lname":"","pos":"","email":"agnes.schwarzenberger@clario.com","phone":"","status":"","mmk":"","notes":""},{"fname":"","lname":"","pos":"","email":"alma.borbas@clario.com","phone":"","status":"","mmk":"","notes":""}]},{"name":"Concorde","industry":"Banking","type":"Business","culture":"Mature","headcount":"141","rehab_fee":"16.36","last_touchpoint":"2026-03-05","website":"https://www.con.hu/","esg":"","status_note":"","tags":"","notes":"Erős CSR támogatói rendszer","people":[{"fname":"Norbert","lname":"Kokas","pos":"Média- és partnerkapcsolati vezető","email":"n.kokas@con.hu","phone":"+36 1 489 2373","status":"","mmk":"","notes":""}]},{"name":"Cushman & Wakefield","industry":"Real Estate","type":"Business","culture":"Novice","headcount":"480","rehab_fee":"55.68","last_touchpoint":"2025-10-10","website":"https://www.cushmanwakefield.com/en/hungary","esg":"","status_note":"","tags":"","notes":"Nem szeretnének diszkrimitatív narratívát","people":[{"fname":"","lname":"","pos":"","email":"gergely.pados@eur.cushwake.com","phone":"","status":"email_sent","mmk":"","notes":""},{"fname":"","lname":"","pos":"","email":"orsolya.hegedus@eur.cushwake.com","phone":"","status":"","mmk":"","notes":""},{"fname":"","lname":"","pos":"","email":"Orsolya.Nemeth@eur.cushwake.com","phone":"","status":"","mmk":"","notes":""},{"fname":"","lname":"","pos":"","email":"zsuzsanna.kiss@eur.cushwake.com","phone":"","status":"","mmk":"","notes":""}]},{"name":"Datapao","industry":"IT services","type":"Business","culture":"Novice","headcount":"48","rehab_fee":"5.57","last_touchpoint":"2025-11-11","website":"https://datapao.com/","esg":"","status_note":"","tags":"","notes":"","people":[{"fname":"","lname":"Muresan","pos":"Head of People","email":"andrei.muresan@datapao.com","phone":"","status":"","mmk":"","notes":""}]},{"name":"Decathlon","industry":"Retail","type":"Business","culture":"Mature","headcount":"100","rehab_fee":"11.6","last_touchpoint":"2025-09-23","website":"https://www.decathlon.hu/","esg":"Environmental","status_note":"","tags":"","notes":"Látássérültek foglalkoztatása felmerült","people":[{"fname":"","lname":"","pos":"HR","email":"csaba.vida@decathlon.com","phone":"","status":"email_sent","mmk":"","notes":""},{"fname":"","lname":"","pos":"HR","email":"helga.buzahegyesi@decathlon.com","phone":"","status":"","mmk":"","notes":""}]},{"name":"Deloitte","industry":"Professional services","type":"Business","culture":"","headcount":"913","rehab_fee":"105.91","last_touchpoint":"2026-03-10","website":"https://www.deloitte.com/","esg":"Environmental","status_note":"","tags":"consulting","notes":"","people":[{"fname":"","lname":"","pos":"","email":"rszucs@deloittece.com","phone":"","status":"email_sent","mmk":"","notes":""},{"fname":"","lname":"","pos":"","email":"pgondocz@deloittece.com","phone":"","status":"","mmk":"","notes":""},{"fname":"","lname":"","pos":"","email":"tzemelenyi@deloittece.com","phone":"","status":"","mmk":"","notes":""}]},{"name":"Deutsche Telekom IT Solutions","industry":"IT services","type":"Business","culture":"","headcount":"5500","rehab_fee":"638","last_touchpoint":"","website":"deutschetelekomitsolutions.hu","esg":"Environmental","status_note":"","tags":"telecom,IT","notes":"","people":[]},{"name":"Diageo","industry":"Beverages","type":"Business","culture":"Mature","headcount":"1454","rehab_fee":"168.66","last_touchpoint":"2026-03-10","website":"https://www.diageo.com/en","esg":"Environmental","status_note":"","tags":"","notes":"","people":[{"fname":"","lname":"","pos":"HR","email":"szabina.somogyvary.pelcz@diageo.com","phone":"","status":"email_sent","mmk":"","notes":""},{"fname":"","lname":"","pos":"HR","email":"monika.pais@diageo.com","phone":"","status":"","mmk":"","notes":""}]},{"name":"DHL Express","industry":"Logistics","type":"Business","culture":"","headcount":"383","rehab_fee":"44.43","last_touchpoint":"","website":"https://www.dhl.com/hu-en/","esg":"Environmental","status_note":"","tags":"","notes":"","people":[{"fname":"","lname":"","pos":"","email":"monika.gacsi@dhl.com","phone":"","status":"","mmk":"","notes":""}]},{"name":"Dome Group","industry":"Real Estate","type":"Business","culture":"Promising","headcount":"525","rehab_fee":"60.9","last_touchpoint":"2025-09-19","website":"https://dome.hu/","esg":"","status_note":"","tags":"","notes":"Niki senior HR generalista is MMK ember","people":[{"fname":"","lname":"","pos":"","email":"ruzsinszki.liliana@dome.hu","phone":"","status":"","mmk":"","notes":""},{"fname":"","lname":"","pos":"","email":"egeto-demeter.nikoletta@dome.hu","phone":"","status":"","mmk":"","notes":""}]},{"name":"E.ON","industry":"Energy","type":"CSR","culture":"Promising","headcount":"468","rehab_fee":"54.29","last_touchpoint":"2025-09-15","website":"http://www.eon-hungaria.com/","esg":"Environmental","status_note":"","tags":"energy","notes":"Inkluzív vezetői tréning folyamatban","people":[{"fname":"","lname":"Kemény","pos":"HR Contact","email":"peter.kemeny@eon-hungaria.com","phone":"","status":"email_sent","mmk":"","notes":""}]},{"name":"Erste Bank","industry":"Banking","type":"CSR","culture":"Mature","headcount":"3700","rehab_fee":"429.2","last_touchpoint":"2025-12-01","website":"www.erste.hu","esg":"ESG / Sustainable finance","status_note":"","tags":"banking,csr,priority","notes":"Kockacsoki, Napraforgó, Incorpora partnerségek","people":[{"fname":"Orsolya","lname":"Szalay","pos":"Social Banking","email":"orsolya.szalay@erstebank.hu","phone":"","status":"email_sent","mmk":"121","notes":"februárban írni · kaptak ajánlatot"},{"fname":"Gábor Pál","lname":"Vecsei","pos":"Social Banking","email":"gaborpal.vecsei@erstebank.hu","phone":"","status":"email_sent","mmk":"","notes":"februárban írni"}]},{"name":"EUJobs HR Group","industry":"HR services","type":"Business","culture":"Unknown","headcount":"502","rehab_fee":"58.23","last_touchpoint":"2022-09-15","website":"eujobshrgroup.hu","esg":"","status_note":"","tags":"","notes":"","people":[{"fname":"","lname":"","pos":"","email":"bianka.szokol@eujobshrgroup.hu","phone":"","status":"","mmk":"","notes":""}]},{"name":"Eurolife","industry":"Healthcare","type":"CSR","culture":"Unknown","headcount":"3","rehab_fee":"0","last_touchpoint":"2022-07-13","website":"eurolifehealthcare.com","esg":"","status_note":"","tags":"","notes":"","people":[{"fname":"Dóra","lname":"Maul","pos":"HR Generalist","email":"doramaul@eurolifehealthcare.com","phone":"","status":"followup_sent","mmk":"","notes":"nem aktuális · régen kaptak már"}]},{"name":"Europ Assistance","industry":"Insurance","type":"CSR","culture":"Unknown","headcount":"145","rehab_fee":"16.82","last_touchpoint":"2023-04-11","website":"europ-assistance.hu","esg":"","status_note":"","tags":"","notes":"","people":[{"fname":"Marina","lname":"Ilic","pos":"HR & Internal Communication","email":"marina.ilic@europ-assistance.hu","phone":"","status":"offer_sent","mmk":"","notes":"angolul mehet"}]},{"name":"evosoft","industry":"IT services","type":"CSR","culture":"Promising","headcount":"1698","rehab_fee":"196.97","last_touchpoint":"2026-01-19","website":"evosoft.hu","esg":"","status_note":"","tags":"IT","notes":"","people":[{"fname":"Daniella","lname":"Lukács","pos":"Recruitment","email":"daniella.lukacs@evosoft.com","phone":"","status":"followup_sent","mmk":"73","notes":"mehet, még nem kaptak"},{"fname":"Ágnes","lname":"György","pos":"Head of HR","email":"agnes.gyorgy@evosoft.com","phone":"","status":"followup_sent","mmk":"","notes":""}]},{"name":"EY","industry":"Professional services","type":"Business","culture":"Mature","headcount":"1245","rehab_fee":"144.42","last_touchpoint":"2025-02-27","website":"ey.com/hu_hu","esg":"Environmental","status_note":"","tags":"consulting","notes":"","people":[{"fname":"","lname":"Gömöri","pos":"HR Contact","email":"boglarka.gomori@hu.ey.com","phone":"","status":"","mmk":"","notes":""}]},{"name":"Focusconsulting","industry":"HR services","type":"Business","culture":"","headcount":"22","rehab_fee":"0","last_touchpoint":"2025-04-09","website":"focusconsulting.hu","esg":"","status_note":"","tags":"","notes":"","people":[{"fname":"","lname":"","pos":"","email":"eva.domjan@focusconsulting.hu","phone":"","status":"","mmk":"","notes":""}]},{"name":"Fressnapf","industry":"Retail","type":"Business","culture":"Unknown","headcount":"548","rehab_fee":"63.57","last_touchpoint":"2024-10-09","website":"fressnapf.hu","esg":"","status_note":"","tags":"","notes":"","people":[]},{"name":"Generali","industry":"Insurance","type":"CSR","culture":"Promising","headcount":"542","rehab_fee":"62.87","last_touchpoint":"2024-10-01","website":"https://www.generali.hu/","esg":"ESG / Sustainable finance","status_note":"","tags":"insurance,csr","notes":"2in1 megoldást keresnek","people":[{"fname":"Éva","lname":"Gerendás","pos":"Head of Talent","email":"eva.gerendas@generali.com","phone":"","status":"offer_sent","mmk":"","notes":""},{"fname":"Tímea","lname":"Krecz","pos":"Talent Management","email":"timea.krecz@generali.com","phone":"","status":"offer_sent","mmk":"52","notes":"P. Sári rajta van · HR brunch"},{"fname":"","lname":"","pos":"","email":"patricia.makay-rupp@generali.com","phone":"","status":"","mmk":"","notes":""}]},{"name":"Givaudan","industry":"Food","type":"CSR","culture":"Mature","headcount":"600","rehab_fee":"69.6","last_touchpoint":"2025-11-04","website":"https://www.givaudan.com/","esg":"Environmental","status_note":"","tags":"food,training","notes":"Érzékenyítő tréning folyamatban","people":[{"fname":"Krisztina","lname":"Varga","pos":"HR Generalist","email":"krisztina.varga@givaudan.com","phone":"","status":"followup_sent","mmk":"24","notes":"Januárban újra keresni!"},{"fname":"Dóra","lname":"Fodor","pos":"HR","email":"dora.fodor@givaudan.com","phone":"","status":"followup_sent","mmk":"","notes":"mehet"}]},{"name":"Grundfos","industry":"Engineering","type":"CSR","culture":"Mature","headcount":"","rehab_fee":"","last_touchpoint":"2026","website":"www.grundfos.hu","esg":"Environmental","status_note":"","tags":"DEI","notes":"Előrehaladottak szemléletben","people":[{"fname":"Dóra","lname":"Deák","pos":"Sr. DE&I Specialist","email":"ddeak@grundfos.com","phone":"","status":"followup_sent","mmk":"85","notes":"2024ben felvenni a fonalat"}]},{"name":"HSA Group","industry":"HR services","type":"Business","culture":"Unknown","headcount":"953","rehab_fee":"110.55","last_touchpoint":"2023-06-20","website":"https://hsa.hu/rolunk/","esg":"","status_note":"","tags":"","notes":"","people":[]},{"name":"IBM","industry":"IT","type":"CSR","culture":"Promising","headcount":"1499","rehab_fee":"173.88","last_touchpoint":"2024-05-17","website":"www.ibm.com","esg":"Environmental","status_note":"","tags":"IT,tech","notes":"","people":[{"fname":"Alexandra","lname":"Basic","pos":"Employee Concerns Partner","email":"Alexandra.Basic2@hu.ibm.com","phone":"","status":"followup_sent","mmk":"13","notes":"FOLLOW UP+LinkedIn · várjunk picit"}]},{"name":"Idomsoft digitális","industry":"IT","type":"CSR","culture":"","headcount":"","rehab_fee":"","last_touchpoint":"","website":"","esg":"","status_note":"","tags":"","notes":"","people":[{"fname":"Norbert","lname":"Pap","pos":"Senior Director, Product Design","email":"norbert@norbertpap.com","phone":"","status":"followup_sent","mmk":"27","notes":"2024 Q1/Q2-ben lesz aktuális · mehet"}]},{"name":"IKEA","industry":"Retail","type":"Business","culture":"Mature","headcount":"1694","rehab_fee":"196.5","last_touchpoint":"2026-03-06","website":"www.ikea.hu","esg":"Environmental","status_note":"","tags":"retail","notes":"","people":[{"fname":"","lname":"","pos":"HR","email":"attila.balint@ingka.ikea.com","phone":"","status":"","mmk":"","notes":""},{"fname":"","lname":"","pos":"HR","email":"agnes.szaloki@ingka.ikea.com","phone":"","status":"","mmk":"","notes":""}]},{"name":"ING Bank","industry":"Banking","type":"Business","culture":"Promising","headcount":"136","rehab_fee":"15.78","last_touchpoint":"2025-12-03","website":"www.ing.com","esg":"ESG / Sustainable finance","status_note":"","tags":"banking","notes":"e-learning projekt","people":[{"fname":"","lname":"Papp","pos":"HR","email":"cecilia.papp@ing.com","phone":"","status":"email_sent","mmk":"","notes":""},{"fname":"","lname":"Németh","pos":"HR","email":"zsofia.nemeth@ing.com","phone":"","status":"","mmk":"","notes":""}]},{"name":"K&H Bank","industry":"Banking","type":"CSR","culture":"","headcount":"4000","rehab_fee":"464","last_touchpoint":"2026-03-10","website":"https://www.kh.hu/","esg":"ESG / Sustainable finance","status_note":"","tags":"banking","notes":"","people":[{"fname":"","lname":"Medvey","pos":"HR Contact","email":"leila.medvey@kh.hu","phone":"","status":"email_sent","mmk":"","notes":""}]},{"name":"KSH","industry":"Governmental","type":"Business","culture":"Unknown","headcount":"1050","rehab_fee":"121.8","last_touchpoint":"2026-02-26","website":"www.ksh.hu","esg":"","status_note":"P1","tags":"","notes":"Cold outreach emailen","people":[{"fname":"Gabriella","lname":"Bihari","pos":"HR osztályvezető","email":"Gabriella.Bihari@ksh.hu","phone":"","status":"","mmk":"","notes":""}]},{"name":"Laba","industry":"Education","type":"Business","culture":"Mature","headcount":"61","rehab_fee":"7.08","last_touchpoint":"2026-03-05","website":"l-a-b-a.hu","esg":"","status_note":"","tags":"","notes":"","people":[]},{"name":"Lexmark","industry":"IT","type":"Business","culture":"Mature","headcount":"375","rehab_fee":"43.5","last_touchpoint":"2020-01-30","website":"https://www.lexmark.com/","esg":"Environmental","status_note":"","tags":"","notes":"","people":[{"fname":"Ágnes","lname":"Katona","pos":"HR vezető","email":"agnes.katona@lexmark.com","phone":"","status":"","mmk":"","notes":""},{"fname":"Noémi","lname":"Karajz","pos":"HR business partner","email":"noemi.karajz@lexmark.com","phone":"+36 30 683 1504","status":"","mmk":"","notes":""}]},{"name":"Linde","industry":"Chemical industry","type":"Business","culture":"Promising","headcount":"460","rehab_fee":"53.36","last_touchpoint":"2023-03-16","website":"https://www.lindegas.hu/","esg":"Environmental","status_note":"","tags":"","notes":"","people":[]},{"name":"Magnet Bank","industry":"Banking","type":"CSR","culture":"Promising","headcount":"422","rehab_fee":"48.95","last_touchpoint":"2025-05-20","website":"https://www.magnetbank.hu/","esg":"","status_note":"","tags":"banking,sustainability","notes":"Barna Éra civil háttérből érkező fenntarthatósági vezető","people":[{"fname":"Erika","lname":"Barna","pos":"Sustainability Lead","email":"barna.erika@magnetbank.hu","phone":"+36 20 297 8308","status":"email_sent","mmk":"","notes":""},{"fname":"Klára","lname":"Wéber","pos":"HR vezető","email":"weber.klara@magnetbank.hu","phone":"","status":"","mmk":"","notes":""}]},{"name":"Magyar Posta","industry":"Logistics","type":"Business","culture":"","headcount":"31843","rehab_fee":"3693.79","last_touchpoint":"2020","website":"https://posta.hu/","esg":"","status_note":"","tags":"","notes":"Az ország egyik legnagyobb rehab foglalkoztatója","people":[{"fname":"Éva","lname":"Podmaniczky","pos":"HR","email":"Podmaniczky.Eva@posta.hu","phone":"","status":"","mmk":"","notes":""}]},{"name":"MBH Bank","industry":"Banking","type":"Business","culture":"","headcount":"9064","rehab_fee":"1051.42","last_touchpoint":"2026-03-10","website":"https://www.mbhbank.hu/","esg":"","status_note":"","tags":"banking","notes":"","people":[{"fname":"","lname":"","pos":"","email":"dobi.kitti@mbhbank.hu","phone":"","status":"email_sent","mmk":"","notes":""}]},{"name":"MediaMarkt","industry":"Retail","type":"Business","culture":"Mature","headcount":"1447","rehab_fee":"167.85","last_touchpoint":"2025-11-01","website":"https://www.mediamarkt.hu","esg":"","status_note":"","tags":"retail","notes":"","people":[{"fname":"","lname":"","pos":"HR vezető","email":"gasparfe@media-saturn.com","phone":"","status":"","mmk":"","notes":""},{"fname":"","lname":"","pos":"HR BP","email":"maczeovics-a@media-saturn.com","phone":"","status":"","mmk":"","notes":""}]},{"name":"MOL","industry":"Energy","type":"CSR","culture":"Mature","headcount":"4731","rehab_fee":"548.8","last_touchpoint":"2025-05-29","website":"https://mol.hu/hu/","esg":"Environmental","status_note":"","tags":"energy,rehab","notes":"Saját rehab rendszerük van","people":[{"fname":"Tímea","lname":"Hadházy","pos":"Employee Relations Expert","email":"THadhazy@mol.hu","phone":"","status":"followup_sent","mmk":"177","notes":"OFF"}]},{"name":"Morgan Stanley","industry":"Finance","type":"Business","culture":"","headcount":"2580","rehab_fee":"299.28","last_touchpoint":"2026-03-10","website":"https://www.morganstanley.com/","esg":"ESG / Sustainable finance","status_note":"","tags":"finance","notes":"","people":[{"fname":"","lname":"Fremda","pos":"HR Contact","email":"balazs.fremda@morganstanley.com","phone":"","status":"email_sent","mmk":"","notes":""}]},{"name":"MSCI","industry":"Finance","type":"Business","culture":"Mature","headcount":"537","rehab_fee":"62.29","last_touchpoint":"2025-07-01","website":"https://www.msci.com/","esg":"","status_note":"","tags":"finance,DEI","notes":"Nagyon érettek, sok DEI kiadás","people":[{"fname":"","lname":"Miklós","pos":"Managing Director","email":"Rozalia.Miklos@msci.com","phone":"","status":"email_sent","mmk":"","notes":""},{"fname":"","lname":"Füge","pos":"Senior Associate","email":"Anna.Fuge@msci.com","phone":"+36 30 320 4490","status":"","mmk":"","notes":""}]},{"name":"Nestlé","industry":"Food","type":"CSR","culture":"Novice","headcount":"3146","rehab_fee":"364.94","last_touchpoint":"2024-09-01","website":"https://www.nestle.hu/","esg":"Environmental","status_note":"","tags":"food","notes":"Több próbálkozás volt már","people":[{"fname":"Csenge","lname":"Kertai","pos":"Junior Talent Partner","email":"csengelilla.kertai@hu.nestle.com","phone":"","status":"followup_sent","mmk":"","notes":"off · már volt ajánlat"},{"fname":"Noémi","lname":"Szabó","pos":"Talent Acquisition Trainee","email":"Noemi.Szabo@hu.nestle.com","phone":"","status":"followup_sent","mmk":"","notes":"off"},{"fname":"Anna","lname":"Habonné Németh","pos":"Sr. Talent Acquisition Specialist","email":"anna.habonnenemeth@hu.nestle.com","phone":"","status":"followup_sent","mmk":"","notes":"off"}]},{"name":"Nespresso","industry":"Food","type":"CSR","culture":"Mature","headcount":"","rehab_fee":"","last_touchpoint":"2022-08-18","website":"https://www.nespresso.com/hu/hu","esg":"Environmental","status_note":"","tags":"food","notes":"Nestlé csoport része; elment a jó HR kontaktunk","people":[{"fname":"Zita Dorottya","lname":"Nagy","pos":"Boutique Manager","email":"zitadorottya.nagy@nespresso.com","phone":"","status":"followup_sent","mmk":"117","notes":""},{"fname":"Daniella","lname":"Andriko","pos":"Interim HR Business Partner","email":"Daniella.Andriko@nespresso.com","phone":"","status":"followup_sent","mmk":"","notes":""},{"fname":"Petra","lname":"Bárdos","pos":"HR Intern","email":"Petra.Bardos@nespresso.com","phone":"","status":"followup_sent","mmk":"","notes":""},{"fname":"Emese","lname":"Szombathy","pos":"Retail Manager","email":"Emese.Szombathy@nespresso.com","phone":"","status":"followup_sent","mmk":"","notes":""}]},{"name":"Nokia","industry":"Telecommunications","type":"Business","culture":"","headcount":"1993","rehab_fee":"231.19","last_touchpoint":"2026-03-10","website":"https://www.nokia.com/","esg":"Environmental","status_note":"","tags":"telecom","notes":"","people":[{"fname":"","lname":"","pos":"HR","email":"csaba.vulkan@nokia-bell-labs.com","phone":"","status":"email_sent","mmk":"","notes":""}]},{"name":"OTP Bank","industry":"Banking","type":"Business","culture":"","headcount":"11257","rehab_fee":"1305.81","last_touchpoint":"","website":"https://www.otpbank.hu/","esg":"ESG / Sustainable finance","status_note":"","tags":"banking","notes":"","people":[{"fname":"","lname":"Bertalan","pos":"OTP Csoport HR igazgató","email":"imre.bertalan@otpbank.hu","phone":"","status":"","mmk":"","notes":""}]},{"name":"Praktiker","industry":"Retail","type":"CSR","culture":"Promising","headcount":"1500","rehab_fee":"174","last_touchpoint":"2023-07-08","website":"https://www.praktiker.hu/","esg":"","status_note":"","tags":"retail","notes":"","people":[{"fname":"Marcell","lname":"Gulyás","pos":"Regionális HR Partner","email":"gulyasm@praktiker.hu","phone":"","status":"followup_sent","mmk":"61","notes":"Mariannal van kontakt tréningekről · mehet"}]},{"name":"Randstad","industry":"Recruitment","type":"Business","culture":"Novice","headcount":"600","rehab_fee":"69.6","last_touchpoint":"2026-02-17","website":"https://www.randstad.hu/","esg":"","status_note":"","tags":"HR,recruitment","notes":"","people":[{"fname":"","lname":"Vörös","pos":"HR Manager","email":"timea.voros@randstad.hu","phone":"","status":"email_sent","mmk":"","notes":""},{"fname":"","lname":"Hámori","pos":"HR Coordinator","email":"eva.hamori@randstad.hu","phone":"","status":"","mmk":"","notes":""},{"fname":"","lname":"Sinka","pos":"COO","email":"edina.sinka@randstad.hu","phone":"","status":"","mmk":"","notes":""}]},{"name":"Richter Gedeon","industry":"Pharmaceuticals","type":"Business","culture":"Mature","headcount":"6137","rehab_fee":"711.89","last_touchpoint":"2026-03-10","website":"https://www.gedeonrichter.com/","esg":"Environmental","status_note":"","tags":"pharma","notes":"","people":[{"fname":"","lname":"Beke","pos":"HR Contact","email":"zs.beke@richter.hu","phone":"","status":"email_sent","mmk":"","notes":""}]},{"name":"Sanofi","industry":"Pharmaceutical","type":"Business","culture":"Promising","headcount":"1650","rehab_fee":"191.4","last_touchpoint":"2026-03-11","website":"www.sanofi.com","esg":"Environmental","status_note":"","tags":"pharma","notes":"","people":[{"fname":"Eszter","lname":"Bánhidi","pos":"People Excellence Lead HGU Cluster","email":"eszter.banhidi@sanofi.com","phone":"+36 70 399 3626","status":"email_sent","mmk":"","notes":""},{"fname":"Andrea","lname":"Asztalos","pos":"Kommunikációs igazgató","email":"andrea.asztalos@sanofi.com","phone":"","status":"","mmk":"","notes":""}]},{"name":"Telekom","industry":"Telecommunications","type":"CSR","culture":"Promising","headcount":"5644","rehab_fee":"654.7","last_touchpoint":"2025-04-11","website":"https://www.telekom.hu/","esg":"Environmental","status_note":"","tags":"telecom,csr","notes":"","people":[{"fname":"Judit","lname":"Jakab","pos":"D&I Expert","email":"jakab.judit@telekom.hu","phone":"","status":"followup_sent","mmk":"233","notes":""},{"fname":"Alíz","lname":"Konrád","pos":"Rehab tanácsadó","email":"Konrad.Aliz@telekom.hu","phone":"","status":"followup_sent","mmk":"","notes":""}]},{"name":"Tesco SSC","industry":"Retail","type":"Business","culture":"Promising","headcount":"800","rehab_fee":"92.8","last_touchpoint":"2025-04-29","website":"","esg":"","status_note":"","tags":"retail","notes":"","people":[{"fname":"","lname":"Budavári","pos":"HR","email":"Reka.Budavari@tesco.com","phone":"","status":"","mmk":"","notes":""}]},{"name":"Thermo Fisher","industry":"Healthcare","type":"CSR","culture":"Promising","headcount":"1098","rehab_fee":"127.37","last_touchpoint":"2022-06-22","website":"https://www.thermofisher.com/hu/en/home.html","esg":"Environmental","status_note":"","tags":"healthcare","notes":"","people":[{"fname":"Anita","lname":"Zbiskó","pos":"EHS Manager","email":"anita.zbisko@thermofisher.com","phone":"","status":"followup_sent","mmk":"28","notes":"Jelentkeznek, pozitív válasz · van felmérésük"},{"fname":"Tamás","lname":"Jakus","pos":"Country HR Lead","email":"tamas.jakus@thermofisher.com","phone":"","status":"followup_sent","mmk":"","notes":""}]},{"name":"Vodafone","industry":"Telecommunications","type":"Business","culture":"Promising","headcount":"3542","rehab_fee":"410.87","last_touchpoint":"2023-06-22","website":"","esg":"Environmental","status_note":"","tags":"telecom","notes":"","people":[]},{"name":"Webshippy","industry":"Logistics","type":"CSR","culture":"Unknown","headcount":"95","rehab_fee":"11.02","last_touchpoint":"2023-06-13","website":"https://webshippy.com/","esg":"","status_note":"","tags":"","notes":"","people":[{"fname":"Norman","lname":"Csapó","pos":"Head of HR","email":"norman.csapo@webshippy.com","phone":"","status":"followup_sent","mmk":"4","notes":"már kaptak"}]},{"name":"WHITELAB","industry":"Healthcare","type":"CSR","culture":"Unknown","headcount":"86","rehab_fee":"9.98","last_touchpoint":"2022-07-19","website":"https://whitelab.hu/","esg":"","status_note":"","tags":"","notes":"","people":[{"fname":"Tímea","lname":"Kiss","pos":"HR Manager","email":"timea.kiss@whitelab.hu","phone":"","status":"followup_sent","mmk":"","notes":"már kaptak"}]},{"name":"Yettel","industry":"Telecommunications","type":"Business","culture":"Promising","headcount":"1716","rehab_fee":"199.06","last_touchpoint":"2025-07-20","website":"https://www.yettel.hu/","esg":"","status_note":"","tags":"telecom","notes":"","people":[{"fname":"","lname":"","pos":"","email":"NKertesz@yettel.hu","phone":"","status":"","mmk":"","notes":""},{"fname":"","lname":"","pos":"","email":"DaSandor@yettel.hu","phone":"","status":"","mmk":"","notes":""}]},{"name":"4iG","industry":"Telecommunications","type":"Business","culture":"Unknown","headcount":"8402","rehab_fee":"974.63","last_touchpoint":"2026-03-05","website":"https://www.4ig.hu/","esg":"","status_note":"","tags":"telecom,IT","notes":"","people":[{"fname":"Laura","lname":"Szakál","pos":"Procurement","email":"laura.szakal@4ig.hu","phone":"+36 20 927 5287","status":"","mmk":"","notes":""}]},{"name":"Szentkirályi","industry":"Food","type":"CSR","culture":"Novice","headcount":"500","rehab_fee":"58","last_touchpoint":"2022-10-25","website":"https://www.szentkiralyi.hu/","esg":"","status_note":"","tags":"food","notes":"","people":[{"fname":"Lea","lname":"Lóczi","pos":"HR recruiter","email":"Lea.Loczi@szentkiralyi.hu","phone":"","status":"followup_sent","mmk":"23","notes":"mehet, már kaptak"},{"fname":"Letícia","lname":"Smid","pos":"HR","email":"Leticia.Smid@szentkiralyi.hu","phone":"","status":"followup_sent","mmk":"","notes":""}]},{"name":"Biotech USA Hungary","industry":"Food","type":"CSR","culture":"Promising","headcount":"1663","rehab_fee":"192.91","last_touchpoint":"2026-03-24","website":"www.biotechusa.hu","esg":"","status_note":"","tags":"csr,food","notes":"","people":[{"fname":"","lname":"Pintér","pos":"Head of CSR","email":"pinter.daniel@biotechusa.com","phone":"","status":"","mmk":"","notes":""},{"fname":"","lname":"Halász","pos":"HR","email":"halasz.adrienn@biotechusa.com","phone":"","status":"","mmk":"","notes":""},{"fname":"","lname":"Pécsváradi","pos":"","email":"pecsvaradi.akos@biotechusa.com","phone":"","status":"","mmk":"","notes":""}]},{"name":"CIB","industry":"Banking","type":"CSR","culture":"Mature","headcount":"2295","rehab_fee":"266.22","last_touchpoint":"2026-03-05","website":"https://www.cib.hu/","esg":"","status_note":"","tags":"banking,csr","notes":"","people":[{"fname":"Ádám","lname":"Szinai","pos":"Marketingkommunikáció és PR vezető","email":"szinai.adam@cib.hu","phone":"","status":"offer_sent","mmk":"87","notes":"27-én küldeni"}]},{"name":"Concorde Bank","industry":"Banking","type":"Business","culture":"Mature","headcount":"141","rehab_fee":"16.36","last_touchpoint":"2026-03-05","website":"https://www.con.hu/","esg":"","status_note":"","tags":"","notes":"Erős CSR támogatói rendszer","people":[{"fname":"Norbert","lname":"Kokas","pos":"Média- és partnerkapcsolati vezető","email":"n.kokas@con.hu","phone":"+36 1 489 2373","status":"","mmk":"","notes":""}]},{"name":"Xellia Pharmaceuticals","industry":"Pharmaceutical","type":"Business","culture":"Unknown","headcount":"320","rehab_fee":"37.12","last_touchpoint":"2026-03-11","website":"https://www.xellia.com/","esg":"","status_note":"","tags":"pharma","notes":"","people":[{"fname":"Diána","lname":"Borsos","pos":"Head of People and Organization CEE","email":"diana.borsos@xellia.com","phone":"","status":"email_sent","mmk":"","notes":""}]},{"name":"Rossmann","industry":"Retail","type":"Business","culture":"","headcount":"2561","rehab_fee":"297.08","last_touchpoint":"2026-03-10","website":"https://www.rossmann.hu/","esg":"General ESG","status_note":"","tags":"retail","notes":"","people":[{"fname":"","lname":"Kiss","pos":"HR","email":"judit.kiss@rossman.hu","phone":"","status":"email_sent","mmk":"","notes":""}]},{"name":"Richter","industry":"Pharmaceuticals","type":"Business","culture":"Mature","headcount":"6137","rehab_fee":"711.89","last_touchpoint":"2026-03-10","website":"https://www.gedeonrichter.com/","esg":"Environmental","status_note":"","tags":"pharma","notes":"","people":[{"fname":"","lname":"","pos":"HR","email":"zs.beke@richter.hu","phone":"","status":"email_sent","mmk":"","notes":""}]},{"name":"Szerencsejáték Rt.","industry":"Lottery / Gaming","type":"Business","culture":"","headcount":"1932","rehab_fee":"224.11","last_touchpoint":"2026-03-10","website":"https://www.szerencsejatek.hu/","esg":"","status_note":"","tags":"","notes":"","people":[{"fname":"","lname":"","pos":"","email":"reka.bertenyi@szerencsejatek.hu","phone":"","status":"email_sent","mmk":"","notes":""}]},{"name":"Diageo Hungary","industry":"Beverages","type":"Business","culture":"Mature","headcount":"1454","rehab_fee":"168.66","last_touchpoint":"2026-03-10","website":"https://www.diageo.com/en","esg":"Environmental","status_note":"","tags":"","notes":"","people":[{"fname":"","lname":"","pos":"HR","email":"szabina.somogyvary.pelcz@diageo.com","phone":"","status":"email_sent","mmk":"","notes":""},{"fname":"","lname":"","pos":"HR","email":"monika.pais@diageo.com","phone":"","status":"","mmk":"","notes":""}]},{"name":"Abacus Medicine","industry":"Pharmaceutical","type":"Business","culture":"","headcount":"667","rehab_fee":"77.37","last_touchpoint":"2026-03-10","website":"https://www.abacusmedicine.com/hu","esg":"","status_note":"","tags":"pharma","notes":"","people":[{"fname":"","lname":"","pos":"","email":"brigitta.tarcsai@abacusmedicine.com","phone":"","status":"email_sent","mmk":"","notes":""}]},{"name":"EPAM Systems","industry":"IT services","type":"Business","culture":"","headcount":"2045","rehab_fee":"237.22","last_touchpoint":"2026-03-10","website":"https://www.epam.com/","esg":"","status_note":"","tags":"IT","notes":"","people":[{"fname":"","lname":"","pos":"HR","email":"imre.branyiczki@epam.com","phone":"","status":"email_sent","mmk":"","notes":""}]},{"name":"Deloitte Hungary","industry":"Professional services","type":"Business","culture":"","headcount":"913","rehab_fee":"105.91","last_touchpoint":"2026-03-10","website":"https://www.deloitte.com/","esg":"Environmental","status_note":"","tags":"consulting","notes":"","people":[{"fname":"","lname":"","pos":"","email":"rszucs@deloittece.com","phone":"","status":"email_sent","mmk":"","notes":""}]},{"name":"SOTE","industry":"Healthcare / Education","type":"Business","culture":"","headcount":"13700","rehab_fee":"1589.2","last_touchpoint":"","website":"https://semmelweis.hu/","esg":"","status_note":"","tags":"healthcare","notes":"","people":[{"fname":"","lname":"","pos":"","email":"reicher.peter@semmelweis.hu","phone":"","status":"","mmk":"","notes":""}]},{"name":"Prohumán","industry":"HR / Staffing","type":"Business","culture":"","headcount":"6796","rehab_fee":"788.34","last_touchpoint":"","website":"https://www.prohuman.hu/","esg":"","status_note":"","tags":"HR","notes":"","people":[{"fname":"","lname":"","pos":"","email":"foltin.blanka@prohuman.hu","phone":"","status":"","mmk":"","notes":""}]},{"name":"OPUS","industry":"Energy","type":"Business","culture":"","headcount":"4457","rehab_fee":"517.01","last_touchpoint":"","website":"https://www.opusenergetika.hu","esg":"","status_note":"","tags":"energy","notes":"","people":[{"fname":"","lname":"Gyöngyösi","pos":"HR senior contact","email":"maria.gyongyosi@opustigaz.hu","phone":"","status":"","mmk":"","notes":""}]},{"name":"DHL","industry":"Logistics","type":"Business","culture":"","headcount":"383","rehab_fee":"44.43","last_touchpoint":"","website":"https://www.dhl.com/hu-en/","esg":"Environmental","status_note":"","tags":"logistics","notes":"","people":[{"fname":"","lname":"Gacsi","pos":"HR","email":"monika.gacsi@dhl.com","phone":"","status":"","mmk":"","notes":""}]},{"name":"Schindler","industry":"Engineering","type":"Business","culture":"","headcount":"118","rehab_fee":"13.69","last_touchpoint":"","website":"https://hu.schindler.com","esg":"","status_note":"","tags":"","notes":"","people":[{"fname":"","lname":"Zádori","pos":"HR senior contact","email":"hr.hu@schindler.com","phone":"","status":"","mmk":"","notes":""}]},{"name":"MOHU","industry":"Waste management","type":"Business","culture":"","headcount":"347","rehab_fee":"40.25","last_touchpoint":"","website":"https://mohu.hu","esg":"","status_note":"","tags":"environment","notes":"","people":[{"fname":"Hajnalka","lname":"Kériné Kis","pos":"Head of HR","email":"hajnalka.kerine.kis@mohu.hu","phone":"","status":"","mmk":"","notes":""}]},{"name":"Greenart","industry":"Landscaping","type":"Business","culture":"Novice","headcount":"20","rehab_fee":"0","last_touchpoint":"2026-03-12","website":"https://www.greenart.hu/","esg":"","status_note":"","tags":"","notes":"","people":[{"fname":"Dóra Zsuzsanna","lname":"Milovszky","pos":"Irodai asszisztens","email":"milovszky.dora@greenart.hu","phone":"+36 70 672 4287","status":"email_sent","mmk":"","notes":""}]},{"name":"WPP Media","industry":"Media","type":"Business","culture":"Unknown","headcount":"255","rehab_fee":"29.58","last_touchpoint":"2026-03-05","website":"https://www.wppmedia.com/","esg":"","status_note":"","tags":"","notes":"","people":[{"fname":"Csilla","lname":"Csiszer","pos":"Recruiter","email":"csilla.csiszer@wppmedia.com","phone":"+36 70 685 3728","status":"","mmk":"","notes":""}]},{"name":"UNICEF Hungary","industry":"NGO / Charity","type":"Civil","culture":"","headcount":"","rehab_fee":"0","last_touchpoint":"2026-03-24","website":"","esg":"","status_note":"","tags":"ngo,civil","notes":"","people":[{"fname":"Gabriella","lname":"Gábori","pos":"HR","email":"gabriella.gabori@unicef.hu","phone":"","status":"","mmk":"","notes":""}]},{"name":"Magyar Ökomenikus Segélyszervezet","industry":"NGO / Charity","type":"Civil","culture":"","headcount":"200","rehab_fee":"23.2","last_touchpoint":"2026-03-10","website":"https://segelyszervezet.hu/","esg":"","status_note":"","tags":"ngo,civil","notes":"","people":[{"fname":"Ilona","lname":"Tőkés","pos":"HR","email":"tokes.ilona@segelyszervezet.hu","phone":"","status":"email_sent","mmk":"","notes":""}]}]`);
+
+const D_TMPLS=[
+  {name:"Hideg megkeresés — rehabilitáció",type:"Cold outreach",lang:"hu",tags:"csr,rehab,hideg",subject:"Együttműködési lehetőség — {your_org} és a {company}",body:"Tisztelt {last_name}!\n\nAzért keresem meg, mert a {company} fenntarthatósági elkötelezettsége összhangban van a {your_org} küldetésével.\n\nA {your_org} megváltozott munkaképességű személyek (MMK) rehabilitációs foglalkoztatásában és érzékenyítő tréningek szervezésében segít vállalatoknak. Önöknél akár {mmk_count} fővel is csökkenthető lenne az éves rehabilitációs hozzájárulás.\n\nSzívesen ajánlanék egy rövid, 20 perces online megbeszélést. Megfelelne Önnek valamelyik nap a jövő héten?\n\nÜdvözlettel,\n{sender_name}\n{your_org}"},
+  {name:"Follow-up emlékeztető",type:"Follow-up",lang:"hu",tags:"followup",subject:"Emlékeztető — {your_org}",body:"Tisztelt {last_name}!\n\nEngedje meg, hogy visszatérjek előző levelemre. Tudom, hogy a beérkező levelek könnyen elhalasztódnak.\n\nEgy rövid 15 perces egyeztetés elegendő lenne — megfelel Önnek valamelyik nap ezen a héten?\n\nÜdvözlettel,\n{sender_name}"},
+  {name:"Cold outreach — English",type:"Cold outreach",lang:"en",tags:"cold,english",subject:"Partnership opportunity — {your_org} × {company}",body:"Dear {first_name},\n\nI hope this message finds you well. I'm reaching out because {company}'s commitment to sustainability aligns closely with our mission at {your_org}.\n\nWe support companies in hiring and integrating employees with disabilities, providing sensitivity training, and reducing annual rehabilitation contribution fees.\n\nWould you be available for a brief 20-minute call next week?\n\nBest regards,\n{sender_name}\n{your_org}"},
+  {name:"Adománygyűjtés",type:"Fundraising",lang:"hu",tags:"fundraising",subject:"Segítsen velünk változást hozni — {your_org}",body:"Tisztelt {last_name}!\n\nKöszönjük folyamatos érdeklődését munkánk iránt. A {your_org}-nál minden nap dolgozunk azért, hogy megváltozott munkaképességű emberek teljes értékű tagjai lehessenek a munka világának.\n\nFontolóra venné, hogy ebben a hónapban hozzájárul munkánkhoz?\n\nHálás köszönettel,\n{sender_name}\n{your_org}"},
+  {name:"Ünnepi köszöntő",type:"Holiday wishes",lang:"hu",tags:"ünnep",subject:"Ünnepi üdvözlet a {your_org}-tól",body:"Tisztelt {last_name}!\n\nAz ünnepek közeledtével szeretnénk megköszönni az Ön és a {company} támogatását.\n\nKívánunk Önnek és munkatársainak kellemes ünnepeket és sikeres új évet!\n\nSzívélyes üdvözlettel,\n{sender_name}\n{your_org}"},
+  {name:"Thank you — after meeting",type:"Thank you",lang:"en",tags:"thankyou",subject:"Thank you for your time — {your_org}",body:"Dear {first_name},\n\nThank you for taking the time to meet with us. It was a pleasure learning more about {company}'s approach.\n\nWe'll follow up with the materials we discussed and look forward to next steps.\n\nWith gratitude,\n{sender_name}\n{your_org}"}
+];
+
+// ═══════════════ PERSISTENCE ═══════════════
+const ld=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch{return d;}};
+const sv=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch{}};
+let COS=ld('crm7_co',D_COMPANIES);
+let TMPLS=ld('crm7_tmpls',D_TMPLS);
+let SETTINGS=ld('crm7_set',{crmName:'ImpactCRM',tag:'NGO Partner Suite',org:'Your Organization',acc:'#1D9E75',rgb:'29,158,117',email:'',sender:''});
+
+// ═══════════════ HELPERS ═══════════════
+const toast=m=>{const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);};
+const getKey=()=>localStorage.getItem('crm7_key')||'';
+const NC=c=>{if(!c)return'';const l=c.toLowerCase();if(l.includes('mature'))return'Mature';if(l.includes('promis'))return'Promising';if(l.includes('novice'))return'Novice';if(l.includes('hostile'))return'Hostile';if(l.includes('unknown')||l.includes('unkown'))return'Unknown';return c;};
+const CB=c=>({Mature:'b-mature',Promising:'b-promising',Novice:'b-novice',Unknown:'b-unknown',Hostile:'b-hostile'}[c]||'b-unknown');
+const TB=t=>({Business:'b-business',CSR:'b-csr',Civil:'b-civil',Other:'b-other'}[t]||'b-other');
+const SB=s=>({offer_sent:'b-offer',email_sent:'b-email',followup_sent:'b-fu',replied:'b-replied',meeting:'b-replied',off:'b-off'}[s]||'b-unknown');
+const SL=s=>({offer_sent:'Offer sent',email_sent:'Email sent',followup_sent:'Follow-up sent',replied:'Replied',meeting:'Meeting','':'Not contacted',off:'Closed'}[s]||s);
+const avCol=n=>['#1D9E75','#378ADD','#D4537E','#BA7517','#5F5E5A','#D85A30','#534AB7','#639922'][(n||'A').charCodeAt(0)%8];
+const fillPH=(t,s={})=>{const d={first_name:'Anna',last_name:'Kovács',company:'Erste Bank',position:'HR Manager',your_org:SETTINGS.org||'Your NGO',mmk_count:'25',rehab_fee:'121.8',sender_name:SETTINGS.sender||'Your Name',...s};return t.replace(/\{(\w+)\}/g,(_,k)=>d[k]!==undefined?d[k]:'{'+k+'}');};
+const iPH=(id,ph)=>{const ta=document.getElementById(id);if(!ta)return;const s=ta.selectionStart,e=ta.selectionEnd;ta.value=ta.value.slice(0,s)+ph+ta.value.slice(e);ta.selectionStart=ta.selectionEnd=s+ph.length;ta.focus();};
+
+// ═══════════════ SELECTION STATE ═══════════════
+let selectedCos=new Set(); // set of company indices
+let selectedPeople=[]; // [{coIdx,pIdx}]
+let expandedCos=new Set();
+let coFilt=[...COS];
+let coPg_=0;
+const CO_PP=30;
+
+// ═══════════════ INIT ═══════════════
+function init(){
+  applySettings();buildInds();refreshCounts();
+  renderDash();renderCo();renderTmpls();updEx();buildTmplSelects();renderPipeline();
+  ['s-crm','s-tag','s-org'].forEach(id=>{const e=document.getElementById(id);if(e&&SETTINGS[{'-crm':'crmName','-tag':'tag','-org':'org'}[id.slice(1)]])e.value=SETTINGS[{'-crm':'crmName','-tag':'tag','-org':'org'}[id.slice(1)]];});
+  const k=getKey();if(k&&document.getElementById('s-key'))document.getElementById('s-key').value=k;
+  // Load EmailJS settings
+  if(SETTINGS.emailjsSvc&&document.getElementById('s-ejs-svc'))document.getElementById('s-ejs-svc').value=SETTINGS.emailjsSvc;
+  if(SETTINGS.emailjsTpl&&document.getElementById('s-ejs-tpl'))document.getElementById('s-ejs-tpl').value=SETTINGS.emailjsTpl;
+  if(SETTINGS.emailjsKey&&document.getElementById('s-ejs-key'))document.getElementById('s-ejs-key').value=SETTINGS.emailjsKey;
+  if(SETTINGS.googleClientId&&document.getElementById('s-goog-cid'))document.getElementById('s-goog-cid').value=SETTINGS.googleClientId;
+  // Init EmailJS
+  if(SETTINGS.emailjsKey){try{emailjs.init({publicKey:SETTINGS.emailjsKey});}catch(e){}}
+  // Update Drive button state
+  updDriveStatus();
+}
+
+function refreshCounts(){
+  const total=COS.length;
+  const ppl=COS.reduce((a,c)=>a+(c.people||[]).length,0);
+  const csr=COS.reduce((a,c)=>a+(c.people||[]).filter(p=>p.status).length,0);
+  const noe=COS.reduce((a,c)=>a+(c.people||[]).filter(p=>!p.email).length,0);
+  const today=new Date().toISOString().slice(0,10);
+  const due=COS.filter(c=>c.next_action_date&&c.next_action_date<=today&&c.stage!=='active'&&c.stage!=='closed_lost').length;
+  [['nb-co',total],['d-co',total],['d-ppl',ppl],['d-csr',csr],['d-noemail',noe],['nb-tmpl',TMPLS.length],['nb-due',due||'']].forEach(([id,v])=>{const e=document.getElementById(id);if(e)e.textContent=v;});
+}
+
+function buildInds(){
+  const inds=[...new Set(COS.map(c=>c.industry).filter(Boolean))].sort();
+  ['co-ind','ex-ind','picker-ind'].forEach(id=>{const s=document.getElementById(id);if(!s)return;const cur=s.value;s.innerHTML='<option value="">All industries</option>';inds.forEach(i=>{const o=document.createElement('option');o.value=i;o.textContent=i;if(i===cur)o.selected=true;s.appendChild(o);});});
+  const dl=document.getElementById('dl-ind-c');if(dl){dl.innerHTML='';inds.forEach(i=>{const o=document.createElement('option');o.value=i;dl.appendChild(o);});}
+}
+
+function renderDash(){
+  const bt=document.getElementById('d-bytype');
+  if(bt){bt.innerHTML='';const types={};COS.forEach(c=>{const t=c.type||'Other';types[t]=(types[t]||0)+1;});[['Business','b-business'],['CSR','b-csr'],['Civil','b-civil'],['Other','b-other']].forEach(([t,cls])=>{if(!types[t])return;const tr=document.createElement('tr');tr.style.cursor='pointer';tr.onclick=()=>{nav('companies',document.querySelector('[onclick*=companies]'));document.getElementById('co-type').value=t;renderCo();};tr.innerHTML=`<td style="padding:6px 11px"><span class="badge ${cls}">${t} partner</span></td><td style="padding:6px 11px;color:var(--tx2);font-size:12px">${types[t]}</td>`;bt.appendChild(tr);});}
+  const bi=document.getElementById('d-byind');
+  if(bi){bi.innerHTML='';const inds={};COS.forEach(c=>{if(c.industry)inds[c.industry]=(inds[c.industry]||0)+1;});Object.entries(inds).sort((a,b)=>b[1]-a[1]).slice(0,10).forEach(([ind,n])=>{const tr=document.createElement('tr');tr.innerHTML=`<td style="padding:6px 11px;font-size:12px;color:var(--tx)">${ind}</td><td style="padding:6px 11px;color:var(--tx2);font-size:12px">${n}</td>`;bi.appendChild(tr);});}
+  const bs=document.getElementById('d-bystatus');
+  if(bs){bs.innerHTML='';const sts={};COS.forEach(c=>(c.people||[]).forEach(p=>{const s=p.status||'';sts[s]=(sts[s]||0)+1;}));[['followup_sent','b-fu'],['email_sent','b-email'],['offer_sent','b-offer'],['replied','b-replied'],['off','b-off'],['','b-unknown']].forEach(([s,cls])=>{const n=sts[s]||0;if(!n)return;const tr=document.createElement('tr');tr.innerHTML=`<td style="padding:6px 11px"><span class="badge ${cls}">${SL(s)}</span></td><td style="padding:6px 11px;color:var(--tx2);font-size:12px">${n}</td>`;bs.appendChild(tr);});}
+  const dr=document.getElementById('d-recent');
+  if(dr){dr.innerHTML='';[...COS].filter(c=>c.last_touchpoint).sort((a,b)=>b.last_touchpoint.localeCompare(a.last_touchpoint)).slice(0,6).forEach(c=>{const d=document.createElement('div');d.style.cssText='background:var(--sur);border:.5px solid var(--brd);border-radius:var(--r);padding:9px 12px;margin-bottom:7px;cursor:pointer';d.onclick=()=>{nav('companies',document.querySelector('[onclick*=companies]'));setTimeout(()=>{const i=COS.indexOf(c);expandedCos.add(i);renderCo();},80);};d.innerHTML=`<div style="font-weight:600;font-size:12px;margin-bottom:2px">${c.name}</div><div style="font-size:10px;color:var(--tx2)">${c.industry||'—'} · <span class="badge ${TB(c.type)}">${c.type}</span> · ${c.last_touchpoint}</div>`;dr.appendChild(d);});}
+}
+
+// ═══════════════ COMPANIES RENDER ═══════════════
+function renderCo(){
+  const q=(document.getElementById('co-q')?.value||'').toLowerCase();
+  const type=document.getElementById('co-type')?.value||'';
+  const ind=document.getElementById('co-ind')?.value||'';
+  const cult=document.getElementById('co-cult')?.value||'';
+  const status=document.getElementById('co-status')?.value||'';
+  coFilt=COS.filter(c=>{
+    const m=!q||[c.name,c.industry,c.notes,c.esg,c.tags,(c.people||[]).map(p=>[p.fname,p.lname,p.email,p.pos,p.phone,p.notes].join(' ')).join(' ')].some(f=>(f||'').toLowerCase().includes(q));
+    const tc=!type||c.type===type;
+    const ic=!ind||c.industry===ind;
+    const cc=!cult||NC(c.culture)===cult;
+    let sc=true;
+    if(status){if(status==='none')sc=(c.people||[]).every(p=>!p.status);else sc=(c.people||[]).some(p=>p.status===status);}
+    return m&&tc&&ic&&cc&&sc;
+  });
+  const start=coPg_*CO_PP,page=coFilt.slice(start,start+CO_PP);
+  const list=document.getElementById('co-list');list.innerHTML='';
+  const lbl=document.getElementById('co-lbl');if(lbl)lbl.textContent=`Showing ${coFilt.length} of ${COS.length} companies`;
+  page.forEach(co=>{
+    const ri=COS.indexOf(co);
+    const isOpen=expandedCos.has(ri);
+    const isSel=selectedCos.has(ri);
+    const c=NC(co.culture);const fee=parseFloat(co.rehab_fee);
+    const pplN=(co.people||[]).length;
+    const tags=(co.tags||'').split(',').filter(Boolean).map(t=>`<span class="badge b-unknown" style="font-size:9px;padding:1px 5px">${t.trim()}</span>`).join('');
+    const card=document.createElement('div');
+    card.className='co-card'+(isSel?' selected':'');
+    card.id='co-card-'+ri;
+    card.innerHTML=`
+      <div class="co-hdr">
+        <div class="co-sel ${isSel?'checked':''}" onclick="toggleCoSel(${ri},event)">
+          ${isSel?`<svg viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5 3.5-4" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`:''}
+        </div>
+        <div class="co-av" style="background:${avCol(co.name)}" onclick="toggleCo(${ri})">
+          ${co.name.slice(0,2).toUpperCase()}
+        </div>
+        <div class="co-info" onclick="toggleCo(${ri})">
+          <div class="co-nm">${co.name}</div>
+          <div class="co-meta">
+            <span>${co.industry||'—'}</span>
+            <span class="badge ${TB(co.type)}">${co.type} partner</span>
+            ${c?`<span class="badge ${CB(c)}">${c}</span>`:''}
+            ${fee>0?`<span style="color:var(--t600);font-size:11px;font-weight:600">${fee.toFixed(2)} M HUF</span>`:''}
+            ${pplN?`<span style="font-size:10px;color:var(--tx2)">${pplN} contact${pplN>1?'s':''}</span>`:'<span style="font-size:10px;color:var(--a400)">no contacts</span>'}
+            ${tags}
+          </div>
+        </div>
+        <div class="co-actions" onclick="event.stopPropagation()">
+          <button class="btn btn-sm" onclick="openActModal(${ri})" title="Activity log">Log</button>
+          <button class="btn btn-sm" onclick="openNAModal(${ri})" title="Set next action">⏰</button>
+          <button class="btn btn-sm" onclick="openCoModal(${ri})">Edit</button>
+          <button class="btn btn-sm btn-p" onclick="openPModal(${ri},null)">+ Person</button>
+        </div>
+        <div class="co-arr ${isOpen?'open':''}" onclick="toggleCo(${ri})">
+          <svg width="7" height="11" viewBox="0 0 7 11" fill="none"><path d="M1.5 1.5L5.5 5.5l-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+      <div class="co-body ${isOpen?'open':''}">
+        <div class="co-details">
+          <div><div class="cd-lbl">Headcount</div><div class="cd-val">${co.headcount||'—'}</div></div>
+          <div><div class="cd-lbl">Rehab fee</div><div class="cd-val ${fee>100?'big':''}">${fee>0?fee.toFixed(2)+' M HUF':'—'}</div></div>
+          <div><div class="cd-lbl">Last contact</div><div class="cd-val">${co.last_touchpoint||'—'}</div></div>
+          <div><div class="cd-lbl">ESG / sustainability</div><div class="cd-val" style="font-size:11px">${co.esg||'—'}</div></div>
+          ${co.website?`<div style="grid-column:span 2"><div class="cd-lbl">Website</div><div class="cd-val" style="font-size:11px"><a href="${co.website.startsWith('http')?co.website:'https://'+co.website}" style="color:var(--b600)">${co.website}</a></div></div>`:''}
+          ${co.notes?`<div style="grid-column:span 4"><div class="cd-lbl">Notes</div><div class="cd-val" style="font-size:11px;color:var(--tx2);font-weight:400">${co.notes}</div></div>`:''}
+        </div>
+        <div id="ppl-${ri}"></div>
+        <div class="add-p-row" onclick="openPModal(${ri},null)">
+          <svg viewBox="0 0 14 14" fill="none" style="width:13px;height:13px"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M7 4.5v5M4.5 7h5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+          Add contact person
+        </div>
+      </div>`;
+    list.appendChild(card);
+    if(isOpen)renderPeople(ri);
+  });
+  const maxP=Math.ceil(coFilt.length/CO_PP);
+  document.getElementById('co-pg').style.display=coFilt.length>CO_PP?'flex':'none';
+  document.getElementById('co-pg-info').textContent=`${coPg_+1} / ${maxP}`;
+  document.getElementById('co-pg-tot').textContent=`${coFilt.length} results`;
+  document.getElementById('nb-co').textContent=coFilt.length;
+  updBulkBar();
+  // ── inject due badges and activity count into rendered cards ──
+  const _today=new Date().toISOString().slice(0,10);
+  const _week=new Date(Date.now()+7*864e5).toISOString().slice(0,10);
+  coFilt.forEach(co=>{
+    const _ri=COS.indexOf(co);
+    const _card=document.getElementById('co-card-'+_ri);if(!_card)return;
+    const _meta=_card.querySelector('.co-meta');if(!_meta)return;
+    _meta.querySelectorAll('.co-due-badge,.co-act-badge').forEach(e=>e.remove());
+    if(co.next_action_date){
+      const _d=co.next_action_date;
+      let _cls,_lbl;
+      if(_d<_today){_cls='b-off';_lbl='⚠ Overdue';}
+      else if(_d===_today){_cls='b-fu';_lbl='⏰ Due today';}
+      else if(_d<=_week){_cls='b-email';_lbl='⏰ '+_d;}
+      else{_cls='b-unknown';_lbl='⏰ '+_d;}
+      const _sp=document.createElement('span');
+      _sp.className='badge '+_cls+' co-due-badge';
+      _sp.style.cursor='pointer';_sp.title='Click to edit reminder';
+      _sp.textContent=_lbl;
+      _sp.onclick=(e)=>{e.stopPropagation();openNAModal(_ri);};
+      _meta.appendChild(_sp);
+    }
+    const _actN=(co.activity||[]).length;
+    if(_actN>0){
+      const _sp2=document.createElement('span');
+      _sp2.className='co-act-badge';
+      _sp2.style.cssText='font-size:10px;color:var(--tx3);cursor:pointer;padding:0 3px';
+      _sp2.textContent=_actN+' log'+ (_actN===1?'':'s');
+      _sp2.onclick=(e)=>{e.stopPropagation();openActModal(_ri);};
+      _meta.appendChild(_sp2);
+    }
+  });
+  updDueCounts();
+}
+
+function renderPeople(ri){
+  const co=COS[ri];if(!co)return;
+  const cont=document.getElementById('ppl-'+ri);if(!cont)return;
+  const ppl=co.people||[];
+  if(!ppl.length){cont.innerHTML='';return;}
+  cont.innerHTML=`
+    <div class="ppl-hdr ppl-hdr-cols" style="gap:8px">
+      <div></div><div></div><div>Name &amp; Position</div><div>Email</div><div>Phone</div><div>Status</div><div></div>
+    </div>
+    ${ppl.map((p,pi)=>`
+      <div class="ppl-row ppl-cols" id="pr-${ri}-${pi}">
+        <div class="p-sel ${selectedPeople.some(x=>x.coIdx===ri&&x.pIdx===pi)?'checked':''}" onclick="togglePSel(${ri},${pi})">
+          ${selectedPeople.some(x=>x.coIdx===ri&&x.pIdx===pi)?'✓':''}
+        </div>
+        <div class="p-av" style="background:${avCol((p.lname||p.email||'?'))}">
+          ${((p.lname||p.email||'?')[0]||'').toUpperCase()}
+        </div>
+        <div>
+          <div class="p-nm">${p.fname||''} ${p.lname||''}</div>
+          <div class="p-pos">${p.pos||'—'}</div>
+          ${p.mmk?`<div style="font-size:10px;color:var(--t600);font-weight:600">MMK: ${p.mmk}</div>`:''}
+        </div>
+        <div class="p-email">${p.email||'<span style="color:var(--a400);font-style:italic">missing</span>'}</div>
+        <div class="p-phone">${p.phone||'—'}</div>
+        <div>${p.status?`<span class="badge ${SB(p.status)}" style="font-size:9px">${SL(p.status)}</span>`:'<span style="font-size:10px;color:var(--tx3)">—</span>'}</div>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-sm" onclick="openPModal(${ri},${pi})">Edit</button>
+        </div>
+      </div>
+      ${p.notes?`<div style="font-size:10px;color:var(--tx2);padding:3px 14px 6px;border-bottom:.5px dashed var(--brd);background:var(--bg2)">Note: ${p.notes.slice(0,100)}</div>`:''}`).join('')}`;
+}
+
+function toggleCo(ri){
+  if(expandedCos.has(ri)){expandedCos.delete(ri);}else{expandedCos.add(ri);}
+  const card=document.getElementById('co-card-'+ri);if(!card)return;
+  const body=card.querySelector('.co-body'),arr=card.querySelector('.co-arr');
+  if(expandedCos.has(ri)){body.classList.add('open');arr.classList.add('open');renderPeople(ri);}
+  else{body.classList.remove('open');arr.classList.remove('open');}
+}
+function coPg(d){const m=Math.ceil(coFilt.length/CO_PP)-1;coPg_=Math.max(0,Math.min(m,coPg_+d));renderCo();}
+
+// ═══════════════ SELECTION ═══════════════
+function toggleCoSel(ri,e){
+  e.stopPropagation();
+  if(selectedCos.has(ri))selectedCos.delete(ri);else selectedCos.add(ri);
+  renderCo();
+}
+function togglePSel(ri,pi){
+  const idx=selectedPeople.findIndex(x=>x.coIdx===ri&&x.pIdx===pi);
+  if(idx>=0)selectedPeople.splice(idx,1);else selectedPeople.push({coIdx:ri,pIdx:pi});
+  renderPeople(ri);updBulkBar();
+}
+function selectAll(){coFilt.forEach(c=>selectedCos.add(COS.indexOf(c)));renderCo();}
+function clearSelection(){selectedCos.clear();selectedPeople=[];renderCo();}
+function updBulkBar(){
+  const n=selectedCos.size+selectedPeople.length;
+  const bar=document.getElementById('bulk-bar');
+  bar.classList.toggle('vis',n>0);
+  document.getElementById('bulk-count').textContent=`${n} selected`;
+}
+
+// ═══════════════ BULK ACTIONS ═══════════════
+function getSelectedPeople(){
+  const res=[];
+  selectedCos.forEach(ri=>{const co=COS[ri];(co.people||[]).forEach((p,pi)=>{if(p.email)res.push({co,p,coIdx:ri,pIdx:pi});});});
+  selectedPeople.forEach(({coIdx,pIdx})=>{const co=COS[coIdx];const p=(co.people||[])[pIdx];if(p&&p.email&&!res.find(x=>x.coIdx===coIdx&&x.pIdx===pIdx))res.push({co,p,coIdx,pIdx});});
+  return res;
+}
+function bulkCompose(){
+  const ppl=getSelectedPeople();
+  if(!ppl.length){toast('No contacts with emails in selection');return;}
+  recipients=ppl.map(({co,p})=>({name:`${p.fname||''} ${p.lname||''}`.trim()||p.email,email:p.email,company:co.name,firstName:p.fname,lastName:p.lname,pos:p.pos,mmk:p.mmk,rehab:co.rehab_fee}));
+  nav('compose',document.querySelector('[onclick*=compose]'));renderRcptBox();
+  toast(`✓ ${recipients.length} recipients added`);
+}
+function bulkExport(){
+  const cos=[...selectedCos].map(i=>COS[i]);
+  if(!cos.length){toast('Select companies first');return;}
+  const cols=['name','industry','type','culture','headcount','rehab_fee','last_touchpoint'];
+  dlCSV(tCSV(cols,cos),`selected_export_${new Date().toISOString().slice(0,10)}.csv`);
+  toast(`✓ Exported ${cos.length} companies`);
+}
+function bulkStatus(){
+  const ppl=getSelectedPeople();
+  if(!ppl.length){toast('No contacts in selection');return;}
+  document.getElementById('bulk-status-info').textContent=`Will update ${ppl.length} contact(s)`;
+  document.getElementById('bulk-status-modal').classList.add('open');
+}
+function closeBulkStatus(){document.getElementById('bulk-status-modal').classList.remove('open');}
+function applyBulkStatus(){
+  const st=document.getElementById('bulk-status-sel').value;
+  getSelectedPeople().forEach(({coIdx,pIdx})=>{if(COS[coIdx]?.people?.[pIdx])COS[coIdx].people[pIdx].status=st;});
+  sv('crm7_co',COS);renderCo();closeBulkStatus();toast(`✓ Status updated`);
+}
+function bulkDelete(){
+  const n=selectedCos.size;
+  if(!n){toast('Select companies first');return;}
+  if(!confirm(`Delete ${n} compan${n>1?'ies':'y'} and all their contacts?`))return;
+  const sorted=[...selectedCos].sort((a,b)=>b-a);
+  sorted.forEach(i=>COS.splice(i,1));
+  selectedCos.clear();selectedPeople=[];
+  sv('crm7_co',COS);buildInds();refreshCounts();renderDash();renderCo();
+  toast(`${n} compan${n>1?'ies':'y'} deleted`);
+}
+
+// ═══════════════ COMPANY MODAL ═══════════════
+function openCoModal(idx){
+  const co=idx!==null&&idx>=0?COS[idx]:null;
+  document.getElementById('com-ttl').textContent=co?'Edit company':'Add company';
+  document.getElementById('com-idx').value=idx!==null&&idx>=0?idx:-1;
+  document.getElementById('com-del').style.display=co?'inline-block':'none';
+  ['name','ind','type','cult','hc','rf','touch','web','esg','tags','notes','stage','na-date','na-note'].forEach(f=>{const e=document.getElementById('com-'+f);if(!e)return;const map={name:'name',ind:'industry',type:'type',cult:'culture',hc:'headcount',rf:'rehab_fee',touch:'last_touchpoint',web:'website',esg:'esg',tags:'tags',notes:'notes',stage:'stage','na-date':'next_action_date','na-note':'next_action_note'};e.value=co?co[map[f]]||'':'';});
+  if(!co)document.getElementById('com-stage').value='prospecting';
+  document.getElementById('co-modal').classList.add('open');
+}
+function closeCoModal(){document.getElementById('co-modal').classList.remove('open');}
+function saveCo(){
+  const idx=parseInt(document.getElementById('com-idx').value);
+  const name=document.getElementById('com-name').value.trim();
+  if(!name){toast('Company name required');return;}
+  const rec={name,industry:document.getElementById('com-ind').value.trim(),type:document.getElementById('com-type').value,culture:document.getElementById('com-cult').value,headcount:document.getElementById('com-hc').value.trim(),rehab_fee:document.getElementById('com-rf').value.trim(),last_touchpoint:document.getElementById('com-touch').value,website:document.getElementById('com-web').value.trim(),esg:document.getElementById('com-esg').value.trim(),tags:document.getElementById('com-tags').value.trim(),notes:document.getElementById('com-notes').value.trim(),stage:document.getElementById('com-stage').value||'prospecting',next_action_date:document.getElementById('com-na-date').value,next_action_note:document.getElementById('com-na-note').value.trim(),activity:idx>=0?(COS[idx].activity||[]):[],people:idx>=0?(COS[idx].people||[]):[]};
+  if(idx>=0){COS[idx]=rec;toast('✓ Company updated');}else{COS.push(rec);toast('✓ Company added');}
+  sv('crm7_co',COS);buildInds();refreshCounts();renderDash();renderCo();closeCoModal();
+}
+function deleteCo(){
+  const idx=parseInt(document.getElementById('com-idx').value);if(idx<0)return;
+  if(!confirm(`Delete "${COS[idx].name}" and all contacts?`))return;
+  expandedCos.delete(idx);selectedCos.delete(idx);COS.splice(idx,1);
+  sv('crm7_co',COS);buildInds();refreshCounts();renderDash();renderCo();closeCoModal();toast('Deleted');
+}
+
+// ═══════════════ PERSON MODAL ═══════════════
+function openPModal(ci,pi){
+  const co=COS[ci];if(!co)return;
+  const p=pi!==null&&pi>=0?(co.people||[])[pi]:null;
+  document.getElementById('pm-ttl').textContent=p?`Edit — ${p.fname||''} ${p.lname||''}`.trim():`Add contact — ${co.name}`;
+  document.getElementById('pm-co-idx').value=ci;document.getElementById('pm-p-idx').value=pi!==null&&pi>=0?pi:-1;
+  document.getElementById('pm-del').style.display=p?'inline-block':'none';
+  ['fn','ln','pos','em','ph','st','mmk','notes'].forEach(f=>{const e=document.getElementById('pm-'+f);if(!e)return;const map={fn:'fname',ln:'lname',pos:'pos',em:'email',ph:'phone',st:'status',mmk:'mmk',notes:'notes'};e.value=p?p[map[f]]||'':'';});
+  document.getElementById('p-modal').classList.add('open');
+}
+function closePModal(){document.getElementById('p-modal').classList.remove('open');}
+function savePerson(){
+  const ci=parseInt(document.getElementById('pm-co-idx').value);
+  const pi=parseInt(document.getElementById('pm-p-idx').value);
+  const fn=document.getElementById('pm-fn').value.trim(),ln=document.getElementById('pm-ln').value.trim();
+  if(!fn&&!ln){toast('Enter at least a name');return;}
+  const rec={fname:fn,lname:ln,pos:document.getElementById('pm-pos').value.trim(),email:document.getElementById('pm-em').value.trim(),phone:document.getElementById('pm-ph').value.trim(),status:document.getElementById('pm-st').value,mmk:document.getElementById('pm-mmk').value.trim(),notes:document.getElementById('pm-notes').value.trim()};
+  if(!COS[ci].people)COS[ci].people=[];
+  if(pi>=0){COS[ci].people[pi]=rec;toast('✓ Contact updated');}else{COS[ci].people.push(rec);toast('✓ Contact added');}
+  sv('crm7_co',COS);expandedCos.add(ci);refreshCounts();renderCo();closePModal();
+}
+function deletePerson(){
+  const ci=parseInt(document.getElementById('pm-co-idx').value);
+  const pi=parseInt(document.getElementById('pm-p-idx').value);if(pi<0)return;
+  if(!confirm('Delete this contact?'))return;
+  COS[ci].people.splice(pi,1);sv('crm7_co',COS);refreshCounts();renderCo();closePModal();toast('Deleted');
+}
+
+// ═══════════════ COMPOSE & RECIPIENTS ═══════════════
+let recipients=[]; // [{name,email,company,firstName,lastName,pos,mmk,rehab}]
+let emailLang='hu';
+let pickerMode='manual';
+let pickerSel=new Set(); // "coIdx-pIdx"
+
+function openCompose(){nav('compose',document.querySelector('[onclick*=compose]'));}
+function renderRcptBox(){
+  const box=document.getElementById('rcpt-box');
+  const ph=document.getElementById('rcpt-placeholder');
+  box.innerHTML='';
+  if(!recipients.length){box.appendChild(ph);return;}
+  recipients.forEach((r,i)=>{
+    const tag=document.createElement('div');tag.className='rcpt-tag';
+    tag.innerHTML=`${r.name||r.email}<span title="Remove" onclick="removeRcpt(${i})">×</span>`;
+    box.appendChild(tag);
+  });
+}
+function removeRcpt(i){recipients.splice(i,1);renderRcptBox();}
+function addRcptManual(){
+  const inp=document.getElementById('rcpt-manual');
+  const em=inp.value.trim();
+  if(!em||!em.includes('@')){toast('Enter a valid email');return;}
+  if(recipients.find(r=>r.email===em)){toast('Already added');return;}
+  recipients.push({name:em,email:em,company:'',firstName:'',lastName:'',pos:'',mmk:'',rehab:''});
+  inp.value='';renderRcptBox();
+}
+
+function openPickerModal(mode){
+  pickerMode=mode;
+  pickerSel=new Set(recipients.map(r=>r._key||'').filter(Boolean));
+  document.getElementById('picker-ttl').textContent=mode==='status'?'Add recipients by status / group':'Add recipients from contacts';
+  document.getElementById('picker-q').value='';
+  document.getElementById('picker-type').value='';
+  document.getElementById('picker-status').value=mode==='status'?'email_sent':'';
+  buildPickerInds();
+  renderPicker();
+  document.getElementById('picker-modal').classList.add('open');
+}
+function buildPickerInds(){const s=document.getElementById('picker-ind');if(!s)return;const inds=[...new Set(COS.map(c=>c.industry).filter(Boolean))].sort();s.innerHTML='<option value="">All industries</option>';inds.forEach(i=>{const o=document.createElement('option');o.value=i;o.textContent=i;s.appendChild(o);});}
+function closePickerModal(){document.getElementById('picker-modal').classList.remove('open');}
+
+function getAllPeople(emailOnly=false){
+  const res=[];
+  COS.forEach((co,ci)=>(co.people||[]).forEach((p,pi)=>{
+    if(emailOnly&&!p.email)return;
+    res.push({co,p,key:`${ci}-${pi}`,ci,pi});
+  }));
+  return res;
+}
+function renderPicker(){
+  const q=(document.getElementById('picker-q')?.value||'').toLowerCase();
+  const type=document.getElementById('picker-type')?.value||'';
+  const status=document.getElementById('picker-status')?.value||'';
+  const ind=document.getElementById('picker-ind')?.value||'';
+  const all=getAllPeople(false).filter(({co,p})=>{
+    const m=!q||[p.fname,p.lname,p.email,p.pos,co.name].some(f=>(f||'').toLowerCase().includes(q));
+    return m&&(!type||co.type===type)&&(!status||(status==='none'?!p.status:p.status===status))&&(!ind||co.industry===ind);
+  });
+  const list=document.getElementById('picker-list');list.innerHTML='';
+  if(!all.length){list.innerHTML='<div style="font-size:12px;color:var(--tx2);padding:12px;grid-column:1/-1">No contacts match the current filters.</div>';updPickerCount();return;}
+  all.forEach(({co,p,key})=>{
+    const hasEmail=!!p.email;
+    const isPicked=pickerSel.has(key);
+    const item=document.createElement('div');
+    item.className='picker-item'+(isPicked?' picked':'')+(hasEmail?'':' no-email');
+    item.style.opacity=hasEmail?'1':'0.45';
+    item.style.cursor=hasEmail?'pointer':'not-allowed';
+    if(hasEmail)item.onclick=()=>{if(pickerSel.has(key))pickerSel.delete(key);else pickerSel.add(key);item.classList.toggle('picked');updPickerCount();};
+    item.innerHTML=`<div class="pi-nm">${p.fname||''} ${p.lname||''}</div><div class="pi-co">${co.name} · ${p.pos||'—'}</div><div class="pi-em">${p.email||'<em style="color:var(--tx3)">no email</em>'}</div>${p.status?`<span class="badge ${SB(p.status)}" style="font-size:9px;margin-top:3px;display:inline-block">${SL(p.status)}</span>`:''}`;
+    list.appendChild(item);
+  });
+  updPickerCount();
+}
+function updPickerCount(){document.getElementById('picker-sel-count').textContent=`${pickerSel.size} selected`;}
+function pickerSelectAll(){
+  const q=(document.getElementById('picker-q')?.value||'').toLowerCase();
+  const type=document.getElementById('picker-type')?.value||'';
+  const status=document.getElementById('picker-status')?.value||'';
+  const ind=document.getElementById('picker-ind')?.value||'';
+  const shown=getAllPeople(false).filter(({co,p})=>{
+    const m=!q||[p.fname,p.lname,p.email,p.pos,co.name].some(f=>(f||'').toLowerCase().includes(q));
+    return m&&(!type||co.type===type)&&(!status||(status==='none'?!p.status:p.status===status))&&(!ind||co.industry===ind)&&p.email;
+  });
+  shown.forEach(({key})=>pickerSel.add(key));
+  renderPicker();
+  updPickerCount();
+}
+function pickerClear(){pickerSel.clear();document.querySelectorAll('#picker-list .picker-item').forEach(i=>i.classList.remove('picked'));updPickerCount();}
+function applyPicker(){
+  getAllPeople().filter(({key})=>pickerSel.has(key)).forEach(({co,p,key})=>{
+    if(!recipients.find(r=>r.email===p.email))
+      recipients.push({name:`${p.fname||''} ${p.lname||''}`.trim()||p.email,email:p.email,company:co.name,firstName:p.fname,lastName:p.lname,pos:p.pos,mmk:p.mmk,rehab:co.rehab_fee,_key:key});
+  });
+  renderRcptBox();closePickerModal();toast(`✓ ${pickerSel.size} recipients added`);
+}
+
+function selLang(el,l){emailLang=l;document.querySelectorAll('.chip[onclick*=selLang]').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');}
+function loadTmpl(){const idx=document.getElementById('tmpl-sel').value;if(!idx)return;const t=TMPLS[parseInt(idx)];if(!t)return;document.getElementById('c-subj').value=t.subject;document.getElementById('c-body').value=t.body;toast(`✓ "${t.name}" loaded`);}
+function fillPrev(){const s=document.getElementById('c-subj').value,b=document.getElementById('c-body').value;document.getElementById('c-prev-subj').textContent=fillPH(s);document.getElementById('c-prev-body').textContent=fillPH(b);}
+function copyEmail(){const s=document.getElementById('c-subj').value,b=document.getElementById('c-body').value;if(!s&&!b){toast('Write something first');return;}navigator.clipboard.writeText(`Subject: ${s}\n\n${b}`).then(()=>toast('✓ Copied')).catch(()=>toast('Select & copy manually'));}
+function saveAsTmpl(){const s=document.getElementById('c-subj').value.trim(),b=document.getElementById('c-body').value.trim();if(!s&&!b){toast('Write something first');return;}const n=prompt('Template name:','My template');if(!n)return;TMPLS.push({name:n,type:'Custom',lang:emailLang,tags:'',subject:s,body:b});sv('crm7_tmpls',TMPLS);renderTmpls();buildTmplSelects();toast('✓ Saved as template');}
+
+async function generateEmail(){
+  const key=getKey();if(!key){toast('Enter API key in Settings first');nav('settings',document.querySelector('[onclick*=settings]'));return;}
+  const msg=document.getElementById('c-msg').value;
+  const target=recipients.length?`${recipients[0].name} at ${recipients[0].company}`:'';
+  document.getElementById('ai-load').classList.add('vis');
+  document.getElementById('c-subj').value='Generating…';document.getElementById('c-body').value='…';
+  const lang=emailLang==='hu'?'ENTIRELY in Hungarian (Magyar), formal "Ön" form':'in English, professional tone';
+  const prompt=`Write a professional outreach email ${lang}.
+${target?`Target: "${target}"`:''}
+Context: "${msg||'partnership opportunity'}"
+Under 120 words. Use {first_name}, {last_name}, {company}, {your_org} as placeholders naturally.
+Reply ONLY:
+SUBJECT: [subject]
+BODY:
+[body]`;
+  try{const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,messages:[{role:'user',content:prompt}]})});const data=await res.json();if(data.error){toast('API error: '+data.error.message);return;}const text=data.content?.map(i=>i.text||'').join('')||'';const sm=text.match(/SUBJECT:\s*(.+)/),bm=text.match(/BODY:\s*([\s\S]+)/);document.getElementById('c-subj').value=sm?sm[1].trim():'';document.getElementById('c-body').value=bm?bm[1].trim():text;toast('✓ Generated');}catch{toast('Generation failed');}
+  document.getElementById('ai-load').classList.remove('vis');
+}
+
+// ═══════════════ TEMPLATES ═══════════════
+function buildTmplSelects(){[document.getElementById('tmpl-sel')].forEach(s=>{if(!s)return;s.innerHTML='<option value="">— or write from scratch —</option>';TMPLS.forEach((t,i)=>{const o=document.createElement('option');o.value=i;o.textContent=t.name;s.appendChild(o);});});}
+function renderTmpls(){
+  const q=(document.getElementById('tmpl-q')?.value||'').toLowerCase();
+  const list=document.getElementById('tmpl-list');if(!list)return;
+  if(document.getElementById('tmpl-lbl'))document.getElementById('tmpl-lbl').textContent=`Email templates (${TMPLS.length})`;
+  const fil=TMPLS.filter(t=>!q||[t.name,t.type,t.tags,t.subject,t.body].some(f=>(f||'').toLowerCase().includes(q)));
+  list.innerHTML='';
+  if(!fil.length){list.innerHTML='<div style="font-size:12px;color:var(--tx2);padding:12px 0">No templates. <span style="color:var(--t600);cursor:pointer" onclick="openTmplModal(null)">Create one ↗</span></div>';return;}
+  fil.forEach(t=>{const ri=TMPLS.indexOf(t);const card=document.createElement('div');card.className='tmpl-card';
+    const ph=txt=>txt.replace(/\{(\w+)\}/g,'<span class="ph">{$1}</span>');
+    card.innerHTML=`<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px"><div style="flex:1"><div style="font-size:13px;font-weight:600;margin-bottom:2px">${t.name}</div><div style="font-size:10px;color:var(--tx2);margin-bottom:7px">${t.type} · ${t.lang==='hu'?'Magyar':t.lang==='en'?'English':'EN+HU'}${t.tags?' · '+t.tags:''}</div><div style="font-size:11px;color:var(--tx2);font-style:italic">${ph(t.subject)}</div></div><div style="display:flex;gap:5px;flex-shrink:0"><button class="btn btn-sm" onclick="useTmpl(${ri})">Use ↗</button><button class="btn btn-sm" onclick="openTmplModal(${ri})">Edit</button></div></div><div style="background:var(--bg2);border-radius:var(--r);padding:8px 10px;margin-top:9px;font-size:10px;color:var(--tx2);line-height:1.65;white-space:pre-wrap;max-height:65px;overflow:hidden">${ph(t.body.slice(0,200))}${t.body.length>200?'…':''}</div>`;
+    list.appendChild(card);});}
+function openTmplModal(idx){
+  const t=idx!==null&&idx>=0?TMPLS[idx]:null;
+  document.getElementById('tm-ttl').textContent=t?'Edit template':'New template';
+  document.getElementById('tm-idx').value=idx!==null&&idx>=0?idx:-1;
+  document.getElementById('tm-del').style.display=t?'inline-block':'none';
+  ['name','type','lang','tags','subj','body'].forEach(f=>{const e=document.getElementById('tm-'+f);if(e)e.value=t?t[{name:'name',type:'type',lang:'lang',tags:'tags',subj:'subject',body:'body'}[f]]||'':'';});
+  updTmPrev();document.getElementById('tmpl-modal').classList.add('open');
+}
+function closeTmplModal(){document.getElementById('tmpl-modal').classList.remove('open');}
+function updTmPrev(){const s=document.getElementById('tm-subj')?.value||'',b=document.getElementById('tm-body')?.value||'';if(document.getElementById('tm-prev-subj'))document.getElementById('tm-prev-subj').textContent=fillPH(s);if(document.getElementById('tm-prev-body'))document.getElementById('tm-prev-body').textContent=fillPH(b).slice(0,250);}
+function saveTmpl(){const idx=parseInt(document.getElementById('tm-idx').value);const name=document.getElementById('tm-name').value.trim();if(!name){toast('Name required');return;}const rec={name,type:document.getElementById('tm-type').value,lang:document.getElementById('tm-lang').value,tags:document.getElementById('tm-tags').value.trim(),subject:document.getElementById('tm-subj').value.trim(),body:document.getElementById('tm-body').value.trim()};if(idx>=0){TMPLS[idx]=rec;toast('✓ Updated');}else{TMPLS.push(rec);toast('✓ Saved');}sv('crm7_tmpls',TMPLS);renderTmpls();buildTmplSelects();closeTmplModal();document.getElementById('nb-tmpl').textContent=TMPLS.length;}
+function deleteTmpl(){const idx=parseInt(document.getElementById('tm-idx').value);if(idx<0)return;if(!confirm(`Delete "${TMPLS[idx].name}"?`))return;TMPLS.splice(idx,1);sv('crm7_tmpls',TMPLS);renderTmpls();buildTmplSelects();closeTmplModal();toast('Deleted');}
+function useTmpl(idx){const t=TMPLS[idx];if(!t)return;document.getElementById('c-subj').value=t.subject;document.getElementById('c-body').value=t.body;nav('compose',document.querySelector('[onclick*=compose]'));toast(`✓ "${t.name}" loaded`);}
+
+// ═══════════════ IMPORT ═══════════════
+let pR=[],fH=[];
+const CF=['company','industry','type','email','phone','pos','fname','lname'],CL={company:'Company name',industry:'Industry',type:'Partnership type',email:'Email',phone:'Phone',pos:'Position',fname:'First name',lname:'Last name'};
+function handleFile(f){if(!f)return;const ext=f.name.split('.').pop().toLowerCase();if(ext==='csv'){const r=new FileReader();r.onload=e=>parseCSV(e.target.result);r.readAsText(f);}else{const r=new FileReader();r.onload=e=>parseXLSX(e.target.result);r.readAsArrayBuffer(f);}}
+function parseCSV(t){const l=t.trim().split('\n');fH=l[0].split(',').map(h=>h.trim().replace(/"/g,''));pR=l.slice(1).map(r=>r.split(',').map(v=>v.trim().replace(/"/g,'')));showMap();}
+function parseXLSX(b){if(typeof XLSX!=='undefined'){const wb=XLSX.read(b,{type:'arraybuffer'});const ws=wb.Sheets[wb.SheetNames[0]];const d=XLSX.utils.sheet_to_json(ws,{header:1});fH=(d[0]||[]).map(String);pR=d.slice(1).filter(r=>r.some(c=>c));showMap();}else toast('SheetJS loading, retry');}
+function am(h,f){const l=h.toLowerCase();const kw={company:['company','ceg','name','nev','firm'],industry:['industry','ipar','sector'],type:['type','tipus','partnership'],email:['email','mail'],phone:['phone','tel','mobil'],pos:['pozi','position','title','role'],fname:['first','fname','kereszt'],lname:['last','lname','vezet','surname']};return(kw[f]||[]).some(k=>l.includes(k));}
+function showMap(){document.getElementById('import-section').style.display='block';document.getElementById('import-info').textContent=`${pR.length} rows · ${fH.length} columns`;document.getElementById('map-rows').innerHTML=CF.map(f=>`<div style="font-size:11px;color:var(--tx2);align-self:center">${CL[f]}</div><select class="ci fs" id="map-${f}" style="width:100%"><option value="">— skip —</option>${fH.map(h=>`<option value="${h}"${am(h,f)?' selected':''}>${h}</option>`).join('')}</select>`).join('');document.getElementById('import-prev').textContent=`Columns: ${fH.join(' | ')}`;}
+function doImport(){
+  const mp={};CF.forEach(f=>{const v=document.getElementById('map-'+f)?.value;if(v)mp[f]=v;});
+  const gi=h=>fH.indexOf(h),seen={};
+  pR.forEach(row=>{const coName=(row[gi(mp.company)]||'').trim();if(!coName)return;if(!seen[coName]){seen[coName]={name:coName,industry:row[gi(mp.industry)]||'',type:row[gi(mp.type)]||'Business',culture:'',headcount:'',rehab_fee:'',last_touchpoint:'',website:'',esg:'',status_note:'',tags:'',notes:'',people:[]};COS.push(seen[coName]);}const email=(row[gi(mp.email)]||'').trim();const pos=(row[gi(mp.pos)]||'').trim();const phone=(row[gi(mp.phone)]||'').trim();const fn=(row[gi(mp.fname)]||'').trim();const ln=(row[gi(mp.lname)]||'').trim();if(email||fn||ln)seen[coName].people.push({fname:fn,lname:ln,pos,email,phone,status:'',mmk:'',notes:''});});
+  sv('crm7_co',COS);buildInds();refreshCounts();renderDash();resetImport();toast(`✓ ${Object.keys(seen).length} companies imported`);nav('companies',document.querySelector('[onclick*=companies]'));
+}
+function resetImport(){document.getElementById('import-section').style.display='none';pR=[];fH=[];const inp=document.querySelector('#uz input');if(inp)inp.value='';}
+
+// ═══════════════ EXPORT ═══════════════
+function updEx(){
+  const type=document.getElementById('ex-type')?.value||'',ind=document.getElementById('ex-ind')?.value||'';
+  const rows=COS.filter(c=>(!type||c.type===type)&&(!ind||c.industry===ind));
+  if(document.getElementById('ex-count'))document.getElementById('ex-count').textContent=`${rows.length} companies, ${rows.reduce((a,c)=>a+(c.people||[]).length,0)} contacts`;
+  const cols=['name','industry','type','culture','headcount','rehab_fee','last_touchpoint'];
+  const prev=cols.join(',')+'\n'+rows.slice(0,4).map(r=>cols.map(c=>`"${r[c]||''}"`).join(',')).join('\n')+(rows.length>4?`\n...+${rows.length-4} more`:'');
+  if(document.getElementById('ex-prev'))document.getElementById('ex-prev').textContent=prev;
+  if(document.getElementById('ex-lbl'))document.getElementById('ex-lbl').textContent=`Preview (${rows.length} companies)`;
+}
+function dlCSV(c,fn){const b=new Blob(['\uFEFF'+c],{type:'text/csv;charset=utf-8;'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=fn;a.click();URL.revokeObjectURL(u);}
+function tCSV(cols,rows){const e=v=>'"'+String(v||'').replace(/"/g,'""')+'"';return[cols.join(','),...rows.map(r=>cols.map(c=>e(r[c])).join(','))].join('\n');}
+function exportCos(){const type=document.getElementById('ex-type').value,ind=document.getElementById('ex-ind').value;const cols=['name','industry','type','culture','headcount','rehab_fee','esg','last_touchpoint','website','tags','notes'];const rows=COS.filter(c=>(!type||c.type===type)&&(!ind||c.industry===ind));if(!rows.length){toast('No data');return;}dlCSV(tCSV(cols,rows),`companies_${new Date().toISOString().slice(0,10)}.csv`);toast(`✓ ${rows.length} companies`);}
+function exportPeople(){const type=document.getElementById('ex-type').value,ind=document.getElementById('ex-ind').value;const cos=COS.filter(c=>(!type||c.type===type)&&(!ind||c.industry===ind));const rows=[];cos.forEach(co=>(co.people||[]).forEach(p=>rows.push({company:co.name,industry:co.industry,type:co.type,fname:p.fname,lname:p.lname,position:p.pos,email:p.email,phone:p.phone,status:p.status,mmk:p.mmk,notes:p.notes})));if(!rows.length){toast('No contacts');return;}const cols=['company','industry','type','fname','lname','position','email','phone','status','mmk','notes'];dlCSV(tCSV(cols,rows),`contacts_${new Date().toISOString().slice(0,10)}.csv`);toast(`✓ ${rows.length} contacts`);}
+function backupAll(){const d={companies:COS,templates:TMPLS,settings:SETTINGS,date:new Date().toISOString()};dlCSV(JSON.stringify(d,null,2),`crm_backup_${new Date().toISOString().slice(0,10)}.json`);toast('✓ Backup downloaded');}
+function clearAll(){if(!confirm('Reset ALL data to defaults?'))return;COS.length=0;TMPLS.length=0;COS.push(...D_COMPANIES);TMPLS.push(...D_TMPLS);sv('crm7_co',COS);sv('crm7_tmpls',TMPLS);buildInds();refreshCounts();renderDash();renderCo();renderTmpls();updEx();buildTmplSelects();toast('Reset to defaults');}
+
+// ═══════════════ SETTINGS ═══════════════
+function applySettings(){
+  const nm=SETTINGS.crmName||'ImpactCRM',tg=SETTINGS.tag||'NGO Partner Suite',org=SETTINGS.org||'Your Organization';
+  ['sb-nm','bp-nm'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=nm;});
+  ['sb-tg','bp-tg'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=tg;});
+  if(document.getElementById('sb-org'))document.getElementById('sb-org').textContent=org;
+  if(document.getElementById('sb-email'))document.getElementById('sb-email').textContent=SETTINGS.email||'White-label CRM';
+  const acc=SETTINGS.acc||'#1D9E75';
+  const ini=nm.split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  ['bp-ico'].forEach(id=>{const e=document.getElementById(id);if(e){e.textContent=ini;e.style.background=acc;}});
+  ['sb-ico'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.background=acc;});
+  setAccCSS(acc,SETTINGS.rgb||'29,158,117');
+}
+function updBrand(){SETTINGS.crmName=document.getElementById('s-crm')?.value||'ImpactCRM';SETTINGS.tag=document.getElementById('s-tag')?.value||'NGO Partner Suite';SETTINGS.org=document.getElementById('s-org')?.value||'Your Organization';SETTINGS.email=document.getElementById('s-email')?.value||'';applySettings();}
+function setAcc(el,c,rgb){SETTINGS.acc=c;SETTINGS.rgb=rgb;document.querySelectorAll('.chip[onclick*=setAcc]').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');['sb-ico','bp-ico'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.background=c;});setAccCSS(c,rgb);}
+function setAccCSS(c,rgb){const d=h=>{const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgb(${Math.round(r*.75)},${Math.round(g*.75)},${Math.round(b*.75)})`;};const ra=(rgb,a)=>`rgba(${rgb},${a})`;document.documentElement.style.setProperty('--acc',c);document.documentElement.style.setProperty('--acc2',d(c));document.documentElement.style.setProperty('--t400',c);document.documentElement.style.setProperty('--t600',d(c));document.documentElement.style.setProperty('--t50',ra(rgb,.13));document.documentElement.style.setProperty('--t100',ra(rgb,.28));document.documentElement.style.setProperty('--acc-r',rgb.split(',')[0]);document.documentElement.style.setProperty('--acc-g',rgb.split(',')[1]);document.documentElement.style.setProperty('--acc-b',rgb.split(',')[2]);}
+function saveSettings(){
+  updBrand();
+  SETTINGS.emailjsSvc=document.getElementById('s-ejs-svc')?.value.trim()||'';
+  SETTINGS.emailjsTpl=document.getElementById('s-ejs-tpl')?.value.trim()||'';
+  SETTINGS.emailjsKey=document.getElementById('s-ejs-key')?.value.trim()||'';
+  SETTINGS.googleClientId=document.getElementById('s-goog-cid')?.value.trim()||'';
+  sv('crm7_set',SETTINGS);
+  const k=document.getElementById('s-key')?.value.trim();if(k)localStorage.setItem('crm7_key',k);
+  document.getElementById('s-status') && (document.getElementById('s-status').textContent='✓ Settings saved');
+  toast('✓ Settings saved');
+  // re-init emailjs if key changed
+  if(SETTINGS.emailjsKey) try{emailjs.init({publicKey:SETTINGS.emailjsKey});}catch(e){}
+}
+function syncKey(){const k=document.getElementById('s-key')?.value.trim();if(k)localStorage.setItem('crm7_key',k);}
+
+// ═══════════════ NAV ═══════════════
+function nav(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(el)el.classList.add('active');
+  const T={dashboard:'Dashboard',pipeline:'Pipeline & Follow-ups',companies:'Companies & Contacts',import:'Import Excel / CSV',compose:'Compose Email',templates:'Email Templates',export:'Export CSV',settings:'Settings'};
+  document.getElementById('page-title').textContent=T[id]||id;
+  if(id==='export')updEx();
+  if(id==='templates')renderTmpls();
+  if(id==='dashboard')renderDash();
+  if(id==='compose'){renderRcptBox();buildTmplSelects();}
+  if(id==='pipeline'){renderPipeline();}
+}
+
+['co-modal','p-modal','picker-modal','tmpl-modal','bulk-status-modal','act-modal','na-modal'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});});
+document.getElementById('ex-type')?.addEventListener('change',updEx);
+document.getElementById('ex-ind')?.addEventListener('change',updEx);
+document.getElementById('tm-subj')?.addEventListener('input',updTmPrev);
+document.getElementById('tm-body')?.addEventListener('input',updTmPrev);
+
+// ═══════════════════════════════════════════════════════
+// PIPELINE, ACTIVITY LOG, NEXT ACTION — v8 features
+// ═══════════════════════════════════════════════════════
+
+// ── PIPELINE STAGES ──
+const STAGES=[
+  {id:'prospecting',label:'Prospecting',color:'#888780'},
+  {id:'offer_sent',label:'Offer sent',color:'#378ADD'},
+  {id:'negotiation',label:'Negotiating',color:'#BA7517'},
+  {id:'active',label:'Active partner',color:'#1D9E75'},
+  {id:'dormant',label:'Dormant',color:'#D4537E'},
+  {id:'closed_lost',label:'Closed / lost',color:'#D85A30'},
+];
+
+let pipelineView='kanban';
+
+function switchPipelineView(v){
+  pipelineView=v;
+  document.getElementById('pl-kanban-btn').classList.toggle('active',v==='kanban');
+  document.getElementById('pl-list-btn').classList.toggle('active',v==='list');
+  document.getElementById('pipeline-kanban').style.display=v==='kanban'?'':'none';
+  document.getElementById('pipeline-due').style.display=v==='list'?'':'none';
+  if(v==='list')renderDueList();
+}
+
+function renderPipeline(){
+  renderKanban();
+  renderDueList();
+  updDueCounts();
+}
+
+function updDueCounts(){
+  const today=new Date().toISOString().slice(0,10);
+  const week=new Date(Date.now()+7*864e5).toISOString().slice(0,10);
+  const overdue=COS.filter(c=>c.next_action_date&&c.next_action_date<today).length;
+  const dueWeek=COS.filter(c=>c.next_action_date&&c.next_action_date>=today&&c.next_action_date<=week).length;
+  const e1=document.getElementById('d-overdue');if(e1)e1.textContent=overdue;
+  const e2=document.getElementById('d-week');if(e2)e2.textContent=dueWeek;
+}
+
+function renderKanban(){
+  const kb=document.getElementById('pipeline-kanban');if(!kb)return;
+  kb.innerHTML='';
+  const wrap=document.createElement('div');wrap.className='pipeline-wrap';
+  const today=new Date().toISOString().slice(0,10);
+  const week=new Date(Date.now()+7*864e5).toISOString().slice(0,10);
+
+  STAGES.forEach(st=>{
+    const companies=COS.filter(c=>(c.stage||'prospecting')===st.id);
+    const col=document.createElement('div');col.className='pl-col';col.dataset.stage=st.id;
+    const totalFee=companies.reduce((a,c)=>a+(parseFloat(c.rehab_fee)||0),0);
+    col.innerHTML=`<div class="pl-hdr"><span class="pl-title" style="color:${st.color}">${st.label}</span><span class="pl-cnt">${companies.length}</span></div>`;
+
+    companies.forEach(co=>{
+      const ri=COS.indexOf(co);
+      const fee=parseFloat(co.rehab_fee);
+      const pplN=(co.people||[]).length;
+      const lastAct=(co.activity||[]).slice(-1)[0];
+      const card=document.createElement('div');card.className='pl-card';card.draggable=true;
+      card.dataset.idx=ri;
+
+      // Due date chip
+      let duechip='';
+      if(co.next_action_date){
+        let cls='future',label=co.next_action_date;
+        if(co.next_action_date<today){cls='overdue';label='Overdue: '+co.next_action_date;}
+        else if(co.next_action_date===today){cls='today';label='Today';}
+        else if(co.next_action_date<=week){cls='soon';label='Due '+co.next_action_date;}
+        duechip=`<div class="pl-due ${cls}">${label}</div>`;
+      }
+
+      card.innerHTML=`
+        <div class="pl-nm">${co.name}</div>
+        <div class="pl-meta">${co.industry||'—'} · ${pplN} contact${pplN!==1?'s':''}</div>
+        ${fee>0?`<div class="pl-fee">${fee.toFixed(1)} M HUF</div>`:''}
+        ${duechip}
+        ${lastAct?`<div class="pl-meta" style="margin-top:4px;font-style:italic">${lastAct.type}: ${(lastAct.text||'').slice(0,40)}…</div>`:''}
+        <div class="pl-actions">
+          <button class="btn btn-sm" onclick="openActModal(${ri})">Log</button>
+          <button class="btn btn-sm" onclick="openNAModal(${ri})">⏰</button>
+          <button class="btn btn-sm" onclick="openCoModal(${ri})">Edit</button>
+        </div>`;
+
+      // Drag events
+      card.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',ri);card.style.opacity='.4';});
+      card.addEventListener('dragend',()=>{card.style.opacity='1';document.querySelectorAll('.pl-col').forEach(c=>c.classList.remove('drag-over'));});
+      col.appendChild(card);
+    });
+
+    // Drop target
+    col.addEventListener('dragover',e=>{e.preventDefault();col.classList.add('drag-over');});
+    col.addEventListener('dragleave',()=>col.classList.remove('drag-over'));
+    col.addEventListener('drop',e=>{
+      e.preventDefault();col.classList.remove('drag-over');
+      const ri=parseInt(e.dataTransfer.getData('text/plain'));
+      if(isNaN(ri)||!COS[ri])return;
+      COS[ri].stage=st.id;
+      sv('crm7_co',COS);renderKanban();refreshCounts();toast(`✓ ${COS[ri].name} → ${st.label}`);
+    });
+
+    if(totalFee>0){
+      const tot=document.createElement('div');
+      tot.style.cssText='font-size:10px;color:var(--tx3);padding:6px 4px 0;text-align:right;border-top:.5px dashed var(--brd);margin-top:4px';
+      tot.textContent='Total: '+totalFee.toFixed(1)+' M HUF';
+      col.appendChild(tot);
+    }
+    wrap.appendChild(col);
+  });
+  kb.appendChild(wrap);
+}
+
+function renderDueList(){
+  const list=document.getElementById('due-list');if(!list)return;list.innerHTML='';
+  const today=new Date().toISOString().slice(0,10);
+  const week=new Date(Date.now()+7*864e5).toISOString().slice(0,10);
+  const items=COS.filter(c=>c.next_action_date).sort((a,b)=>a.next_action_date.localeCompare(b.next_action_date));
+  if(!items.length){list.innerHTML='<div style="font-size:12px;color:var(--tx2);padding:12px 0">No follow-up reminders set. Open any company and click ⏰ to add one.</div>';return;}
+  items.forEach(co=>{
+    const ri=COS.indexOf(co);
+    const d=co.next_action_date;
+    let cls='',label=d;
+    if(d<today){cls='overdue';label='⚠ Overdue — '+d;}
+    else if(d===today){cls='today';label='Today — '+d;}
+    else if(d<=week){cls='soon';label=d;}
+    const row=document.createElement('div');row.className='due-row '+cls;
+    row.onclick=()=>{nav('companies',document.querySelector('[onclick*=companies]'));setTimeout(()=>{expandedCos.add(ri);renderCo();},80);};
+    const fee=parseFloat(co.rehab_fee);
+    row.innerHTML=`
+      <div class="due-nm">${co.name}</div>
+      <div class="due-note">${co.next_action_note||'Follow up'}</div>
+      ${fee>0?`<span style="font-size:10px;font-weight:700;color:var(--t600);flex-shrink:0">${fee.toFixed(1)}M</span>`:''}
+      <div class="due-date ${d<today?'b-off':d===today?'b-fu':'b-email'}" style="background:transparent;padding:0">${label}</div>
+      <div style="display:flex;gap:4px;flex-shrink:0">
+        <button class="btn btn-sm" onclick="event.stopPropagation();openActModal(${ri})">Log</button>
+        <button class="btn btn-sm" onclick="event.stopPropagation();openNAModal(${ri})">Edit ⏰</button>
+      </div>`;
+    list.appendChild(row);
+  });
+}
+
+// ── ACTIVITY LOG ──
+let actCoIdx=-1;
+let curActType='note';
+
+const ACT_ICONS={note:'📝',call:'📞',meeting:'🤝',email:'📧',reply:'↩',win:'🎉'};
+const ACT_LABELS={note:'Note',call:'Call',meeting:'Meeting',email:'Email sent',reply:'Reply received',win:'Partnership won'};
+const ACT_CLS={note:'act-note',call:'act-call',meeting:'act-meeting',email:'act-email',reply:'act-reply',win:'act-win'};
+
+function openActModal(ri){
+  actCoIdx=ri;
+  const co=COS[ri];if(!co)return;
+  document.getElementById('act-modal-ttl').textContent='Activity log — '+co.name;
+  document.getElementById('act-co-idx').value=ri;
+  document.getElementById('act-text').value='';
+  document.getElementById('act-date').value=new Date().toISOString().slice(0,10);
+  curActType='note';
+  document.querySelectorAll('.act-type-btn').forEach(b=>b.classList.toggle('sel',b.dataset.type==='note'));
+  renderActFeed(ri);
+  document.getElementById('act-modal').classList.add('open');
+}
+function closeActModal(){document.getElementById('act-modal').classList.remove('open');}
+
+function selActType(btn){
+  curActType=btn.dataset.type;
+  document.querySelectorAll('.act-type-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+
+function saveActivity(){
+  const ri=parseInt(document.getElementById('act-co-idx').value);
+  const text=document.getElementById('act-text').value.trim();
+  if(!text){toast('Write something first');return;}
+  if(!COS[ri])return;
+  if(!COS[ri].activity)COS[ri].activity=[];
+  COS[ri].activity.unshift({type:curActType,text,date:document.getElementById('act-date').value,ts:Date.now()});
+  sv('crm7_co',COS);
+  document.getElementById('act-text').value='';
+  renderActFeed(ri);
+  // also update last_touchpoint if it's a real interaction
+  if(['call','meeting','reply','win'].includes(curActType)){
+    const d=document.getElementById('act-date').value;
+    if(!COS[ri].last_touchpoint||d>COS[ri].last_touchpoint){COS[ri].last_touchpoint=d;sv('crm7_co',COS);}
+  }
+  toast('✓ Activity logged');
+  renderCo();
+}
+
+function renderActFeed(ri){
+  const co=COS[ri];if(!co)return;
+  const feed=document.getElementById('act-modal-feed');if(!feed)return;
+  const acts=(co.activity||[]);
+  if(!acts.length){feed.innerHTML='<div style="font-size:11px;color:var(--tx2);padding:8px 0 4px">No activity logged yet for this company.</div>';return;}
+  feed.innerHTML=acts.map((a,i)=>`
+    <div class="act-item">
+      <div class="act-dot ${ACT_CLS[a.type]||'act-note'}">${ACT_ICONS[a.type]||'📝'}</div>
+      <div style="flex:1;min-width:0">
+        <div class="act-ttl">${ACT_LABELS[a.type]||a.type}</div>
+        <div class="act-when">${a.date||''}</div>
+        <div class="act-body">${a.text}</div>
+      </div>
+      <span class="act-del" onclick="deleteActivity(${ri},${i})" title="Delete">×</span>
+    </div>`).join('');
+}
+
+function deleteActivity(ri,i){
+  if(!COS[ri]?.activity)return;
+  COS[ri].activity.splice(i,1);
+  sv('crm7_co',COS);renderActFeed(ri);renderCo();toast('Activity deleted');
+}
+
+// Show activity count badge on company card (inline in renderPeople + co header)
+// We add it to renderCo by patching the co-meta line is too complex—instead 
+// we enhance the card subtitle if activity exists (injected into pl-meta area above already)
+
+// ── NEXT ACTION (REMINDER) MODAL ──
+function openNAModal(ri){
+  const co=COS[ri];if(!co)return;
+  document.getElementById('na-modal-ttl').textContent='Next action — '+co.name;
+  document.getElementById('na-co-idx').value=ri;
+  document.getElementById('na-date').value=co.next_action_date||'';
+  document.getElementById('na-note').value=co.next_action_note||'';
+  document.getElementById('na-owner').value=co.next_action_owner||'';
+  document.getElementById('na-clear').style.display=co.next_action_date?'inline-block':'none';
+  document.getElementById('na-modal').classList.add('open');
+}
+function closeNAModal(){document.getElementById('na-modal').classList.remove('open');}
+
+function saveNextAction(){
+  const ri=parseInt(document.getElementById('na-co-idx').value);
+  if(!COS[ri])return;
+  const d=document.getElementById('na-date').value;
+  if(!d){toast('Select a date');return;}
+  COS[ri].next_action_date=d;
+  COS[ri].next_action_note=document.getElementById('na-note').value.trim();
+  COS[ri].next_action_owner=document.getElementById('na-owner').value.trim();
+  sv('crm7_co',COS);refreshCounts();renderCo();
+  if(document.getElementById('page-pipeline').classList.contains('active'))renderPipeline();
+  closeNAModal();toast('✓ Reminder set for '+d);
+}
+
+function clearNextAction(){
+  const ri=parseInt(document.getElementById('na-co-idx').value);
+  if(!COS[ri])return;
+  delete COS[ri].next_action_date;delete COS[ri].next_action_note;delete COS[ri].next_action_owner;
+  sv('crm7_co',COS);refreshCounts();renderCo();
+  if(document.getElementById('page-pipeline').classList.contains('active'))renderPipeline();
+  closeNAModal();toast('Reminder cleared');
+}
+
+// ── DASHBOARD EXTENSION: show overdue + week ──
+const _origRenderDash=typeof renderDash==='function'?renderDash:null;
+// (renderDash already exists; we patch refreshCounts which already calls updDueCounts via refreshCounts re-route)
+// updDueCounts is called inside renderPipeline; also call it from renderDash
+const _origRefreshCounts=refreshCounts;
+
+
+// ═══════════════ EMAILJS SEND ═══════════════
+async function sendEmailJS(){
+  const svc=SETTINGS.emailjsSvc;
+  const tpl=SETTINGS.emailjsTpl;
+  const key=SETTINGS.emailjsKey;
+  if(!svc||!tpl||!key){
+    toast('Set up EmailJS in Settings first');
+    nav('settings',document.querySelector('[onclick*=settings]'));
+    return;
+  }
+  if(!recipients.length){toast('Add recipients first');return;}
+  const subj=document.getElementById('c-subj').value.trim();
+  const body=document.getElementById('c-body').value.trim();
+  if(!subj||!body){toast('Subject and body required');return;}
+
+  const statusEl=document.getElementById('send-status');
+  statusEl.textContent=`Sending to ${recipients.length} recipient(s)…`;
+  statusEl.style.color='var(--tx2)';
+
+  let sent=0,failed=0;
+  for(const r of recipients){
+    const filled=(t)=>t.replace(/\{first_name\}/g,r.firstName||'').replace(/\{last_name\}/g,r.lastName||'').replace(/\{company\}/g,r.company||'').replace(/\{position\}/g,r.pos||'').replace(/\{your_org\}/g,SETTINGS.org||'').replace(/\{mmk_count\}/g,r.mmk||'').replace(/\{rehab_fee\}/g,r.rehab||'').replace(/\{sender_name\}/g,SETTINGS.sender||'');
+    try{
+      await emailjs.send(svc,tpl,{
+        to_email:r.email,
+        to_name:r.name||r.email,
+        from_name:SETTINGS.sender||SETTINGS.org||'',
+        from_email:SETTINGS.email||'',
+        subject:filled(subj),
+        message:filled(body),
+        reply_to:SETTINGS.email||''
+      });
+      sent++;
+      statusEl.textContent=`Sent ${sent}/${recipients.length}…`;
+    }catch(e){
+      failed++;
+      console.error('EmailJS error for',r.email,e);
+    }
+  }
+  if(failed===0){
+    statusEl.textContent=`✓ Sent to ${sent} recipient(s)`;
+    statusEl.style.color='var(--t600)';
+    toast(`✓ Email sent to ${sent} recipient(s)`);
+  } else {
+    statusEl.textContent=`⚠ ${sent} sent, ${failed} failed — check console`;
+    statusEl.style.color='var(--a400)';
+    toast(`⚠ ${sent} sent, ${failed} failed`);
+  }
+}
+
+async function testEmailJS(){
+  const svc=document.getElementById('s-ejs-svc')?.value.trim();
+  const tpl=document.getElementById('s-ejs-tpl')?.value.trim();
+  const key=document.getElementById('s-ejs-key')?.value.trim();
+  const email=document.getElementById('s-email')?.value.trim();
+  const statusEl=document.getElementById('ejs-status');
+  if(!svc||!tpl||!key||!email){statusEl.textContent='Fill in Service ID, Template ID, Public Key and your email address first.';return;}
+  statusEl.textContent='Sending test…';
+  try{
+    emailjs.init({publicKey:key});
+    await emailjs.send(svc,tpl,{
+      to_email:email,to_name:'Test',from_name:SETTINGS.sender||'ImpactCRM',
+      from_email:email,subject:'ImpactCRM — test email',
+      message:'This is a test from ImpactCRM. EmailJS is connected correctly!',reply_to:email
+    });
+    statusEl.textContent='✓ Test email sent! Check your inbox.';
+    statusEl.style.color='var(--t600)';
+  }catch(e){
+    statusEl.textContent='✗ Error: '+(e?.text||e?.message||JSON.stringify(e));
+    statusEl.style.color='var(--c400)';
+  }
+}
+
+// ═══════════════ GOOGLE DRIVE SYNC ═══════════════
+const GDRIVE_FILE_NAME='ImpactCRM_data.json';
+const GDRIVE_SCOPE='https://www.googleapis.com/auth/drive.file';
+let gdriveToken=null;
+let gdriveFileId=localStorage.getItem('crm9_gdrive_fid')||null;
+
+function updDriveStatus(){
+  const btn=document.getElementById('gdrive-btn');
+  const st=document.getElementById('gdrive-status');
+  const det=document.getElementById('gdrive-detail-status');
+  if(!SETTINGS.googleClientId){
+    if(btn)btn.textContent='☁ Connect Drive';
+    if(st)st.textContent='';
+    return;
+  }
+  if(gdriveToken){
+    if(btn){btn.textContent='☁ Sync Drive';btn.style.background='var(--t50)';btn.style.color='var(--t600)';}
+    if(st)st.textContent='✓ connected';
+    if(det)det.textContent='Connected. Use Push/Pull to sync data.';
+  } else {
+    if(btn)btn.textContent='☁ Connect Drive';
+    if(st)st.textContent='';
+  }
+}
+
+function gdriveAction(){
+  if(!SETTINGS.googleClientId){
+    toast('Enter your Google Client ID in Settings first');
+    nav('settings',document.querySelector('[onclick*=settings]'));
+    return;
+  }
+  if(gdriveToken){gdriveUpload();return;}
+  // OAuth popup
+  const params=new URLSearchParams({
+    client_id:SETTINGS.googleClientId,
+    redirect_uri:location.origin+location.pathname,
+    response_type:'token',
+    scope:GDRIVE_SCOPE,
+    prompt:'select_account'
+  });
+  const w=window.open('https://accounts.google.com/o/oauth2/v2/auth?'+params,'_blank','width=500,height=600');
+  // Listen for token via URL hash in the popup — use a message or polling approach
+  const poll=setInterval(()=>{
+    try{
+      const hash=w?.location?.hash;
+      if(hash&&hash.includes('access_token')){
+        clearInterval(poll);
+        const p=new URLSearchParams(hash.slice(1));
+        gdriveToken=p.get('access_token');
+        w.close();
+        updDriveStatus();
+        toast('✓ Google Drive connected');
+        gdriveFindOrCreate();
+      }
+    }catch(e){/* cross-origin, keep polling */}
+    if(w?.closed){clearInterval(poll);}
+  },500);
+}
+
+async function gdriveApiFetch(url,opts={}){
+  const res=await fetch(url,{...opts,headers:{...(opts.headers||{}),Authorization:'Bearer '+gdriveToken}});
+  if(res.status===401){gdriveToken=null;updDriveStatus();toast('Drive session expired — reconnect');throw new Error('401');}
+  return res;
+}
+
+async function gdriveFindOrCreate(){
+  // Search for existing file
+  const q=encodeURIComponent(`name='${GDRIVE_FILE_NAME}' and trashed=false`);
+  const res=await gdriveApiFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`);
+  const data=await res.json();
+  if(data.files&&data.files.length){
+    gdriveFileId=data.files[0].id;
+    localStorage.setItem('crm9_gdrive_fid',gdriveFileId);
+    const det=document.getElementById('gdrive-detail-status');
+    if(det)det.textContent=`Found existing file (${gdriveFileId.slice(0,8)}…). Ready to push/pull.`;
+  } else {
+    gdriveFileId=null;
+    localStorage.removeItem('crm9_gdrive_fid');
+    const det=document.getElementById('gdrive-detail-status');
+    if(det)det.textContent='No existing file found. Push to Drive to create one.';
+  }
+}
+
+async function gdriveUpload(){
+  if(!gdriveToken){gdriveAction();return;}
+  const det=document.getElementById('gdrive-detail-status');
+  if(det)det.textContent='Uploading…';
+  const payload=JSON.stringify({companies:COS,templates:TMPLS,settings:SETTINGS,date:new Date().toISOString()},null,2);
+  const blob=new Blob([payload],{type:'application/json'});
+  try{
+    let res;
+    if(gdriveFileId){
+      // Update existing
+      res=await gdriveApiFetch(`https://www.googleapis.com/upload/drive/v3/files/${gdriveFileId}?uploadType=media`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:blob});
+    } else {
+      // Create new (multipart)
+      const meta=JSON.stringify({name:GDRIVE_FILE_NAME,mimeType:'application/json'});
+      const form=new FormData();
+      form.append('metadata',new Blob([meta],{type:'application/json'}));
+      form.append('file',blob);
+      res=await gdriveApiFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',body:form});
+      const d=await res.json();
+      gdriveFileId=d.id;
+      localStorage.setItem('crm9_gdrive_fid',gdriveFileId);
+    }
+    if(det)det.textContent=`✓ Pushed to Drive at ${new Date().toLocaleTimeString()}`;
+    toast('✓ Data pushed to Google Drive');
+  }catch(e){
+    if(det)det.textContent='✗ Upload failed: '+e.message;
+    toast('Drive upload failed');
+  }
+}
+
+async function gdriveDownload(){
+  if(!gdriveToken){gdriveAction();return;}
+  const det=document.getElementById('gdrive-detail-status');
+  if(det)det.textContent='Downloading…';
+  try{
+    // Find file if we don't have ID
+    if(!gdriveFileId){await gdriveFindOrCreate();}
+    if(!gdriveFileId){det&&(det.textContent='No file found on Drive. Push first.');return;}
+    const res=await gdriveApiFetch(`https://www.googleapis.com/drive/v3/files/${gdriveFileId}?alt=media`);
+    const data=await res.json();
+    if(data.companies){
+      if(!confirm(`Pull from Drive? This will overwrite your local data (${data.companies.length} companies from ${data.date?.slice(0,10)||'unknown date'}).`))return;
+      COS.length=0;COS.push(...data.companies);
+      if(data.templates){TMPLS.length=0;TMPLS.push(...data.templates);}
+      if(data.settings){Object.assign(SETTINGS,data.settings);}
+      sv('crm7_co',COS);sv('crm7_tmpls',TMPLS);sv('crm7_set',SETTINGS);
+      buildInds();refreshCounts();renderDash();renderCo();renderTmpls();applySettings();
+      det.textContent=`✓ Pulled from Drive at ${new Date().toLocaleTimeString()}`;
+      toast(`✓ Loaded ${data.companies.length} companies from Drive`);
+    } else {
+      det.textContent='✗ File found but data is invalid';
+    }
+  }catch(e){
+    if(det)det.textContent='✗ Download failed: '+e.message;
+    toast('Drive download failed');
+  }
+}
+
+init();
+</script>
+</body>
+</html>
