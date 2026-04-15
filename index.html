@@ -262,6 +262,8 @@ select.fs{padding:6px 8px;border-radius:var(--r);border:.5px solid var(--brd2);b
   <div class="ns">
     <div class="nl">Database</div>
     <div class="ni" onclick="nav('pipeline',this)"><svg viewBox="0 0 14 14" fill="none"><rect x="1" y="3" width="3" height="8" rx="1" fill="currentColor" opacity=".5"/><rect x="5.5" y="1.5" width="3" height="9.5" rx="1" fill="currentColor" opacity=".7"/><rect x="10" y="4" width="3" height="7" rx="1" fill="currentColor" opacity=".4"/></svg>Pipeline <span class="nb nb-w" id="nb-due">0</span></div>
+    <div class="ni" onclick="nav('reengage',this)"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7a5 5 0 1 0 1.5-3.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><path d="M2 3.5V7h3.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>Re-engage <span class="nb nb-w" id="nb-reengage"></span></div>
+    <div class="ni" onclick="nav('deals',this)"><svg viewBox="0 0 14 14" fill="none"><path d="M2 12l2.5-2.5M7 2l5 5-5.5 5.5-5-5 .5-5.5 5-.5z" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="9" cy="5" r="1" fill="currentColor"/></svg>Deals &amp; Revenue <span class="nb" id="nb-deals"></span></div>
     <div class="ni" onclick="nav('companies',this)"><svg viewBox="0 0 14 14" fill="none"><rect x="2" y="1" width="10" height="12" rx="1.2" stroke="currentColor" stroke-width="1.1" fill="none"/><path d="M4.5 4h5M4.5 6.5h5M4.5 9h3" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>Companies &amp; Contacts <span class="nb" id="nb-co">0</span></div>
     <div class="ni" onclick="nav('import',this)"><svg viewBox="0 0 14 14" fill="none"><path d="M2.5 11h9M7 2.5v7M4.5 7l2.5 2.5 2.5-2.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>Import Excel / CSV</div>
   </div>
@@ -305,6 +307,11 @@ select.fs{padding:6px 8px;border-radius:var(--r);border:.5px solid var(--brd2);b
       <div class="sr" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:0">
         <div class="sc"><div class="sl">Follow-ups overdue</div><div class="sv" style="color:var(--c400)" id="d-overdue">0</div><div class="ss">past due date · <span style="color:var(--t600);cursor:pointer" onclick="nav('pipeline',document.querySelector('[onclick*=pipeline]'))">view pipeline ↗</span></div></div>
         <div class="sc"><div class="sl">Due this week</div><div class="sv" style="color:var(--a400)" id="d-week">0</div><div class="ss">upcoming actions</div></div>
+      </div>
+      <div class="sr" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:14px">
+        <div class="sc"><div class="sl">Stale — ready to re-engage</div><div class="sv" style="color:var(--c400)" id="d-stale">0</div><div class="ss"><span style="color:var(--t600);cursor:pointer" onclick="nav('reengage',document.querySelector('[onclick*=reengage]'))">view queue ↗</span></div></div>
+        <div class="sc"><div class="sl">Active deals</div><div class="sv" style="color:var(--t600)" id="d-deals-active">0</div><div class="ss" id="d-deals-val"></div></div>
+        <div class="sc"><div class="sl">Revenue delivered</div><div class="sv" style="color:var(--b600)" id="d-rev-delivered">0</div><div class="ss">M HUF invoiced/delivered</div></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
         <div>
@@ -452,8 +459,12 @@ select.fs{padding:6px 8px;border-radius:var(--r);border:.5px solid var(--brd2);b
           </div>
           <div style="background:var(--sur);border:.5px solid var(--brd);border-radius:var(--rl);padding:13px 15px">
             <div style="font-size:12px;font-weight:600;margin-bottom:9px">Backup &amp; restore</div>
-            <div style="font-size:12px;color:var(--tx2);line-height:1.7;margin-bottom:9px">All data saved automatically in browser. Download JSON backup anytime.</div>
-            <div style="display:flex;gap:7px"><button class="btn btn-p" onclick="backupAll()">Download backup ↓</button><button class="btn btn-del" onclick="clearAll()">Reset to defaults</button></div>
+            <div style="font-size:12px;color:var(--tx2);line-height:1.7;margin-bottom:9px">All data saved automatically in browser. Download JSON backup anytime, restore it on any device.</div>
+            <div style="display:flex;gap:7px;flex-wrap:wrap">
+              <button class="btn btn-p" onclick="backupAll()">Download backup ↓</button>
+              <label class="btn" style="cursor:pointer">Restore from backup ↑<input type="file" accept=".json" style="display:none" onchange="restoreBackup(this)"></label>
+              <button class="btn btn-del" onclick="clearAll()">Reset to defaults</button>
+            </div>
           </div>
         </div>
         <div>
@@ -557,6 +568,51 @@ select.fs{padding:6px 8px;border-radius:var(--r);border:.5px solid var(--brd2);b
       </div>
     </div>
 
+    <!-- RE-ENGAGE -->
+    <div class="page" id="page-reengage">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:2px">Re-engagement queue</div>
+          <div style="font-size:11px;color:var(--tx2)">Contacts with no response for 180+ days, not marked as closed or do-not-contact.</div>
+        </div>
+        <div style="display:flex;gap:7px">
+          <select class="fs" id="re-days" onchange="renderReengage()">
+            <option value="180">Stale after 180 days</option>
+            <option value="90">Stale after 90 days</option>
+            <option value="365">Stale after 365 days</option>
+          </select>
+          <button class="btn btn-sm" onclick="reengageSelectAll()">Select all</button>
+          <button class="btn btn-sm btn-p" onclick="reengageBulkCompose()">✉ Compose to selected</button>
+        </div>
+      </div>
+      <div id="re-list"></div>
+    </div>
+
+    <!-- DEALS & REVENUE -->
+    <div class="page" id="page-deals">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+        <div class="sc"><div class="sl">Total deal value</div><div class="sv" style="color:var(--t600)" id="deal-total">0</div><div class="ss">M HUF across all deals</div></div>
+        <div class="sc"><div class="sl">Delivered / invoiced</div><div class="sv" style="color:var(--b600)" id="deal-delivered">0</div><div class="ss">M HUF completed</div></div>
+        <div class="sc"><div class="sl">Active deals</div><div class="sv" id="deal-count">0</div><div class="ss">in progress</div></div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+        <div style="font-size:12px;font-weight:600">All deals</div>
+        <div style="display:flex;gap:7px">
+          <select class="fs" id="deal-filter-status" onchange="renderDeals()">
+            <option value="">All statuses</option>
+            <option value="active">Active</option>
+            <option value="delivered">Delivered</option>
+            <option value="invoiced">Invoiced</option>
+            <option value="paid">Paid</option>
+            <option value="renewed">Renewed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <button class="btn btn-p btn-sm" onclick="openDealModal(null,null)">+ New deal</button>
+        </div>
+      </div>
+      <div id="deal-list"></div>
+    </div>
+
   </div>
 </div>
 </div>
@@ -588,6 +644,10 @@ select.fs{padding:6px 8px;border-radius:var(--r);border:.5px solid var(--brd2);b
     <div class="fg2"><div class="cg"><div class="cl">Email</div><input class="ci" id="pm-em" type="email" placeholder="anna@company.com"></div><div class="cg"><div class="cl">Phone</div><input class="ci" id="pm-ph" placeholder="+36 20 123 4567"></div></div>
     <div class="fg2"><div class="cg"><div class="cl">Outreach status</div><select class="ci fs" id="pm-st" style="width:100%"><option value="">Not contacted</option><option value="offer_sent">Offer sent</option><option value="email_sent">Email sent</option><option value="followup_sent">Follow-up sent</option><option value="replied">Replied</option><option value="meeting">Meeting scheduled</option><option value="off">Closed / off</option></select></div><div class="cg"><div class="cl">MMK needed</div><input class="ci" id="pm-mmk" placeholder="e.g. 25"></div></div>
     <div class="cg"><div class="cl">Notes</div><textarea class="ci" id="pm-notes" style="min-height:54px" placeholder="Notes about this person…"></textarea></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <input type="checkbox" id="pm-dnr" style="width:14px;height:14px;accent-color:var(--c400)">
+      <label for="pm-dnr" style="font-size:11px;color:var(--tx2);cursor:pointer">Do not re-engage (permanently exclude from re-engagement queue)</label>
+    </div>
     <input type="hidden" id="pm-co-idx" value="-1">
     <input type="hidden" id="pm-p-idx" value="-1">
     <div class="modal-ft"><button class="btn btn-del" id="pm-del" onclick="deletePerson()" style="margin-right:auto;display:none">Delete</button><button class="btn" onclick="closePModal()">Cancel</button><button class="btn btn-p" onclick="savePerson()">Save person</button></div>
@@ -697,6 +757,55 @@ select.fs{padding:6px 8px;border-radius:var(--r);border:.5px solid var(--brd2);b
   </div>
 </div>
 
+<!-- DEAL MODAL -->
+<div class="modal-bg" id="deal-modal">
+  <div class="modal" style="width:540px">
+    <h3 id="deal-modal-ttl">New deal</h3>
+    <div class="cg"><div class="cl">Company</div><input class="ci" id="deal-co-name" placeholder="Company name" list="dl-deal-co" oninput="dealCoInput()"><datalist id="dl-deal-co"></datalist></div>
+    <input type="hidden" id="deal-co-idx" value="-1">
+    <input type="hidden" id="deal-idx" value="-1">
+    <div class="fg2">
+      <div class="cg"><div class="cl">Service / product</div>
+        <input class="ci" id="deal-service" placeholder="e.g. Érzékenyítő tréning" list="dl-services">
+        <datalist id="dl-services">
+          <option value="Érzékenyítő tréning">
+          <option value="MMK elhelyezés">
+          <option value="Rehabilitációs tanácsadás">
+          <option value="HR konzultáció">
+          <option value="Munkakör-elemzés">
+          <option value="Csoportos tréning">
+          <option value="Online képzés">
+          <option value="Éves partnerség">
+        </datalist>
+      </div>
+      <div class="cg"><div class="cl">Value (M HUF)</div><input class="ci" id="deal-value" type="number" step="0.1" placeholder="e.g. 2.5"></div>
+    </div>
+    <div class="fg2">
+      <div class="cg"><div class="cl">Status</div>
+        <select class="ci fs" id="deal-status" style="width:100%">
+          <option value="active">Active</option>
+          <option value="delivered">Delivered</option>
+          <option value="invoiced">Invoiced</option>
+          <option value="paid">Paid</option>
+          <option value="renewed">Renewed / upsell</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+      <div class="cg"><div class="cl">Start date</div><input class="ci" type="date" id="deal-start"></div>
+    </div>
+    <div class="fg2">
+      <div class="cg"><div class="cl">Close / delivery date</div><input class="ci" type="date" id="deal-close"></div>
+      <div class="cg"><div class="cl">Assigned to</div><input class="ci" id="deal-owner" placeholder="e.g. Eszter"></div>
+    </div>
+    <div class="cg"><div class="cl">Notes</div><textarea class="ci" id="deal-notes" style="min-height:54px" placeholder="Deal notes, contract reference, next steps…"></textarea></div>
+    <div class="modal-ft">
+      <button class="btn btn-del" id="deal-del-btn" onclick="deleteDeal()" style="margin-right:auto;display:none">Delete deal</button>
+      <button class="btn" onclick="closeDealModal()">Cancel</button>
+      <button class="btn btn-p" onclick="saveDeal()">Save deal</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -718,6 +827,7 @@ const ld=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}c
 const sv=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch{}if(gdriveToken)_scheduleAutoPush();};
 let COS=ld('crm7_co',D_COMPANIES);
 let TMPLS=ld('crm7_tmpls',D_TMPLS);
+let DEALS=ld('crm9_deals',[]);
 let SETTINGS=ld('crm7_set',{crmName:'ImpactCRM',tag:'NGO Partner Suite',org:'Your Organization',acc:'#1D9E75',rgb:'29,158,117',email:'',sender:''});
 
 // ═══════════════ HELPERS ═══════════════
@@ -756,6 +866,8 @@ function init(){
   // Update Drive button state
   updDriveStatus();
 }
+
+// init() called at end of script after all const declarations
 
 function refreshCounts(){
   const total=COS.length;
@@ -835,6 +947,7 @@ function renderCo(){
         <div class="co-actions" onclick="event.stopPropagation()">
           <button class="btn btn-sm" onclick="openActModal(${ri})" title="Activity log">Log</button>
           <button class="btn btn-sm" onclick="openNAModal(${ri})" title="Set next action">⏰</button>
+          <button class="btn btn-sm" onclick="openDealModal(null,${ri})">+ Deal</button>
           <button class="btn btn-sm" onclick="openCoModal(${ri})">Edit</button>
           <button class="btn btn-sm btn-p" onclick="openPModal(${ri},null)">+ Person</button>
         </div>
@@ -1040,6 +1153,7 @@ function openPModal(ci,pi){
   document.getElementById('pm-co-idx').value=ci;document.getElementById('pm-p-idx').value=pi!==null&&pi>=0?pi:-1;
   document.getElementById('pm-del').style.display=p?'inline-block':'none';
   ['fn','ln','pos','em','ph','st','mmk','notes'].forEach(f=>{const e=document.getElementById('pm-'+f);if(!e)return;const map={fn:'fname',ln:'lname',pos:'pos',em:'email',ph:'phone',st:'status',mmk:'mmk',notes:'notes'};e.value=p?p[map[f]]||'':'';});
+  document.getElementById('pm-dnr').checked=p?!!p.dnr:false;
   document.getElementById('p-modal').classList.add('open');
 }
 function closePModal(){document.getElementById('p-modal').classList.remove('open');}
@@ -1048,7 +1162,7 @@ function savePerson(){
   const pi=parseInt(document.getElementById('pm-p-idx').value);
   const fn=document.getElementById('pm-fn').value.trim(),ln=document.getElementById('pm-ln').value.trim();
   if(!fn&&!ln){toast('Enter at least a name');return;}
-  const rec={fname:fn,lname:ln,pos:document.getElementById('pm-pos').value.trim(),email:document.getElementById('pm-em').value.trim(),phone:document.getElementById('pm-ph').value.trim(),status:document.getElementById('pm-st').value,mmk:document.getElementById('pm-mmk').value.trim(),notes:document.getElementById('pm-notes').value.trim()};
+  const rec={fname:fn,lname:ln,pos:document.getElementById('pm-pos').value.trim(),email:document.getElementById('pm-em').value.trim(),phone:document.getElementById('pm-ph').value.trim(),status:document.getElementById('pm-st').value,mmk:document.getElementById('pm-mmk').value.trim(),notes:document.getElementById('pm-notes').value.trim(),dnr:document.getElementById('pm-dnr').checked||false};
   if(!COS[ci].people)COS[ci].people=[];
   if(pi>=0){COS[ci].people[pi]=rec;toast('✓ Contact updated');}else{COS[ci].people.push(rec);toast('✓ Contact added');}
   sv('crm7_co',COS);expandedCos.add(ci);refreshCounts();renderCo();closePModal();
@@ -1239,7 +1353,27 @@ function dlCSV(c,fn){const b=new Blob(['\uFEFF'+c],{type:'text/csv;charset=utf-8
 function tCSV(cols,rows){const e=v=>'"'+String(v||'').replace(/"/g,'""')+'"';return[cols.join(','),...rows.map(r=>cols.map(c=>e(r[c])).join(','))].join('\n');}
 function exportCos(){const type=document.getElementById('ex-type').value,ind=document.getElementById('ex-ind').value;const cols=['name','industry','type','culture','headcount','rehab_fee','esg','last_touchpoint','website','tags','notes'];const rows=COS.filter(c=>(!type||c.type===type)&&(!ind||c.industry===ind));if(!rows.length){toast('No data');return;}dlCSV(tCSV(cols,rows),`companies_${new Date().toISOString().slice(0,10)}.csv`);toast(`✓ ${rows.length} companies`);}
 function exportPeople(){const type=document.getElementById('ex-type').value,ind=document.getElementById('ex-ind').value;const cos=COS.filter(c=>(!type||c.type===type)&&(!ind||c.industry===ind));const rows=[];cos.forEach(co=>(co.people||[]).forEach(p=>rows.push({company:co.name,industry:co.industry,type:co.type,fname:p.fname,lname:p.lname,position:p.pos,email:p.email,phone:p.phone,status:p.status,mmk:p.mmk,notes:p.notes})));if(!rows.length){toast('No contacts');return;}const cols=['company','industry','type','fname','lname','position','email','phone','status','mmk','notes'];dlCSV(tCSV(cols,rows),`contacts_${new Date().toISOString().slice(0,10)}.csv`);toast(`✓ ${rows.length} contacts`);}
-function backupAll(){const d={companies:COS,templates:TMPLS,settings:SETTINGS,date:new Date().toISOString()};dlCSV(JSON.stringify(d,null,2),`crm_backup_${new Date().toISOString().slice(0,10)}.json`);toast('✓ Backup downloaded');}
+function backupAll(){const d={companies:COS,templates:TMPLS,settings:SETTINGS,deals:DEALS,date:new Date().toISOString()};dlCSV(JSON.stringify(d,null,2),`crm_backup_${new Date().toISOString().slice(0,10)}.json`);toast('✓ Backup downloaded');}
+function restoreBackup(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!data.companies){toast('✗ Invalid backup file');return;}
+      if(!confirm(`Restore backup from ${data.date?.slice(0,10)||'unknown date'}?\n${data.companies.length} companies, ${(data.deals||[]).length} deals.\n\nThis will overwrite your current data.`)){input.value='';return;}
+      COS.length=0;COS.push(...data.companies);
+      if(data.templates){TMPLS.length=0;TMPLS.push(...data.templates);}
+      if(data.deals){DEALS.length=0;DEALS.push(...data.deals);}
+      if(data.settings){Object.assign(SETTINGS,data.settings);}
+      sv('crm7_co',COS);sv('crm7_tmpls',TMPLS);sv('crm7_set',SETTINGS);sv('crm9_deals',DEALS);
+      buildInds();refreshCounts();renderDash();renderCo();renderTmpls();buildTmplSelects();applySettings();updEx();
+      toast(`✓ Restored — ${data.companies.length} companies loaded`);
+      input.value='';
+    }catch(err){toast('✗ Could not read backup file');input.value='';}
+  };
+  reader.readAsText(file);
+}
 function clearAll(){if(!confirm('Reset ALL data to defaults?'))return;COS.length=0;TMPLS.length=0;COS.push(...D_COMPANIES);TMPLS.push(...D_TMPLS);sv('crm7_co',COS);sv('crm7_tmpls',TMPLS);buildInds();refreshCounts();renderDash();renderCo();renderTmpls();updEx();buildTmplSelects();toast('Reset to defaults');}
 
 // ═══════════════ SETTINGS ═══════════════
@@ -1279,16 +1413,18 @@ function nav(id,el){
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   if(el)el.classList.add('active');
-  const T={dashboard:'Dashboard',pipeline:'Pipeline & Follow-ups',companies:'Companies & Contacts',import:'Import Excel / CSV',compose:'Compose Email',templates:'Email Templates',export:'Export CSV',settings:'Settings'};
+  const T={dashboard:'Dashboard',pipeline:'Pipeline & Follow-ups',companies:'Companies & Contacts',import:'Import Excel / CSV',compose:'Compose Email',templates:'Email Templates',export:'Export CSV',settings:'Settings',reengage:'Re-engagement queue',deals:'Deals & Revenue'};
   document.getElementById('page-title').textContent=T[id]||id;
   if(id==='export')updEx();
   if(id==='templates')renderTmpls();
-  if(id==='dashboard')renderDash();
+  if(id==='dashboard'){renderDash();updDueCounts();}
   if(id==='compose'){renderRcptBox();buildTmplSelects();}
   if(id==='pipeline'){renderPipeline();}
+  if(id==='reengage'){renderReengage();}
+  if(id==='deals'){renderDeals();}
 }
 
-['co-modal','p-modal','picker-modal','tmpl-modal','bulk-status-modal','act-modal','na-modal'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});});
+['co-modal','p-modal','picker-modal','tmpl-modal','bulk-status-modal','act-modal','na-modal','deal-modal'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});});
 document.getElementById('ex-type')?.addEventListener('change',updEx);
 document.getElementById('ex-ind')?.addEventListener('change',updEx);
 document.getElementById('tm-subj')?.addEventListener('input',updTmPrev);
@@ -1543,13 +1679,6 @@ function clearNextAction(){
   closeNAModal();toast('Reminder cleared');
 }
 
-// ── DASHBOARD EXTENSION: show overdue + week ──
-const _origRenderDash=typeof renderDash==='function'?renderDash:null;
-// (renderDash already exists; we patch refreshCounts which already calls updDueCounts via refreshCounts re-route)
-// updDueCounts is called inside renderPipeline; also call it from renderDash
-const _origRefreshCounts=refreshCounts;
-
-
 // ═══════════════ EMAILJS SEND ═══════════════
 async function sendEmailJS(){
   const svc=SETTINGS.emailjsSvc;
@@ -1786,7 +1915,7 @@ async function gdriveFindFile(){
 async function gdriveUpload(silent=false){
   if(!gdriveToken){gdriveConnect();return;}
   if(!silent)_setDriveStatus('Saving to Drive…',false);
-  const payload=JSON.stringify({companies:COS,templates:TMPLS,settings:SETTINGS,date:new Date().toISOString()},null,2);
+  const payload=JSON.stringify({companies:COS,templates:TMPLS,settings:SETTINGS,deals:DEALS,date:new Date().toISOString()},null,2);
   const blob=new Blob([payload],{type:'application/json'});
   try{
     let res;
@@ -1832,8 +1961,9 @@ async function gdriveDownload(silent=false){
       }
       COS.length=0;COS.push(...data.companies);
       if(data.templates){TMPLS.length=0;TMPLS.push(...data.templates);}
+      if(data.deals){DEALS.length=0;DEALS.push(...data.deals);}
       if(data.settings){Object.assign(SETTINGS,data.settings);}
-      try{localStorage.setItem('crm7_co',JSON.stringify(COS));localStorage.setItem('crm7_tmpls',JSON.stringify(TMPLS));localStorage.setItem('crm7_set',JSON.stringify(SETTINGS));}catch{}
+      try{localStorage.setItem('crm7_co',JSON.stringify(COS));localStorage.setItem('crm7_tmpls',JSON.stringify(TMPLS));localStorage.setItem('crm7_set',JSON.stringify(SETTINGS));localStorage.setItem('crm9_deals',JSON.stringify(DEALS));}catch{}
       buildInds();refreshCounts();renderDash();renderCo();renderTmpls();buildTmplSelects();applySettings();
       const t=new Date().toLocaleTimeString();
       _setDriveStatus(`✓ Loaded from Drive at ${t} — ${data.companies.length} companies`,false);
@@ -1846,6 +1976,264 @@ async function gdriveDownload(silent=false){
     if(e.message!=='401')_setDriveStatus('✗ Load failed: '+e.message,true);
   }
 }
+
+// ═══════════════ RE-ENGAGEMENT QUEUE ═══════════════
+const STALE_STATUSES=['email_sent','offer_sent','followup_sent'];
+const EXCLUDE_STATUSES=['replied','off','meeting'];
+
+function getStaleContacts(days=180){
+  const cutoff=new Date(Date.now()-days*864e5).toISOString().slice(0,10);
+  const res=[];
+  COS.forEach((co,ci)=>{
+    if(co.stage==='active'||co.stage==='closed_lost')return;
+    (co.people||[]).forEach((p,pi)=>{
+      if(p.dnr)return;
+      if(EXCLUDE_STATUSES.includes(p.status))return;
+      if(!STALE_STATUSES.includes(p.status))return;
+      // Use company last_touchpoint as proxy if no per-person date
+      const lastTouch=co.last_touchpoint||'';
+      if(!lastTouch||lastTouch>cutoff)return;
+      res.push({co,p,ci,pi,lastTouch});
+    });
+  });
+  return res.sort((a,b)=>a.lastTouch.localeCompare(b.lastTouch));
+}
+
+let reengageSel=new Set();
+
+function renderReengage(){
+  const days=parseInt(document.getElementById('re-days')?.value||180);
+  const stale=getStaleContacts(days);
+  const nb=document.getElementById('nb-reengage');
+  if(nb)nb.textContent=stale.length||'';
+  const list=document.getElementById('re-list');if(!list)return;
+  if(!stale.length){
+    list.innerHTML=`<div style="padding:24px;text-align:center;color:var(--tx2);font-size:12px">🎉 No stale contacts — all outreach is current!</div>`;
+    return;
+  }
+  list.innerHTML='';
+  const today=new Date().toISOString().slice(0,10);
+  stale.forEach(({co,p,ci,pi,lastTouch})=>{
+    const key=`${ci}-${pi}`;
+    const isSel=reengageSel.has(key);
+    const daysSince=Math.floor((Date.now()-new Date(lastTouch).getTime())/864e5);
+    const row=document.createElement('div');
+    row.style.cssText=`background:var(--sur);border:.5px solid ${isSel?'var(--acc)':'var(--brd)'};border-radius:var(--r);padding:10px 14px;margin-bottom:7px;display:flex;align-items:center;gap:10px;transition:border-color .1s`;
+    row.innerHTML=`
+      <div class="co-sel ${isSel?'checked':''}" onclick="reengageToggle('${key}',this)" style="flex-shrink:0">
+        ${isSel?`<svg viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5 3.5-4" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`:''}
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600">${p.fname||''} ${p.lname||''} <span style="font-weight:400;color:var(--tx2)">at ${co.name}</span></div>
+        <div style="font-size:11px;color:var(--tx2);margin-top:2px">${p.pos||'—'} · ${p.email||'<em>no email</em>'}</div>
+      </div>
+      <span class="badge ${SB(p.status)}">${SL(p.status)}</span>
+      <span style="font-size:11px;color:var(--c400);font-weight:600;flex-shrink:0">${daysSince}d ago</span>
+      <div style="display:flex;gap:5px;flex-shrink:0">
+        <button class="btn btn-sm btn-p" onclick="reengageStartRound(${ci},${pi})">New round ↗</button>
+        <button class="btn btn-sm" onclick="reengageSnooze(${ci},${pi},90)">Snooze 90d</button>
+        <button class="btn btn-sm" style="color:var(--tx3)" onclick="reengageDNR(${ci},${pi})">DNR</button>
+      </div>`;
+    list.appendChild(row);
+  });
+}
+
+function reengageToggle(key,el){
+  if(reengageSel.has(key)){reengageSel.delete(key);el.classList.remove('checked');el.innerHTML='';}
+  else{reengageSel.add(key);el.classList.add('checked');el.innerHTML=`<svg viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5 3.5-4" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;}
+  el.closest('div[style]').style.borderColor=reengageSel.has(key)?'var(--acc)':'var(--brd)';
+}
+
+function reengageSelectAll(){
+  const days=parseInt(document.getElementById('re-days')?.value||180);
+  getStaleContacts(days).forEach(({ci,pi})=>reengageSel.add(`${ci}-${pi}`));
+  renderReengage();
+}
+
+function reengageBulkCompose(){
+  if(!reengageSel.size){toast('Select contacts first');return;}
+  recipients=[];
+  reengageSel.forEach(key=>{
+    const [ci,pi]=key.split('-').map(Number);
+    const co=COS[ci];const p=(co?.people||[])[pi];
+    if(p?.email)recipients.push({name:`${p.fname||''} ${p.lname||''}`.trim()||p.email,email:p.email,company:co.name,firstName:p.fname,lastName:p.lname,pos:p.pos,mmk:p.mmk,rehab:co.rehab_fee,_key:key});
+  });
+  if(!recipients.length){toast('No contacts with emails selected');return;}
+  nav('compose',document.querySelector('[onclick*=compose]'));
+  renderRcptBox();
+  toast(`✓ ${recipients.length} recipients added`);
+}
+
+function reengageStartRound(ci,pi){
+  const co=COS[ci];if(!co?.people?.[pi])return;
+  // Log the previous cycle in activity
+  const p=co.people[pi];
+  if(!co.activity)co.activity=[];
+  co.activity.unshift({type:'note',text:`Re-engagement round started. Previous status: ${SL(p.status)}. Last touch: ${co.last_touchpoint||'unknown'}.`,date:new Date().toISOString().slice(0,10),ts:Date.now()});
+  // Reset status
+  p.status='email_sent';
+  co.last_touchpoint=new Date().toISOString().slice(0,10);
+  sv('crm7_co',COS);
+  renderReengage();
+  refreshCounts();
+  toast(`✓ New round started for ${p.fname||p.lname||p.email}`);
+}
+
+function reengageSnooze(ci,pi,days){
+  const co=COS[ci];if(!co?.people?.[pi])return;
+  // Set a fake last_touchpoint in the future so they won't appear until then
+  const snoozeUntil=new Date(Date.now()+days*864e5).toISOString().slice(0,10);
+  co.people[pi]._snooze_until=snoozeUntil;
+  sv('crm7_co',COS);
+  renderReengage();
+  toast(`Snoozed for ${days} days`);
+}
+
+function reengageDNR(ci,pi){
+  if(!confirm('Mark as Do Not Re-engage? They will be permanently excluded from this queue.'))return;
+  COS[ci].people[pi].dnr=true;
+  sv('crm7_co',COS);
+  renderReengage();
+  toast('Marked as Do Not Re-engage');
+}
+
+// ═══════════════ DEALS & REVENUE ═══════════════
+const DEAL_STATUS_LABELS={active:'Active',delivered:'Delivered',invoiced:'Invoiced',paid:'Paid',renewed:'Renewed',cancelled:'Cancelled'};
+const DEAL_STATUS_CLS={active:'b-email',delivered:'b-replied',invoiced:'b-fu',paid:'b-csr',renewed:'b-csr',cancelled:'b-off'};
+
+function renderDeals(){
+  const filterStatus=document.getElementById('deal-filter-status')?.value||'';
+  const deals=filterStatus?DEALS.filter(d=>d.status===filterStatus):DEALS;
+  // Stats
+  const totalVal=DEALS.reduce((a,d)=>a+(parseFloat(d.value)||0),0);
+  const deliveredVal=DEALS.filter(d=>['delivered','invoiced','paid'].includes(d.status)).reduce((a,d)=>a+(parseFloat(d.value)||0),0);
+  const activeCount=DEALS.filter(d=>d.status==='active').length;
+  const e=id=>document.getElementById(id);
+  if(e('deal-total'))e('deal-total').textContent=totalVal.toFixed(1)+' M';
+  if(e('deal-delivered'))e('deal-delivered').textContent=deliveredVal.toFixed(1)+' M';
+  if(e('deal-count'))e('deal-count').textContent=activeCount;
+  // Navbar badge
+  const nb=document.getElementById('nb-deals');if(nb)nb.textContent=DEALS.length||'';
+  // Dashboard
+  if(e('d-deals-active'))e('d-deals-active').textContent=activeCount;
+  if(e('d-deals-val'))e('d-deals-val').textContent=totalVal.toFixed(1)+' M HUF pipeline';
+  if(e('d-rev-delivered'))e('d-rev-delivered').textContent=deliveredVal.toFixed(1);
+  const list=document.getElementById('deal-list');if(!list)return;
+  if(!deals.length){
+    list.innerHTML=`<div style="padding:24px;text-align:center;color:var(--tx2);font-size:12px">No deals yet. Click <strong>+ New deal</strong> to add your first contract.</div>`;
+    return;
+  }
+  list.innerHTML='';
+  // Group by company
+  const byco={};
+  deals.forEach((d,i)=>{const idx=DEALS.indexOf(d);const key=d.coName||'Unknown';if(!byco[key])byco[key]=[];byco[key].push({d,idx});});
+  Object.entries(byco).forEach(([coName,entries])=>{
+    const coTotal=entries.reduce((a,{d})=>a+(parseFloat(d.value)||0),0);
+    const header=document.createElement('div');
+    header.style.cssText='font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px;padding:10px 0 5px;display:flex;justify-content:space-between';
+    header.innerHTML=`<span>${coName}</span><span style="color:var(--t600)">${coTotal.toFixed(1)} M HUF</span>`;
+    list.appendChild(header);
+    entries.forEach(({d,idx})=>{
+      const row=document.createElement('div');
+      row.style.cssText='background:var(--sur);border:.5px solid var(--brd);border-radius:var(--r);padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;gap:10px';
+      row.innerHTML=`
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:600;margin-bottom:2px">${d.service||'—'}</div>
+          <div style="font-size:11px;color:var(--tx2)">${d.start||'—'} ${d.close?'→ '+d.close:''} ${d.owner?'· '+d.owner:''}</div>
+          ${d.notes?`<div style="font-size:10px;color:var(--tx3);margin-top:3px">${d.notes.slice(0,80)}</div>`:''}
+        </div>
+        <span class="badge ${DEAL_STATUS_CLS[d.status]||'b-unknown'}">${DEAL_STATUS_LABELS[d.status]||d.status}</span>
+        <span style="font-size:13px;font-weight:700;color:var(--t600);flex-shrink:0">${d.value?parseFloat(d.value).toFixed(1)+' M':''}</span>
+        <button class="btn btn-sm" onclick="openDealModal(${idx},null)">Edit</button>`;
+      list.appendChild(row);
+    });
+  });
+  // Build company datalist
+  const dl=document.getElementById('dl-deal-co');
+  if(dl){dl.innerHTML='';COS.forEach(c=>{const o=document.createElement('option');o.value=c.name;dl.appendChild(o);});}
+}
+
+function openDealModal(dealIdx,coIdx){
+  const d=dealIdx!==null&&dealIdx>=0?DEALS[dealIdx]:null;
+  document.getElementById('deal-modal-ttl').textContent=d?'Edit deal':'New deal';
+  document.getElementById('deal-idx').value=dealIdx!==null&&dealIdx>=0?dealIdx:-1;
+  document.getElementById('deal-del-btn').style.display=d?'inline-block':'none';
+  document.getElementById('deal-co-name').value=d?d.coName:(coIdx!==null&&coIdx>=0?COS[coIdx]?.name||'':'');
+  document.getElementById('deal-co-idx').value=d?d.coIdx:(coIdx!==null?coIdx:-1);
+  document.getElementById('deal-service').value=d?d.service||'':'';
+  document.getElementById('deal-value').value=d?d.value||'':'';
+  document.getElementById('deal-status').value=d?d.status||'active':'active';
+  document.getElementById('deal-start').value=d?d.start||new Date().toISOString().slice(0,10):new Date().toISOString().slice(0,10);
+  document.getElementById('deal-close').value=d?d.close||'':'';
+  document.getElementById('deal-owner').value=d?d.owner||SETTINGS.sender||'':'';
+  document.getElementById('deal-notes').value=d?d.notes||'':'';
+  // Build company datalist
+  const dl=document.getElementById('dl-deal-co');
+  if(dl){dl.innerHTML='';COS.forEach(c=>{const o=document.createElement('option');o.value=c.name;dl.appendChild(o);});}
+  document.getElementById('deal-modal').classList.add('open');
+}
+
+function dealCoInput(){
+  const name=document.getElementById('deal-co-name').value;
+  const idx=COS.findIndex(c=>c.name===name);
+  document.getElementById('deal-co-idx').value=idx;
+}
+
+function closeDealModal(){document.getElementById('deal-modal').classList.remove('open');}
+
+function saveDeal(){
+  const idx=parseInt(document.getElementById('deal-idx').value);
+  const coName=document.getElementById('deal-co-name').value.trim();
+  const service=document.getElementById('deal-service').value.trim();
+  if(!coName||!service){toast('Company and service are required');return;}
+  const rec={
+    coName,
+    coIdx:parseInt(document.getElementById('deal-co-idx').value),
+    service,
+    value:document.getElementById('deal-value').value,
+    status:document.getElementById('deal-status').value,
+    start:document.getElementById('deal-start').value,
+    close:document.getElementById('deal-close').value,
+    owner:document.getElementById('deal-owner').value.trim(),
+    notes:document.getElementById('deal-notes').value.trim(),
+    created:idx>=0?DEALS[idx].created:new Date().toISOString()
+  };
+  if(idx>=0){DEALS[idx]=rec;toast('✓ Deal updated');}
+  else{DEALS.push(rec);toast('✓ Deal added');}
+  sv('crm9_deals',DEALS);
+  renderDeals();
+  closeDealModal();
+}
+
+function deleteDeal(){
+  const idx=parseInt(document.getElementById('deal-idx').value);
+  if(idx<0)return;
+  if(!confirm(`Delete deal "${DEALS[idx].service}"?`))return;
+  DEALS.splice(idx,1);
+  sv('crm9_deals',DEALS);
+  renderDeals();
+  closeDealModal();
+  toast('Deal deleted');
+}
+
+// Patch refreshCounts to include stale + deals counts
+const _origRefreshCounts=refreshCounts;
+refreshCounts=function(){
+  _origRefreshCounts();
+  const days=parseInt(document.getElementById('re-days')?.value||180);
+  const stale=getStaleContacts(days).length;
+  const nb=document.getElementById('nb-reengage');if(nb)nb.textContent=stale||'';
+  const ds=document.getElementById('d-stale');if(ds)ds.textContent=stale;
+  // Deals dashboard stats
+  const totalVal=DEALS.reduce((a,d)=>a+(parseFloat(d.value)||0),0);
+  const deliveredVal=DEALS.filter(d=>['delivered','invoiced','paid'].includes(d.status)).reduce((a,d)=>a+(parseFloat(d.value)||0),0);
+  const activeCount=DEALS.filter(d=>d.status==='active').length;
+  const e=id=>document.getElementById(id);
+  if(e('d-deals-active'))e('d-deals-active').textContent=activeCount;
+  if(e('d-deals-val'))e('d-deals-val').textContent=totalVal.toFixed(1)+' M HUF pipeline';
+  if(e('d-rev-delivered'))e('d-rev-delivered').textContent=deliveredVal.toFixed(1);
+  if(e('nb-deals'))e('nb-deals').textContent=DEALS.length||'';
+};
 
 init();
 </script>
