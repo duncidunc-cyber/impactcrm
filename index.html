@@ -1321,7 +1321,7 @@ function pickerSelectAll(){
 }
 function pickerClear(){pickerSel.clear();document.querySelectorAll('#picker-list .picker-item').forEach(i=>i.classList.remove('picked'));updPickerCount();}
 function applyPicker(){
-  getAllPeople().filter(({key})=>pickerSel.has(key)).forEach(({co,p,key})=>{
+  getAllPeople().filter(({key})=>pickerSel.has(key)).forEach(({co,p,key,ci})=>{
     if(!recipients.find(r=>r.email===p.email))
       recipients.push({name:`${p.fname||''} ${p.lname||''}`.trim()||p.email,email:p.email,company:co.name,coIdx:ci,firstName:p.fname,lastName:p.lname,pos:p.pos,mmk:p.mmk,rehab:co.rehab_fee,_key:key});
   });
@@ -2357,37 +2357,35 @@ function _autoLogOutreachAfterSend(rcpts,subject){
   const affected=new Set();
 
   rcpts.forEach(r=>{
-    // Find company by matching email or company name
-    let coIdx=r.coIdx!==undefined?r.coIdx:COS.findIndex(c=>c.name===r.company);
-    if(coIdx<0)return;
-    if(affected.has(coIdx))return; // only log once per company
+    // Resolve company index — prefer stored coIdx, fall back to name match
+    let coIdx=(r.coIdx!==undefined&&r.coIdx>=0)?r.coIdx:COS.findIndex(c=>c.name===r.company);
+    if(coIdx<0||!COS[coIdx])return;
+    if(affected.has(coIdx))return; // log once per company
     affected.add(coIdx);
 
     const co=COS[coIdx];
     if(!co.activity)co.activity=[];
 
-    // Log outreach
+    // Log outreach activity
     co.activity.unshift({
       type:'outreach',
-      text:`Email sent: "${subject.slice(0,60)}"`,
+      text:`Email sent: "${(subject||'').slice(0,80)}"`,
       date:today,
       ts:Date.now(),
       owner
     });
 
-    // Advance pipeline stage
+    // Advance pipeline stage through outreach sequence
     const cur=co.stage||'prospecting';
     if(cur==='prospecting')co.stage='outreach_1';
     else if(cur==='outreach_1')co.stage='outreach_2';
     else if(cur==='outreach_2')co.stage='outreach_3';
 
-    // Update last touchpoint
+    // Update touchpoint and follow-up reminder
     co.last_touchpoint=today;
-
-    // Set follow-up reminder
     if(!co.next_action_date||co.next_action_date<nextDate){
       co.next_action_date=nextDate;
-      co.next_action_note='Follow up on email';
+      co.next_action_note='Follow up on outreach';
       co.next_action_owner=owner;
     }
   });
@@ -2396,7 +2394,7 @@ function _autoLogOutreachAfterSend(rcpts,subject){
     sv('crm7_co',COS);
     refreshCounts();
     renderCo();
-    toast(`✓ Outreach logged for ${affected.size} compan${affected.size>1?'ies':'y'} — pipeline updated`);
+    toast(`✓ Pipeline updated for ${affected.size} compan${affected.size>1?'ies':'y'}`);
   }
 }
 
