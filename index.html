@@ -900,8 +900,16 @@ function init(){
   if(SETTINGS.googleClientId&&document.getElementById('s-goog-cid'))document.getElementById('s-goog-cid').value=SETTINGS.googleClientId;
   // Init EmailJS
   if(SETTINGS.emailjsKey){try{emailjs.init({publicKey:SETTINGS.emailjsKey});}catch(e){}}
-  // Update Drive button state
+  // Update Drive button state (token may already be in sessionStorage)
   updDriveStatus();
+  // If token was restored from session, verify it's still valid with a lightweight check
+  if(gdriveToken){
+    _setDriveStatus('Reconnecting…',false);
+    gdriveFindFile().then(fid=>{
+      if(fid){_setDriveStatus(`✓ Auto-sync active`,false);}
+      else{_setDriveStatus('Connected — no data file yet, push to create one.',false);}
+    }).catch(()=>{});
+  }
   // Render team list in settings
   renderTeamList();
   // Check first use — prompt for name if not set
@@ -1127,7 +1135,7 @@ function getSelectedPeople(){
 function bulkCompose(){
   const ppl=getSelectedPeople();
   if(!ppl.length){toast('No contacts with emails in selection');return;}
-  recipients=ppl.map(({co,p})=>({name:`${p.fname||''} ${p.lname||''}`.trim()||p.email,email:p.email,company:co.name,firstName:p.fname,lastName:p.lname,pos:p.pos,mmk:p.mmk,rehab:co.rehab_fee}));
+  recipients=ppl.map(({co,p})=>({name:`${p.fname||''} ${p.lname||''}`.trim()||p.email,email:p.email,company:co.name,coIdx:COS.indexOf(co),firstName:p.fname,lastName:p.lname,pos:p.pos,mmk:p.mmk,rehab:co.rehab_fee}));
   nav('compose',document.querySelector('[onclick*=compose]'));renderRcptBox();
   toast(`✓ ${recipients.length} recipients added`);
 }
@@ -1315,7 +1323,7 @@ function pickerClear(){pickerSel.clear();document.querySelectorAll('#picker-list
 function applyPicker(){
   getAllPeople().filter(({key})=>pickerSel.has(key)).forEach(({co,p,key})=>{
     if(!recipients.find(r=>r.email===p.email))
-      recipients.push({name:`${p.fname||''} ${p.lname||''}`.trim()||p.email,email:p.email,company:co.name,firstName:p.fname,lastName:p.lname,pos:p.pos,mmk:p.mmk,rehab:co.rehab_fee,_key:key});
+      recipients.push({name:`${p.fname||''} ${p.lname||''}`.trim()||p.email,email:p.email,company:co.name,coIdx:ci,firstName:p.fname,lastName:p.lname,pos:p.pos,mmk:p.mmk,rehab:co.rehab_fee,_key:key});
   });
   renderRcptBox();closePickerModal();toast(`✓ ${pickerSel.size} recipients added`);
 }
@@ -1816,6 +1824,8 @@ async function sendEmailJS(){
     statusEl.textContent=`✓ Sent to ${sent} recipient(s)`;
     statusEl.style.color='var(--t600)';
     toast(`✓ Email sent to ${sent} recipient(s)`);
+    // Auto-log outreach for each recipient's company and advance pipeline
+    _autoLogOutreachAfterSend(recipients,subj);
   } else {
     statusEl.textContent=`⚠ ${sent} sent, ${failed} failed — check console`;
     statusEl.style.color='var(--a400)';
@@ -1854,7 +1864,7 @@ async function testEmailJS(){
 
 const GDRIVE_FILE_NAME='ImpactCRM_data.json';
 const GDRIVE_SCOPE='https://www.googleapis.com/auth/drive.file';
-let gdriveToken=null;
+let gdriveToken=sessionStorage.getItem('crm_drive_token')||null;
 let gdriveFileId=localStorage.getItem('crm9_gdrive_fid')||null;
 let _gisInited=false;
 let _gisClient=null;
@@ -1891,6 +1901,7 @@ function _initGisClient(){
         return;
       }
       gdriveToken=resp.access_token;
+      sessionStorage.setItem('crm_drive_token',gdriveToken);
       updDriveStatus();
       toast('✓ Google Drive connected — syncing…');
       // Auto-pull on connect if file exists, otherwise push current data
@@ -1939,6 +1950,7 @@ function gdriveDisconnect(){
     try{google.accounts.oauth2.revoke(gdriveToken,()=>{});}catch(e){}
   }
   gdriveToken=null;_gisClient=null;clearTimeout(_driveAutoSaveTimer);
+  sessionStorage.removeItem('crm_drive_token');
   updDriveStatus();
   _setDriveStatus('Disconnected from Google Drive.',false);
   toast('Drive disconnected');
@@ -1978,7 +1990,8 @@ function updDriveStatus(){
 async function _driveApiFetch(url,opts={}){
   const res=await fetch(url,{...opts,headers:{...(opts.headers||{}),Authorization:'Bearer '+gdriveToken}});
   if(res.status===401){
-    gdriveToken=null;updDriveStatus();
+    gdriveToken=null;sessionStorage.removeItem('crm_drive_token');
+    updDriveStatus();
     _setDriveStatus('Session expired — click Connect Drive to reconnect',true);
     throw new Error('401');
   }
@@ -2335,6 +2348,56 @@ function _rfManualFlag(){const rf=document.getElementById('com-rf');if(rf)rf.dat
 // ═══════════════ OUTREACH HELPERS ═══════════════
 function _outreachCount(co){
   return (co.activity||[]).filter(a=>a.type==='outreach').length;
+}
+
+function _autoLogOutreachAfterSend(rcpts,subject){
+  const today=new Date().toISOString().slice(0,10);
+  const owner=getCurrentUser()||SETTINGS.sender||'';
+  const nextDate=new Date(Date.now()+7*864e5).toISOString().slice(0,10);
+  const affected=new Set();
+
+  rcpts.forEach(r=>{
+    // Find company by matching email or company name
+    let coIdx=r.coIdx!==undefined?r.coIdx:COS.findIndex(c=>c.name===r.company);
+    if(coIdx<0)return;
+    if(affected.has(coIdx))return; // only log once per company
+    affected.add(coIdx);
+
+    const co=COS[coIdx];
+    if(!co.activity)co.activity=[];
+
+    // Log outreach
+    co.activity.unshift({
+      type:'outreach',
+      text:`Email sent: "${subject.slice(0,60)}"`,
+      date:today,
+      ts:Date.now(),
+      owner
+    });
+
+    // Advance pipeline stage
+    const cur=co.stage||'prospecting';
+    if(cur==='prospecting')co.stage='outreach_1';
+    else if(cur==='outreach_1')co.stage='outreach_2';
+    else if(cur==='outreach_2')co.stage='outreach_3';
+
+    // Update last touchpoint
+    co.last_touchpoint=today;
+
+    // Set follow-up reminder
+    if(!co.next_action_date||co.next_action_date<nextDate){
+      co.next_action_date=nextDate;
+      co.next_action_note='Follow up on email';
+      co.next_action_owner=owner;
+    }
+  });
+
+  if(affected.size){
+    sv('crm7_co',COS);
+    refreshCounts();
+    renderCo();
+    toast(`✓ Outreach logged for ${affected.size} compan${affected.size>1?'ies':'y'} — pipeline updated`);
+  }
 }
 
 function _outreachChips(co){
