@@ -280,7 +280,11 @@ select.fs{padding:6px 8px;border-radius:var(--r);border:.5px solid var(--brd2);b
   <div class="sb-ft">
     <div class="sf-o" id="sb-org">Your Organization</div>
     <div class="sf-s" id="sb-email">White-label CRM</div>
-    <div style="margin-top:8px;display:flex;gap:5px;align-items:center">
+    <div style="margin-top:7px;display:flex;align-items:center;gap:6px;cursor:pointer" onclick="openUserModal()" title="Change your name">
+      <div id="sb-user-av" style="width:20px;height:20px;border-radius:50%;background:var(--acc);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0">?</div>
+      <span id="sb-user-name" style="font-size:11px;color:var(--tx2);flex:1">Set your name →</span>
+    </div>
+    <div style="margin-top:6px;display:flex;gap:5px;align-items:center">
       <button class="btn btn-sm" id="gdrive-btn" onclick="gdriveConnectOrPush()" style="font-size:10px;flex:1">☁ Connect Drive</button>
       <span id="gdrive-status" style="font-size:9px;color:var(--tx3)"></span>
     </div>
@@ -539,6 +543,15 @@ select.fs{padding:6px 8px;border-radius:var(--r);border:.5px solid var(--brd2);b
             </details>
           </div>
           <div class="cg"><div class="cl">Anthropic API key (AI email generation)</div><input class="ci" id="s-key" type="password" placeholder="sk-ant-..." oninput="syncKey()"></div>
+          <div style="font-size:12px;font-weight:600;margin:12px 0 8px">Team members</div>
+          <div style="background:var(--sur);border:.5px solid var(--brd);border-radius:var(--rl);padding:13px 15px;margin-bottom:12px">
+            <div style="font-size:11px;color:var(--tx2);margin-bottom:10px;line-height:1.6">Add your team members here. When someone opens the CRM for the first time, they'll pick their name from this list — no typos possible.</div>
+            <div id="team-list" style="margin-bottom:9px"></div>
+            <div style="display:flex;gap:7px">
+              <input class="ci" id="team-add-input" placeholder="Add team member name…" style="flex:1" onkeydown="if(event.key==='Enter')addTeamMember()">
+              <button class="btn btn-sm btn-p" onclick="addTeamMember()">+ Add</button>
+            </div>
+          </div>
           <div style="display:flex;gap:7px;margin-top:4px">
             <button class="btn btn-p" onclick="saveSettings()" style="flex:1">Save all settings</button>
           </div>
@@ -557,14 +570,25 @@ select.fs{padding:6px 8px;border-radius:var(--r);border:.5px solid var(--brd2);b
 
     <!-- PIPELINE -->
     <div class="page" id="page-pipeline">
-      <div class="pl-view-toggle">
-        <button class="pl-vbtn active" id="pl-kanban-btn" onclick="switchPipelineView('kanban')">Kanban board</button>
-        <button class="pl-vbtn" id="pl-list-btn" onclick="switchPipelineView('list')">Due list</button>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+        <div class="pl-view-toggle" style="margin:0">
+          <button class="pl-vbtn active" id="pl-kanban-btn" onclick="switchPipelineView('kanban')">Kanban</button>
+          <button class="pl-vbtn" id="pl-list-btn" onclick="switchPipelineView('list')">Due list</button>
+          <button class="pl-vbtn" id="pl-outreach-btn" onclick="switchPipelineView('outreach')">Outreach tracker</button>
+        </div>
+        <select class="fs" id="pl-owner-filter" onchange="renderPipeline()" style="font-size:11px">
+          <option value="">All team members</option>
+        </select>
+        <span style="font-size:11px;color:var(--tx2)" id="pl-filter-info"></span>
       </div>
       <div id="pipeline-kanban"></div>
       <div id="pipeline-due" style="display:none">
         <div style="font-size:12px;font-weight:600;margin-bottom:10px">Follow-ups due</div>
         <div id="due-list"></div>
+      </div>
+      <div id="pipeline-outreach" style="display:none">
+        <div style="font-size:12px;font-weight:600;margin-bottom:10px">Outreach tracker — who to contact this week</div>
+        <div id="outreach-list"></div>
       </div>
     </div>
 
@@ -623,10 +647,10 @@ select.fs{padding:6px 8px;border-radius:var(--r);border:.5px solid var(--brd2);b
     <h3 id="com-ttl">Add company</h3>
     <div class="fg2"><div class="cg"><div class="cl">Company name *</div><input class="ci" id="com-name" placeholder="e.g. Erste Bank"><datalist id="dl-ind-c"></datalist></div><div class="cg"><div class="cl">Industry</div><input class="ci" id="com-ind" placeholder="e.g. Banking" list="dl-ind-c"></div></div>
     <div class="fg2"><div class="cg"><div class="cl">Partnership type</div><select class="ci fs" id="com-type" style="width:100%"><option value="Business">Business partner</option><option value="CSR">CSR partner</option><option value="Civil">Civil partner</option><option value="Other">Other</option></select></div><div class="cg"><div class="cl">Culture readiness</div><select class="ci fs" id="com-cult" style="width:100%"><option value="">—</option><option>Mature</option><option>Promising</option><option>Novice</option><option>Unknown</option><option>Hostile</option></select></div></div>
-    <div class="fg3"><div class="cg"><div class="cl">Headcount (HU)</div><input class="ci" id="com-hc" placeholder="e.g. 500"></div><div class="cg"><div class="cl">Rehab fee (M HUF)</div><input class="ci" id="com-rf" placeholder="e.g. 58.0"></div><div class="cg"><div class="cl">Last touchpoint</div><input class="ci" type="date" id="com-touch"></div></div>
-    <div class="fg2"><div class="cg"><div class="cl">Pipeline stage</div><select class="ci fs" id="com-stage" style="width:100%"><option value="prospecting">Prospecting</option><option value="offer_sent">Offer sent</option><option value="negotiation">Negotiation</option><option value="active">Active partner</option><option value="dormant">Dormant</option><option value="closed_lost">Closed / lost</option></select></div><div class="cg"><div class="cl">Next action date</div><input class="ci" type="date" id="com-na-date"></div></div>
+    <div class="fg3"><div class="cg"><div class="cl">Headcount (HU)</div><input class="ci" id="com-hc" placeholder="e.g. 500" oninput="calcRehabFee()"></div><div class="cg"><div class="cl">Rehab fee (M HUF)<span style="font-size:9px;color:var(--t600);margin-left:4px" id="com-rf-auto"></span></div><input class="ci" id="com-rf" placeholder="auto-calculated" oninput="_rfManualFlag()"></div><div class="cg"><div class="cl">Last touchpoint</div><input class="ci" type="date" id="com-touch"></div></div>
+    <div class="fg2"><div class="cg"><div class="cl">Pipeline stage</div><select class="ci fs" id="com-stage" style="width:100%"><option value="prospecting">🔍 Prospecting</option><option value="outreach_1">📧 Outreach 1 sent</option><option value="outreach_2">📧 Outreach 2 sent</option><option value="outreach_3">📧 Outreach 3 sent</option><option value="replied">↩ Replied</option><option value="meeting">🤝 Meeting scheduled</option><option value="offer_sent">📄 Offer sent</option><option value="negotiation">🤝 Negotiating</option><option value="active">✅ Active partner</option><option value="dormant">💤 Dormant</option><option value="closed_lost">❌ Closed / lost</option></select></div><div class="cg"><div class="cl">Next action date</div><input class="ci" type="date" id="com-na-date"></div></div>
     <div class="cg"><div class="cl">Next action note</div><input class="ci" id="com-na-note" placeholder="e.g. Follow up on proposal, Call to confirm interest…"></div>
-    <div class="cg"><div class="cl">Website</div><input class="ci" id="com-web" placeholder="https://…"></div>
+    <div class="fg2"><div class="cg"><div class="cl">Website</div><input class="ci" id="com-web" placeholder="https://…"></div><div class="cg"><div class="cl">General email</div><input class="ci" id="com-email" type="email" placeholder="info@company.com"></div></div>
     <div class="cg"><div class="cl">ESG / sustainability notes</div><input class="ci" id="com-esg" placeholder="e.g. Environmental, ESG / Sustainable finance…"></div>
     <div class="cg"><div class="cl">Tags (comma-separated)</div><input class="ci" id="com-tags" placeholder="e.g. rehab, training, priority, banking"></div>
     <div class="cg"><div class="cl">Internal notes</div><textarea class="ci" id="com-notes" style="min-height:54px" placeholder="Notes about this company…"></textarea></div>
@@ -724,13 +748,15 @@ select.fs{padding:6px 8px;border-radius:var(--r);border:.5px solid var(--brd2);b
         <button class="act-type-btn sel" data-type="note" onclick="selActType(this)">📝 Note</button>
         <button class="act-type-btn" data-type="call" onclick="selActType(this)">📞 Call</button>
         <button class="act-type-btn" data-type="meeting" onclick="selActType(this)">🤝 Meeting</button>
+        <button class="act-type-btn" data-type="outreach" onclick="selActType(this)">📤 Outreach sent</button>
         <button class="act-type-btn" data-type="email" onclick="selActType(this)">📧 Email sent</button>
         <button class="act-type-btn" data-type="reply" onclick="selActType(this)">↩ Reply received</button>
         <button class="act-type-btn" data-type="win" onclick="selActType(this)">🎉 Partnership won</button>
       </div>
       <textarea class="ci" id="act-text" placeholder="What happened? Who was involved? Any outcomes…" style="min-height:62px"></textarea>
-      <div style="display:flex;gap:7px;margin-top:8px;align-items:center">
-        <input type="date" class="ci" id="act-date" style="width:150px">
+      <div style="display:flex;gap:7px;margin-top:8px;align-items:center;flex-wrap:wrap">
+        <input type="date" class="ci" id="act-date" style="width:140px">
+        <input class="ci" id="act-owner" placeholder="Sent by (your name)" style="flex:1;min-width:100px">
         <button class="btn btn-p" style="flex:1" onclick="saveActivity()">Add to log</button>
       </div>
     </div>
@@ -806,6 +832,17 @@ select.fs{padding:6px 8px;border-radius:var(--r);border:.5px solid var(--brd2);b
   </div>
 </div>
 
+<!-- USER IDENTITY MODAL -->
+<div class="modal-bg" id="user-modal" style="z-index:100">
+  <div class="modal" style="width:360px;text-align:center">
+    <div style="font-size:28px;margin-bottom:8px">👋</div>
+    <h3 id="user-modal-ttl" style="margin-bottom:6px">Who are you?</h3>
+    <div style="font-size:12px;color:var(--tx2);margin-bottom:16px" id="user-modal-sub">Select your name from the list. This is saved on this device only.</div>
+    <div id="user-pick-list" style="display:flex;flex-direction:column;gap:7px;margin-bottom:12px;text-align:left"></div>
+    <div style="font-size:11px;color:var(--tx3);margin-top:4px">Not on the list? Ask your admin to add you in Settings → Team members.</div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -865,6 +902,10 @@ function init(){
   if(SETTINGS.emailjsKey){try{emailjs.init({publicKey:SETTINGS.emailjsKey});}catch(e){}}
   // Update Drive button state
   updDriveStatus();
+  // Render team list in settings
+  renderTeamList();
+  // Check first use — prompt for name if not set
+  _checkFirstUse();
 }
 
 // init() called at end of script after all const declarations
@@ -962,6 +1003,7 @@ function renderCo(){
           <div><div class="cd-lbl">Last contact</div><div class="cd-val">${co.last_touchpoint||'—'}</div></div>
           <div><div class="cd-lbl">ESG / sustainability</div><div class="cd-val" style="font-size:11px">${co.esg||'—'}</div></div>
           ${co.website?`<div style="grid-column:span 2"><div class="cd-lbl">Website</div><div class="cd-val" style="font-size:11px"><a href="${co.website.startsWith('http')?co.website:'https://'+co.website}" style="color:var(--b600)">${co.website}</a></div></div>`:''}
+          ${co.email?`<div style="grid-column:span 2"><div class="cd-lbl">General email</div><div class="cd-val" style="font-size:11px"><a href="mailto:${co.email}" style="color:var(--b600)">${co.email}</a></div></div>`:''}
           ${co.notes?`<div style="grid-column:span 4"><div class="cd-lbl">Notes</div><div class="cd-val" style="font-size:11px;color:var(--tx2);font-weight:400">${co.notes}</div></div>`:''}
         </div>
         <div id="ppl-${ri}"></div>
@@ -1125,7 +1167,7 @@ function openCoModal(idx){
   document.getElementById('com-ttl').textContent=co?'Edit company':'Add company';
   document.getElementById('com-idx').value=idx!==null&&idx>=0?idx:-1;
   document.getElementById('com-del').style.display=co?'inline-block':'none';
-  ['name','ind','type','cult','hc','rf','touch','web','esg','tags','notes','stage','na-date','na-note'].forEach(f=>{const e=document.getElementById('com-'+f);if(!e)return;const map={name:'name',ind:'industry',type:'type',cult:'culture',hc:'headcount',rf:'rehab_fee',touch:'last_touchpoint',web:'website',esg:'esg',tags:'tags',notes:'notes',stage:'stage','na-date':'next_action_date','na-note':'next_action_note'};e.value=co?co[map[f]]||'':'';});
+  ['name','ind','type','cult','hc','rf','touch','web','email','esg','tags','notes','stage','na-date','na-note'].forEach(f=>{const e=document.getElementById('com-'+f);if(!e)return;const map={name:'name',ind:'industry',type:'type',cult:'culture',hc:'headcount',rf:'rehab_fee',touch:'last_touchpoint',web:'website',email:'email',esg:'esg',tags:'tags',notes:'notes',stage:'stage','na-date':'next_action_date','na-note':'next_action_note'};e.value=co?co[map[f]]||'':'';});
   if(!co)document.getElementById('com-stage').value='prospecting';
   document.getElementById('co-modal').classList.add('open');
 }
@@ -1134,7 +1176,7 @@ function saveCo(){
   const idx=parseInt(document.getElementById('com-idx').value);
   const name=document.getElementById('com-name').value.trim();
   if(!name){toast('Company name required');return;}
-  const rec={name,industry:document.getElementById('com-ind').value.trim(),type:document.getElementById('com-type').value,culture:document.getElementById('com-cult').value,headcount:document.getElementById('com-hc').value.trim(),rehab_fee:document.getElementById('com-rf').value.trim(),last_touchpoint:document.getElementById('com-touch').value,website:document.getElementById('com-web').value.trim(),esg:document.getElementById('com-esg').value.trim(),tags:document.getElementById('com-tags').value.trim(),notes:document.getElementById('com-notes').value.trim(),stage:document.getElementById('com-stage').value||'prospecting',next_action_date:document.getElementById('com-na-date').value,next_action_note:document.getElementById('com-na-note').value.trim(),activity:idx>=0?(COS[idx].activity||[]):[],people:idx>=0?(COS[idx].people||[]):[]};
+  const rec={name,industry:document.getElementById('com-ind').value.trim(),type:document.getElementById('com-type').value,culture:document.getElementById('com-cult').value,headcount:document.getElementById('com-hc').value.trim(),rehab_fee:document.getElementById('com-rf').value.trim(),last_touchpoint:document.getElementById('com-touch').value,website:document.getElementById('com-web').value.trim(),email:document.getElementById('com-email').value.trim(),esg:document.getElementById('com-esg').value.trim(),tags:document.getElementById('com-tags').value.trim(),notes:document.getElementById('com-notes').value.trim(),stage:document.getElementById('com-stage').value||'prospecting',next_action_date:document.getElementById('com-na-date').value,next_action_note:document.getElementById('com-na-note').value.trim(),activity:idx>=0?(COS[idx].activity||[]):[],people:idx>=0?(COS[idx].people||[]):[]};
   if(idx>=0){COS[idx]=rec;toast('✓ Company updated');}else{COS.push(rec);toast('✓ Company added');}
   sv('crm7_co',COS);buildInds();refreshCounts();renderDash();renderCo();closeCoModal();
 }
@@ -1218,10 +1260,17 @@ function closePickerModal(){document.getElementById('picker-modal').classList.re
 
 function getAllPeople(emailOnly=false){
   const res=[];
-  COS.forEach((co,ci)=>(co.people||[]).forEach((p,pi)=>{
-    if(emailOnly&&!p.email)return;
-    res.push({co,p,key:`${ci}-${pi}`,ci,pi});
-  }));
+  COS.forEach((co,ci)=>{
+    // Include company general email as a virtual contact
+    if(co.email){
+      const vp={fname:'',lname:'',pos:'General contact',email:co.email,status:'',mmk:'',notes:'',_isGeneral:true};
+      res.push({co,p:vp,key:`${ci}-gen`,ci,pi:-1});
+    }
+    (co.people||[]).forEach((p,pi)=>{
+      if(emailOnly&&!p.email)return;
+      res.push({co,p,key:`${ci}-${pi}`,ci,pi});
+    });
+  });
   return res;
 }
 function renderPicker(){
@@ -1404,6 +1453,9 @@ function saveSettings(){
   toast('✓ Settings saved');
   // re-init emailjs if key changed
   if(SETTINGS.emailjsKey) try{emailjs.init({publicKey:SETTINGS.emailjsKey});}catch(e){}
+  // render team list in settings if open
+  renderTeamList();
+  _buildOwnerFilter();
 }
 function syncKey(){const k=document.getElementById('s-key')?.value.trim();if(k)localStorage.setItem('crm7_key',k);}
 
@@ -1437,10 +1489,15 @@ document.getElementById('tm-body')?.addEventListener('input',updTmPrev);
 // ── PIPELINE STAGES ──
 const STAGES=[
   {id:'prospecting',label:'Prospecting',color:'#888780'},
-  {id:'offer_sent',label:'Offer sent',color:'#378ADD'},
-  {id:'negotiation',label:'Negotiating',color:'#BA7517'},
+  {id:'outreach_1',label:'Outreach 1',color:'#378ADD'},
+  {id:'outreach_2',label:'Outreach 2',color:'#7B61D6'},
+  {id:'outreach_3',label:'Outreach 3',color:'#BA7517'},
+  {id:'replied',label:'Replied',color:'#1D9E75'},
+  {id:'meeting',label:'Meeting',color:'#1D9E75'},
+  {id:'offer_sent',label:'Offer sent',color:'#D4537E'},
+  {id:'negotiation',label:'Negotiating',color:'#D85A30'},
   {id:'active',label:'Active partner',color:'#1D9E75'},
-  {id:'dormant',label:'Dormant',color:'#D4537E'},
+  {id:'dormant',label:'Dormant',color:'#888780'},
   {id:'closed_lost',label:'Closed / lost',color:'#D85A30'},
 ];
 
@@ -1448,11 +1505,14 @@ let pipelineView='kanban';
 
 function switchPipelineView(v){
   pipelineView=v;
-  document.getElementById('pl-kanban-btn').classList.toggle('active',v==='kanban');
-  document.getElementById('pl-list-btn').classList.toggle('active',v==='list');
-  document.getElementById('pipeline-kanban').style.display=v==='kanban'?'':'none';
-  document.getElementById('pipeline-due').style.display=v==='list'?'':'none';
+  ['kanban','list','outreach'].forEach(n=>{
+    const btn=document.getElementById('pl-'+n+'-btn');
+    if(btn)btn.classList.toggle('active',v===n);
+    const el=document.getElementById('pipeline-'+(n==='kanban'?'kanban':n==='list'?'due':'outreach'));
+    if(el)el.style.display=v===n?'':'none';
+  });
   if(v==='list')renderDueList();
+  if(v==='outreach')renderOutreachTracker();
 }
 
 function renderPipeline(){
@@ -1478,7 +1538,12 @@ function renderKanban(){
   const week=new Date(Date.now()+7*864e5).toISOString().slice(0,10);
 
   STAGES.forEach(st=>{
-    const companies=COS.filter(c=>(c.stage||'prospecting')===st.id);
+    const ownerFilter=document.getElementById('pl-owner-filter')?.value||'';
+    const companies=COS.filter(c=>{
+      if((c.stage||'prospecting')!==st.id)return false;
+      if(!ownerFilter)return true;
+      return (c.activity||[]).some(a=>a.owner===ownerFilter);
+    });
     const col=document.createElement('div');col.className='pl-col';col.dataset.stage=st.id;
     const totalFee=companies.reduce((a,c)=>a+(parseFloat(c.rehab_fee)||0),0);
     col.innerHTML=`<div class="pl-hdr"><span class="pl-title" style="color:${st.color}">${st.label}</span><span class="pl-cnt">${companies.length}</span></div>`;
@@ -1505,8 +1570,9 @@ function renderKanban(){
         <div class="pl-nm">${co.name}</div>
         <div class="pl-meta">${co.industry||'—'} · ${pplN} contact${pplN!==1?'s':''}</div>
         ${fee>0?`<div class="pl-fee">${fee.toFixed(1)} M HUF</div>`:''}
+        ${_outreachChips(co)}
         ${duechip}
-        ${lastAct?`<div class="pl-meta" style="margin-top:4px;font-style:italic">${lastAct.type}: ${(lastAct.text||'').slice(0,40)}…</div>`:''}
+        ${lastAct?`<div class="pl-meta" style="margin-top:4px;font-style:italic;font-size:10px">${ACT_ICONS[lastAct.type]||'📝'} ${(lastAct.text||'').slice(0,35)}${lastAct.owner?' · '+lastAct.owner:''}</div>`:''}
         <div class="pl-actions">
           <button class="btn btn-sm" onclick="openActModal(${ri})">Log</button>
           <button class="btn btn-sm" onclick="openNAModal(${ri})">⏰</button>
@@ -1574,9 +1640,9 @@ function renderDueList(){
 let actCoIdx=-1;
 let curActType='note';
 
-const ACT_ICONS={note:'📝',call:'📞',meeting:'🤝',email:'📧',reply:'↩',win:'🎉'};
-const ACT_LABELS={note:'Note',call:'Call',meeting:'Meeting',email:'Email sent',reply:'Reply received',win:'Partnership won'};
-const ACT_CLS={note:'act-note',call:'act-call',meeting:'act-meeting',email:'act-email',reply:'act-reply',win:'act-win'};
+const ACT_ICONS={note:'📝',call:'📞',meeting:'🤝',email:'📧',outreach:'📤',reply:'↩',win:'🎉'};
+const ACT_LABELS={note:'Note',call:'Call',meeting:'Meeting',email:'Email sent',outreach:'Outreach sent',reply:'Reply received',win:'Partnership won'};
+const ACT_CLS={note:'act-note',call:'act-call',meeting:'act-meeting',email:'act-email',outreach:'act-email',reply:'act-reply',win:'act-win'};
 
 function openActModal(ri){
   actCoIdx=ri;
@@ -1604,17 +1670,45 @@ function saveActivity(){
   if(!text){toast('Write something first');return;}
   if(!COS[ri])return;
   if(!COS[ri].activity)COS[ri].activity=[];
-  COS[ri].activity.unshift({type:curActType,text,date:document.getElementById('act-date').value,ts:Date.now()});
+  const owner=document.getElementById('act-owner').value.trim()||SETTINGS.sender||'';
+  const entry={type:curActType,text,date:document.getElementById('act-date').value,ts:Date.now(),owner};
+  COS[ri].activity.unshift(entry);
+
+  // Auto-advance pipeline stage on outreach
+  if(curActType==='outreach'){
+    const cur=COS[ri].stage||'prospecting';
+    if(cur==='prospecting')COS[ri].stage='outreach_1';
+    else if(cur==='outreach_1')COS[ri].stage='outreach_2';
+    else if(cur==='outreach_2')COS[ri].stage='outreach_3';
+    COS[ri].last_touchpoint=document.getElementById('act-date').value;
+    // Auto-set next action date 7 days out for follow-up
+    const nextDate=new Date(Date.now()+7*864e5).toISOString().slice(0,10);
+    if(!COS[ri].next_action_date||COS[ri].next_action_date<nextDate){
+      COS[ri].next_action_date=nextDate;
+      COS[ri].next_action_note='Follow up on outreach';
+      COS[ri].next_action_owner=owner;
+    }
+    toast(`✓ Outreach logged — stage advanced to ${STAGES.find(s=>s.id===COS[ri].stage)?.label}`);
+  } else {
+    // Update last_touchpoint for real interactions
+    if(['call','meeting','reply','win','email'].includes(curActType)){
+      const d=document.getElementById('act-date').value;
+      if(!COS[ri].last_touchpoint||d>COS[ri].last_touchpoint){COS[ri].last_touchpoint=d;}
+    }
+    if(curActType==='reply')COS[ri].stage='replied';
+    if(curActType==='meeting')COS[ri].stage='meeting';
+    if(curActType==='win')COS[ri].stage='active';
+    toast('✓ Activity logged');
+  }
+
+  // Add owner to known team members dropdown
+  if(owner)_addOwnerToFilter(owner);
+
   sv('crm7_co',COS);
   document.getElementById('act-text').value='';
   renderActFeed(ri);
-  // also update last_touchpoint if it's a real interaction
-  if(['call','meeting','reply','win'].includes(curActType)){
-    const d=document.getElementById('act-date').value;
-    if(!COS[ri].last_touchpoint||d>COS[ri].last_touchpoint){COS[ri].last_touchpoint=d;sv('crm7_co',COS);}
-  }
-  toast('✓ Activity logged');
   renderCo();
+  if(document.getElementById('page-pipeline').classList.contains('active'))renderPipeline();
 }
 
 function renderActFeed(ri){
@@ -1626,7 +1720,7 @@ function renderActFeed(ri){
     <div class="act-item">
       <div class="act-dot ${ACT_CLS[a.type]||'act-note'}">${ACT_ICONS[a.type]||'📝'}</div>
       <div style="flex:1;min-width:0">
-        <div class="act-ttl">${ACT_LABELS[a.type]||a.type}</div>
+        <div class="act-ttl">${ACT_LABELS[a.type]||a.type}${a.owner?` <span style="font-weight:400;color:var(--tx3)">by ${a.owner}</span>`:''}</div>
         <div class="act-when">${a.date||''}</div>
         <div class="act-body">${a.text}</div>
       </div>
@@ -2215,6 +2309,260 @@ function deleteDeal(){
   closeDealModal();
   toast('Deal deleted');
 }
+
+// ═══════════════ REHAB FEE CALCULATOR ═══════════════
+function calcRehabFee(){
+  const hc=parseInt(document.getElementById('com-hc')?.value||0);
+  if(!hc||hc<25){
+    const rf=document.getElementById('com-rf');if(rf&&!rf.value)rf.placeholder='auto-calculated';
+    const lbl=document.getElementById('com-rf-auto');if(lbl)lbl.textContent='';
+    return;
+  }
+  // Every 25 employees → obligation to employ 1 person with changed work capacity
+  // If not employing them: pay 2,905,200 HUF per missing person per year
+  const obliged=Math.floor(hc/25);
+  const feeHUF=obliged*2905200;
+  const feeM=(feeHUF/1000000).toFixed(2);
+  const rf=document.getElementById('com-rf');
+  if(rf&&!rf.dataset.manual){rf.value=feeM;}
+  const lbl=document.getElementById('com-rf-auto');
+  if(lbl)lbl.textContent=`= ${obliged} × 2.9M`;
+}
+
+// Allow user to override auto-calc by typing manually
+function _rfManualFlag(){const rf=document.getElementById('com-rf');if(rf)rf.dataset.manual=rf.value?'1':'';}
+
+// ═══════════════ OUTREACH HELPERS ═══════════════
+function _outreachCount(co){
+  return (co.activity||[]).filter(a=>a.type==='outreach').length;
+}
+
+function _outreachChips(co){
+  const n=_outreachCount(co);
+  if(!n)return '';
+  const dots=[1,2,3].map(i=>`<span style="width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:2px;background:${i<=n?'var(--acc)':'var(--bg3)'}"></span>`).join('');
+  return `<div style="display:flex;align-items:center;gap:4px;margin-top:3px">${dots}<span style="font-size:9px;color:var(--tx3)">${n}/3 outreach${n>=3?' · make dormant?':''}</span></div>`;
+}
+
+// ═══════════════ OWNER FILTER ═══════════════
+function _addOwnerToFilter(owner){
+  if(!owner)return;
+  const sel=document.getElementById('pl-owner-filter');if(!sel)return;
+  if([...sel.options].some(o=>o.value===owner))return;
+  const o=document.createElement('option');o.value=owner;o.textContent=owner;
+  sel.appendChild(o);
+}
+
+function _buildOwnerFilter(){
+  const sel=document.getElementById('pl-owner-filter');if(!sel)return;
+  const cur=sel.value;
+  const owners=[...new Set(COS.flatMap(c=>(c.activity||[]).map(a=>a.owner).filter(Boolean)))].sort();
+  sel.innerHTML='<option value="">All team members</option>';
+  owners.forEach(o=>{const opt=document.createElement('option');opt.value=o;opt.textContent=o;if(o===cur)opt.selected=true;sel.appendChild(opt);});
+}
+
+// ═══════════════ OUTREACH TRACKER VIEW ═══════════════
+function renderOutreachTracker(){
+  const list=document.getElementById('outreach-list');if(!list)return;
+  const ownerFilter=document.getElementById('pl-owner-filter')?.value||'';
+  const today=new Date().toISOString().slice(0,10);
+  const week=new Date(Date.now()+7*864e5).toISOString().slice(0,10);
+
+  // Candidates: in outreach stages, not active/dormant/closed
+  const outreachStages=['prospecting','outreach_1','outreach_2','outreach_3'];
+  let candidates=COS.map((co,ri)=>({co,ri})).filter(({co})=>outreachStages.includes(co.stage||'prospecting'));
+
+  // Filter by owner if set
+  if(ownerFilter)candidates=candidates.filter(({co})=>(co.activity||[]).some(a=>a.owner===ownerFilter));
+
+  // Split into sections
+  const overdue=candidates.filter(({co})=>co.next_action_date&&co.next_action_date<today);
+  const thisWeek=candidates.filter(({co})=>co.next_action_date&&co.next_action_date>=today&&co.next_action_date<=week);
+  const ready=candidates.filter(({co})=>!co.next_action_date||co.next_action_date>week);
+  const maxOutreach=candidates.filter(({co})=>_outreachCount(co)>=3);
+
+  list.innerHTML='';
+
+  const section=(title,color,items,emptyMsg)=>{
+    const h=document.createElement('div');
+    h.style.cssText=`font-size:11px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:.5px;margin:14px 0 6px;padding-bottom:4px;border-bottom:.5px solid var(--brd)`;
+    h.textContent=`${title} (${items.length})`;
+    list.appendChild(h);
+    if(!items.length){const e=document.createElement('div');e.style.cssText='font-size:11px;color:var(--tx3);padding:6px 0 10px';e.textContent=emptyMsg;list.appendChild(e);return;}
+    items.forEach(({co,ri})=>{
+      const n=_outreachCount(co);
+      const lastOutreach=(co.activity||[]).find(a=>a.type==='outreach');
+      const row=document.createElement('div');
+      row.style.cssText='background:var(--sur);border:.5px solid var(--brd);border-radius:var(--r);padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;gap:10px;cursor:pointer';
+      row.onclick=()=>{nav('companies',document.querySelector('[onclick*=companies]'));setTimeout(()=>{expandedCos.add(ri);renderCo();},80);};
+      const contacts=(co.people||[]).filter(p=>p.email).map(p=>`${p.fname||''} ${p.lname||''}`.trim()||p.email).slice(0,2).join(', ');
+      row.innerHTML=`
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:600;margin-bottom:2px">${co.name} ${_outreachChips(co)}</div>
+          <div style="font-size:11px;color:var(--tx2)">${co.industry||'—'} · ${contacts||'no email contacts'}</div>
+          ${co.next_action_note?`<div style="font-size:10px;color:var(--tx3);margin-top:2px">${co.next_action_note}${co.next_action_owner?' · '+co.next_action_owner:''}</div>`:''}
+          ${lastOutreach?`<div style="font-size:10px;color:var(--tx3)">Last outreach: ${lastOutreach.date}${lastOutreach.owner?' by '+lastOutreach.owner:''}</div>`:''}
+        </div>
+        ${co.next_action_date?`<span class="badge ${co.next_action_date<today?'b-off':co.next_action_date<=week?'b-fu':'b-unknown'}">${co.next_action_date}</span>`:''}
+        <div style="display:flex;gap:5px;flex-shrink:0" onclick="event.stopPropagation()">
+          <button class="btn btn-sm btn-p" onclick="openActModal(${ri});setTimeout(()=>{const b=document.querySelector('.act-type-btn[data-type=outreach]');if(b){b.click();}},100)">📤 Log outreach</button>
+          <button class="btn btn-sm" onclick="openNAModal(${ri})">⏰</button>
+        </div>`;
+      list.appendChild(row);
+    });
+  };
+
+  section('⚠ Overdue — contact now','var(--c400)',overdue,'No overdue follow-ups.');
+  section('📅 Due this week','var(--a400)',thisWeek,'No follow-ups due this week.');
+  section('✉ Ready to contact','var(--tx2)',ready,'No other prospects in outreach stages.');
+  if(maxOutreach.length){
+    section('💤 3 outreaches sent — consider making dormant','var(--tx3)',maxOutreach,'');
+  }
+}
+
+// Patch renderPipeline to also build owner filter
+const _origRenderPipeline=renderPipeline;
+renderPipeline=function(){
+  _buildOwnerFilter();
+  _origRenderPipeline();
+  if(pipelineView==='outreach')renderOutreachTracker();
+};
+
+// Patch openActModal to pre-fill owner from device user (priority) or last activity
+const _origOpenActModal=openActModal;
+openActModal=function(ri){
+  _origOpenActModal(ri);
+  const ownerEl=document.getElementById('act-owner');
+  if(ownerEl){
+    const deviceUser=getCurrentUser();
+    const lastOwner=(COS[ri]?.activity||[]).find(a=>a.owner)?.owner||SETTINGS.sender||'';
+    ownerEl.value=deviceUser||lastOwner;
+  }
+};
+
+// Patch openCoModal to clear the manual flag on rehab fee
+const _origOpenCoModal=openCoModal;
+openCoModal=function(idx){
+  _origOpenCoModal(idx);
+  const rf=document.getElementById('com-rf');
+  if(rf)rf.dataset.manual=rf.value?'1':'';
+  calcRehabFee();
+};
+
+// ═══════════════ USER IDENTITY (per device) ═══════════════
+// Stored in localStorage separately from CRM data — each device has its own identity.
+// Not synced to Drive intentionally — each user sets their own name on their own device.
+
+// ═══════════════ TEAM MEMBERS & USER IDENTITY ═══════════════
+// Team list is defined by admin in Settings, stored in SETTINGS and synced to Drive.
+// Each device picks from the list — no free text, no typos.
+
+function getTeam(){return SETTINGS.team||[];}
+
+function renderTeamList(){
+  const list=document.getElementById('team-list');if(!list)return;
+  const team=getTeam();
+  if(!team.length){list.innerHTML='<div style="font-size:11px;color:var(--tx3);padding:4px 0">No team members added yet.</div>';return;}
+  list.innerHTML=team.map((name,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:5px 8px;background:var(--bg2);border-radius:var(--r);font-size:12px">
+      <div style="width:22px;height:22px;border-radius:50%;background:${avCol(name)};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0">${name[0].toUpperCase()}</div>
+      <span style="flex:1">${name}</span>
+      <span style="cursor:pointer;color:var(--tx3);font-size:14px" onclick="removeTeamMember(${i})">×</span>
+    </div>`).join('');
+}
+
+function addTeamMember(){
+  const inp=document.getElementById('team-add-input');
+  const name=inp?.value.trim();
+  if(!name){toast('Enter a name');return;}
+  if(!SETTINGS.team)SETTINGS.team=[];
+  if(SETTINGS.team.includes(name)){toast('Already in team');return;}
+  SETTINGS.team.push(name);
+  sv('crm7_set',SETTINGS);
+  inp.value='';
+  renderTeamList();
+  _buildOwnerFilter();
+  toast(`✓ ${name} added to team`);
+}
+
+function removeTeamMember(i){
+  if(!SETTINGS.team)return;
+  const name=SETTINGS.team[i];
+  if(!confirm(`Remove ${name} from team?`))return;
+  SETTINGS.team.splice(i,1);
+  sv('crm7_set',SETTINGS);
+  renderTeamList();
+  _buildOwnerFilter();
+  toast(`${name} removed`);
+}
+
+function getCurrentUser(){return localStorage.getItem('crm_user_name')||'';}
+
+function pickUser(name){
+  localStorage.setItem('crm_user_name',name);
+  document.getElementById('user-modal').classList.remove('open');
+  _applyUserIdentity(name);
+  toast(`✓ Logged in as ${name}`);
+}
+
+// Keep saveUserName as alias for compatibility
+function saveUserName(){
+  const inp=document.getElementById('user-name-input');
+  if(inp)pickUser(inp.value.trim());
+}
+
+function openUserModal(){
+  const cur=getCurrentUser();
+  const team=getTeam();
+  const ttl=document.getElementById('user-modal-ttl');
+  const sub=document.getElementById('user-modal-sub');
+  const pickList=document.getElementById('user-pick-list');
+  if(ttl)ttl.textContent=cur?'Switch user':'Who are you?';
+  if(sub)sub.textContent=cur
+    ?`Currently logged in as "${cur}". Switch to a different name:`
+    :'Select your name to get started:';
+  if(pickList){
+    if(!team.length){
+      pickList.innerHTML='<div style="font-size:12px;color:var(--tx2);text-align:center;padding:10px">No team members set up yet.<br>Go to <strong>Settings → Team members</strong> to add your team.</div>';
+    } else {
+      pickList.innerHTML=team.map(name=>`
+        <button onclick="pickUser('${name}')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--r);border:.5px solid ${name===cur?'var(--acc)':'var(--brd)'};background:${name===cur?'var(--t50)':'var(--sur)'};cursor:pointer;font-family:var(--f);font-size:13px;font-weight:${name===cur?'700':'500'};color:var(--tx);width:100%;text-align:left;transition:all .1s" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='${name===cur?'var(--acc)':'var(--brd)'}'">
+          <div style="width:30px;height:30px;border-radius:50%;background:${avCol(name)};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">${name[0].toUpperCase()}</div>
+          ${name}${name===cur?' <span style="margin-left:auto;font-size:10px;color:var(--t600)">✓ you</span>':''}
+        </button>`).join('');
+    }
+  }
+  document.getElementById('user-modal').classList.add('open');
+}
+
+function _applyUserIdentity(name){
+  const av=document.getElementById('sb-user-av');
+  const nm=document.getElementById('sb-user-name');
+  if(av){av.textContent=(name[0]||'?').toUpperCase();av.style.background=avCol(name);}
+  if(nm)nm.textContent=name;
+}
+
+function _checkFirstUse(){
+  const name=getCurrentUser();
+  const team=getTeam();
+  if(name&&team.includes(name)){
+    _applyUserIdentity(name);
+  } else if(team.length){
+    // Team is set up but user not identified — show picker
+    setTimeout(openUserModal,600);
+  } else if(name){
+    // Legacy: user set a name before team was configured
+    _applyUserIdentity(name);
+  }
+  // If no team and no name — wait for admin to set up team first
+}
+
+// Patch modal close listeners to include user-modal
+document.getElementById('user-modal')?.addEventListener('click',e=>{
+  if(e.target===document.getElementById('user-modal')&&getCurrentUser()){
+    document.getElementById('user-modal').classList.remove('open');
+  }
+});
 
 // Patch refreshCounts to include stale + deals counts
 const _origRefreshCounts=refreshCounts;
