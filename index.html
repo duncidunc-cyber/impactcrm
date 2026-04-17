@@ -700,6 +700,15 @@ select.fs:focus{border-color:var(--acc)}
           </div>
         </div>
 
+        <div class="st-h" style="color:var(--c400);border-left-color:var(--c400)">Danger zone</div>
+        <div class="st-card" style="border-color:var(--c50)">
+          <div style="font-size:11.5px;color:var(--tx2);line-height:1.55;margin-bottom:10px">
+            Resets every company's pipeline stage to <strong>Prospecting</strong> and clears the last-touchpoint date, next-action, and activity log on each one. Contacts, campaigns, and templates stay intact.
+          </div>
+          <button class="btn btn-sm" onclick="resetAllLeadsToNew()" style="color:var(--c800);border-color:var(--c400)">↺ Reset all leads to "new"</button>
+          <span id="reset-leads-status" style="font-size:11px;color:var(--tx2);margin-left:8px"></span>
+        </div>
+
         <div style="margin-top:4px">
           <button class="btn btn-p" onclick="saveSettings()" style="width:100%">Save all settings</button>
         </div>
@@ -1762,6 +1771,32 @@ function findDuplicateCompanies(threshold=0.9){
   }
   pairs.sort((a,b)=>b.sim-a.sim);
   return pairs;
+}
+
+function resetAllLeadsToNew(){
+  const n=COS.length;
+  if(!n){toast('No companies to reset');return;}
+  const msg=`This will reset ALL ${n} companies to stage "Prospecting" and clear their last-touchpoint date, next-action date/note, and activity log.\n\nContacts, campaigns, and templates will NOT be touched.\n\nThis cannot be undone. Continue?`;
+  if(!confirm(msg))return;
+  const now=Date.now();
+  let resetCount=0;
+  COS.forEach(c=>{
+    c.stage='prospecting';
+    c.last_touch='';
+    c.next_action_date='';
+    c.next_action_note='';
+    c.activity=[];
+    c._updatedAt=now;
+    resetCount++;
+  });
+  sv('crm7_co',COS);
+  refreshCounts();
+  (typeof renderCo==='function')&&renderCo();
+  (typeof renderPipeline==='function')&&renderPipeline();
+  (typeof renderDash==='function')&&renderDash();
+  const s=document.getElementById('reset-leads-status');
+  if(s){s.textContent=`✓ ${resetCount} companies reset`;s.style.color='var(--t600)';setTimeout(()=>{s.textContent='';},6000);}
+  toast&&toast(`Reset ${resetCount} companies to Prospecting`);
 }
 
 function openDupeFinder(){
