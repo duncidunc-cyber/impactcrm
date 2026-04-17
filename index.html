@@ -533,8 +533,8 @@ select.fs:focus{border-color:var(--acc)}
         <div>
           <div class="dash-section-h"><div class="bar"></div><div class="label">Message</div></div>
           <div class="st-card">
-            <div class="cg"><div class="cl">Subject</div><input class="ci" id="c-subj" placeholder="Subject line…"></div>
-            <div class="cg" style="margin-bottom:0"><div class="cl">Body</div><textarea class="ci" id="c-body" style="min-height:240px;font-family:var(--f);font-size:13px;line-height:1.7" placeholder="Email body…"></textarea></div>
+            <div class="cg"><div class="cl">Subject</div><input class="ci" id="c-subj" placeholder="Subject line…" oninput="fillPrev()"></div>
+            <div class="cg" style="margin-bottom:0"><div class="cl">Body</div><textarea class="ci" id="c-body" style="min-height:240px;font-family:var(--f);font-size:13px;line-height:1.7" placeholder="Email body…" oninput="fillPrev()"></textarea></div>
             <div class="cg" style="margin-top:10px;margin-bottom:0"><div class="cl">Insert placeholder at cursor</div>
               <div class="chips">
                 <button class="ph-btn" onclick="iPH('c-body','{first_name}')">first_name</button>
@@ -551,6 +551,7 @@ select.fs:focus{border-color:var(--acc)}
           </div>
 
           <div class="dash-section-h"><div class="bar"></div><div class="label">Preview</div><button class="btn btn-sm" onclick="fillPrev()" style="margin-left:auto">Fill sample values ↗</button></div>
+          <div id="c-sig-hint" style="font-size:11px;margin:0 0 8px;padding:7px 10px;background:var(--bg2);border-radius:var(--r);border:.5px solid var(--brd);color:var(--tx2)"></div>
           <div class="st-card">
             <div class="prev-box" style="border:none;padding:0;background:transparent"><div class="prev-subj" id="c-prev-subj"></div><div class="prev-body" id="c-prev-body"></div></div>
           </div>
@@ -655,12 +656,22 @@ select.fs:focus{border-color:var(--acc)}
             <div class="cg"><div class="cl">Sender name</div><input class="ci" id="s-sender" placeholder="Weinberger Eszter · fut|able"></div>
           </div>
           <div class="cg" style="margin-bottom:7px">
-            <div class="cl">Email signature <span style="color:var(--tx3);font-weight:400">— inserts via <code style="font-family:var(--fm)">{signature}</code></span></div>
+            <div class="cl">Plain-text signature <span style="color:var(--tx3);font-weight:400">— inserts via <code style="font-family:var(--fm)">{signature}</code>, fallback if no HTML version</span></div>
             <textarea class="ci" id="s-signature" rows="3" style="font-family:var(--f);line-height:1.5;resize:vertical" placeholder="Üdvözlettel,&#10;Weinberger Eszter&#10;fut|able · +36 30 000 0000"></textarea>
+          </div>
+          <div class="cg" style="margin-bottom:7px">
+            <div class="cl" style="display:flex;align-items:center;gap:8px">
+              <span>HTML signature <span style="color:var(--tx3);font-weight:400">— used when your EmailJS template uses <code style="font-family:var(--fm)">{{{message}}}</code> (triple braces)</span></span>
+              <label class="btn btn-sm" style="margin-left:auto;cursor:pointer">Upload .html<input type="file" accept=".html,.htm,text/html" onchange="loadSigFile(this)" style="display:none"></label>
+              <button class="btn btn-sm" onclick="clearSigHtml()">Clear</button>
+            </div>
+            <textarea class="ci" id="s-signature-html" rows="5" style="font-family:var(--fm);font-size:11px;line-height:1.5;resize:vertical" placeholder="Paste your HTML signature here, or upload an .html file…" oninput="renderSigHtmlPreview()"></textarea>
+            <div style="font-size:11px;color:var(--tx2);margin-top:6px;margin-bottom:4px">Live preview:</div>
+            <div id="s-signature-html-preview" style="background:#fff;border:.5px solid var(--brd);border-radius:var(--r);padding:14px;min-height:40px;color:#2e2e38"></div>
           </div>
           <div style="display:flex;gap:7px;align-items:center">
             <button class="btn btn-sm" onclick="testEmailJS()">Send test email ↗</button>
-            <details style="font-size:10px;color:var(--tx3)"><summary style="cursor:pointer">Template vars</summary><span style="font-family:var(--fm);font-size:10px">{{to_email}} {{to_name}} {{from_name}} {{subject}} {{message}} {{reply_to}}</span></details>
+            <details style="font-size:10px;color:var(--tx3)"><summary style="cursor:pointer">Template vars</summary><span style="font-family:var(--fm);font-size:10px">{{to_email}} {{to_name}} {{from_name}} {{subject}} {{{message}}} {{reply_to}}</span></details>
           </div>
           <div id="ejs-status" style="font-size:11px;color:var(--tx2);margin-top:6px"></div>
         </div>
@@ -1104,7 +1115,20 @@ const SB=s=>({offer_sent:'b-offer',email_sent:'b-email',followup_sent:'b-fu',rep
 const SL=s=>({offer_sent:'Offer sent',email_sent:'Email sent',followup_sent:'Follow-up sent',replied:'Replied',meeting:'Meeting','':'Not contacted',off:'Closed'}[s]||s);
 const avCol=n=>['#1D9E75','#378ADD','#D4537E','#BA7517','#5F5E5A','#D85A30','#534AB7','#639922'][(n||'A').charCodeAt(0)%8];
 const fillPH=(t,s={})=>{const _cfg=(typeof getActiveEmailConfig==='function'?getActiveEmailConfig():{});const d={first_name:'Anna',last_name:'Kovács',company:'Erste Bank',position:'HR Manager',your_org:'fut|able',mmk_count:'25',rehab_fee:'121.8',sender_name:_cfg.sender||SETTINGS.sender||getCurrentUser()||'Your Name',signature:_cfg.signature||SETTINGS.signature||'',...s};return t.replace(/\{(\w+)\}/g,(_,k)=>d[k]!==undefined?d[k]:'{'+k+'}');};
-const iPH=(id,ph)=>{const ta=document.getElementById(id);if(!ta)return;const s=ta.selectionStart,e=ta.selectionEnd;ta.value=ta.value.slice(0,s)+ph+ta.value.slice(e);ta.selectionStart=ta.selectionEnd=s+ph.length;ta.focus();};
+// If the body doesn't have a {signature} placeholder and the user has one set, auto-append it so emails always end with the signature of the currently logged-in user.
+const ensureSig=(body)=>{if(!body)return body;if(body.includes('{signature}'))return body;const _cfg=(typeof getActiveEmailConfig==='function'?getActiveEmailConfig():{});const sig=_cfg.signature||SETTINGS.signature||'';const sigH=_cfg.signatureHtml||SETTINGS.signatureHtml||'';if(!sig&&!sigH)return body;return body.replace(/\s+$/,'')+'\n\n{signature}';};
+// Strip HTML body content from any <body>…</body> wrapper or DOCTYPE so we use just the inline signature table/markup.
+const _extractSigHtml=(raw)=>{if(!raw)return'';let s=String(raw);const m=s.match(/<body[^>]*>([\s\S]*?)<\/body>/i);if(m)s=m[1];s=s.replace(/<!DOCTYPE[^>]*>/gi,'').replace(/<\/?html[^>]*>/gi,'').replace(/<head[\s\S]*?<\/head>/gi,'');return s.trim();};
+// Convert plain-text body to HTML-safe paragraphs (escape + \n→<br>, double \n→</p><p>).
+const _plainToHtml=(txt)=>{if(!txt)return'';const esc=String(txt).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');return '<div style="font-family:Arial,sans-serif;font-size:13px;line-height:1.55;color:#2e2e38">'+esc.split(/\n{2,}/).map(p=>'<p style="margin:0 0 12px">'+p.replace(/\n/g,'<br>')+'</p>').join('')+'</div>';};
+// Build the final {signature} replacement: if user has HTML sig, return HTML (preferred). Else plain text.
+const _sigReplacement=(preferHtml)=>{const cfg=(typeof getActiveEmailConfig==='function'?getActiveEmailConfig():{});const h=cfg.signatureHtml||SETTINGS.signatureHtml||'';const t=cfg.signature||SETTINGS.signature||'';if(preferHtml&&h)return _extractSigHtml(h);return t;};
+// Render body + signature as a combined HTML blob for sending (if an HTML sig exists).
+const _buildHtmlMessage=(bodyText)=>{const cfg=(typeof getActiveEmailConfig==='function'?getActiveEmailConfig():{});const h=cfg.signatureHtml||SETTINGS.signatureHtml||'';const t=cfg.signature||SETTINGS.signature||'';if(!h)return null;const cleanSig=_extractSigHtml(h);const withoutPH=bodyText.replace(/\{signature\}/g,'');return _plainToHtml(withoutPH.replace(/\s+$/,''))+'<div style="margin-top:16px">'+cleanSig+'</div>';};
+function loadSigFile(inp){const f=inp.files&&inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const ta=document.getElementById('s-signature-html');if(ta){ta.value=String(r.result||'');renderSigHtmlPreview();toast('✓ HTML loaded — click Save');}};r.readAsText(f);inp.value='';}
+function clearSigHtml(){const ta=document.getElementById('s-signature-html');if(!ta)return;if(ta.value&&!confirm('Clear the HTML signature?'))return;ta.value='';renderSigHtmlPreview();}
+function renderSigHtmlPreview(){const ta=document.getElementById('s-signature-html'),box=document.getElementById('s-signature-html-preview');if(!ta||!box)return;const raw=ta.value||'';if(!raw.trim()){box.innerHTML='<span style="color:var(--tx3);font-size:11px">No HTML signature set — your plain-text signature will be used instead.</span>';return;}box.innerHTML=_extractSigHtml(raw);}
+const iPH=(id,ph)=>{const ta=document.getElementById(id);if(!ta)return;const s=ta.selectionStart,e=ta.selectionEnd;ta.value=ta.value.slice(0,s)+ph+ta.value.slice(e);ta.selectionStart=ta.selectionEnd=s+ph.length;ta.focus();if(typeof fillPrev==='function'&&(id==='c-body'||id==='c-subj'))fillPrev();};
 
 // ═══════════════ SELECTION STATE ═══════════════
 let selectedCos=new Set(); // set of company indices
@@ -1623,8 +1647,9 @@ function applyPicker(){
 }
 
 function selLang(el,l){emailLang=l;document.querySelectorAll('.chip[onclick*=selLang]').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');buildTmplSelects();}
-function loadTmpl(){const idx=document.getElementById('tmpl-sel').value;if(!idx)return;const t=TMPLS[parseInt(idx)];if(!t)return;document.getElementById('c-subj').value=t.subject;document.getElementById('c-body').value=t.body;toast(`✓ "${t.name}" loaded`);}
-function fillPrev(){const s=document.getElementById('c-subj').value,b=document.getElementById('c-body').value;document.getElementById('c-prev-subj').textContent=fillPH(s);document.getElementById('c-prev-body').textContent=fillPH(b);}
+function loadTmpl(){const idx=document.getElementById('tmpl-sel').value;if(!idx)return;const t=TMPLS[parseInt(idx)];if(!t)return;document.getElementById('c-subj').value=t.subject;document.getElementById('c-body').value=t.body;fillPrev();toast(`✓ "${t.name}" loaded`);}
+function fillPrev(){const se=document.getElementById('c-subj'),be=document.getElementById('c-body');if(!se||!be)return;const s=se.value||'',b=be.value||'';const ps=document.getElementById('c-prev-subj'),pb=document.getElementById('c-prev-body');if(ps)ps.textContent=fillPH(s);if(pb){const cfg=(typeof getActiveEmailConfig==='function'?getActiveEmailConfig():{});const hasHtml=!!(cfg.signatureHtml||SETTINGS.signatureHtml);const filled=ensureSig(b);if(hasHtml){const htmlMsg=_buildHtmlMessage(fillPH(filled));pb.innerHTML=htmlMsg||'';pb.style.whiteSpace='normal';}else{pb.textContent=fillPH(filled);pb.style.whiteSpace='pre-wrap';}}updSigHint();}
+function updSigHint(){const h=document.getElementById('c-sig-hint');if(!h)return;const cfg=(typeof getActiveEmailConfig==='function'?getActiveEmailConfig():{});const u=(typeof getCurrentUser==='function'?getCurrentUser():'')||'';const sig=cfg.signature||SETTINGS.signature||'';const sigH=cfg.signatureHtml||SETTINGS.signatureHtml||'';const mode=sigH?'HTML':(sig?'plain text':'');if(u&&mode){const label=sigH?'Rich HTML signature':sig.split(/\n/).map(s=>s.trim()).filter(Boolean).slice(0,2).join(' · ');h.innerHTML=`✓ <strong>${mode}</strong> signature auto-attached for <strong>${u}</strong> — <span style="color:var(--tx3)">${label.slice(0,80)}${label.length>80?'…':''}</span>`;h.style.color='var(--t600)';}else if(u&&!mode){h.innerHTML=`⚠ <strong>${u}</strong> has no signature yet — <a href="#" onclick="nav('settings',document.querySelector('[onclick*=settings]'));return false" style="color:var(--t600);text-decoration:underline">set it in Settings</a>`;h.style.color='var(--c800)';}else{h.innerHTML=`⚠ No user selected — pick your name from the sidebar so your signature gets attached`;h.style.color='var(--c800)';}}
 function copyEmail(){const s=document.getElementById('c-subj').value,b=document.getElementById('c-body').value;if(!s&&!b){toast('Write something first');return;}navigator.clipboard.writeText(`Subject: ${s}\n\n${b}`).then(()=>toast('✓ Copied')).catch(()=>toast('Select & copy manually'));}
 function saveAsTmpl(){const s=document.getElementById('c-subj').value.trim(),b=document.getElementById('c-body').value.trim();if(!s&&!b){toast('Write something first');return;}const n=prompt('Template name:','My template');if(!n)return;TMPLS.push({name:n,type:'Custom',lang:emailLang,tags:'',subject:s,body:b});sv('crm7_tmpls',TMPLS);renderTmpls();buildTmplSelects();toast('✓ Saved as template');}
 
@@ -1643,7 +1668,7 @@ Reply ONLY:
 SUBJECT: [subject]
 BODY:
 [body]`;
-  try{const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,messages:[{role:'user',content:prompt}]})});const data=await res.json();if(data.error){toast('API error: '+data.error.message);return;}const text=data.content?.map(i=>i.text||'').join('')||'';const sm=text.match(/SUBJECT:\s*(.+)/),bm=text.match(/BODY:\s*([\s\S]+)/);document.getElementById('c-subj').value=sm?sm[1].trim():'';document.getElementById('c-body').value=bm?bm[1].trim():text;toast('✓ Generated');}catch{toast('Generation failed');}
+  try{const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,messages:[{role:'user',content:prompt}]})});const data=await res.json();if(data.error){toast('API error: '+data.error.message);return;}const text=data.content?.map(i=>i.text||'').join('')||'';const sm=text.match(/SUBJECT:\s*(.+)/),bm=text.match(/BODY:\s*([\s\S]+)/);document.getElementById('c-subj').value=sm?sm[1].trim():'';document.getElementById('c-body').value=bm?bm[1].trim():text;fillPrev();toast('✓ Generated');}catch{toast('Generation failed');}
   document.getElementById('ai-load').classList.remove('vis');
 }
 
@@ -1691,7 +1716,7 @@ function closeTmplModal(){document.getElementById('tmpl-modal').classList.remove
 function updTmPrev(){const s=document.getElementById('tm-subj')?.value||'',b=document.getElementById('tm-body')?.value||'';if(document.getElementById('tm-prev-subj'))document.getElementById('tm-prev-subj').textContent=fillPH(s);if(document.getElementById('tm-prev-body'))document.getElementById('tm-prev-body').textContent=fillPH(b).slice(0,250);}
 function saveTmpl(){const idx=parseInt(document.getElementById('tm-idx').value);const name=document.getElementById('tm-name').value.trim();if(!name){toast('Name required');return;}const rec={name,type:document.getElementById('tm-type').value,lang:document.getElementById('tm-lang').value,tags:document.getElementById('tm-tags').value.trim(),subject:document.getElementById('tm-subj').value.trim(),body:document.getElementById('tm-body').value.trim()};if(idx>=0){TMPLS[idx]=rec;toast('✓ Updated');}else{TMPLS.push(rec);toast('✓ Saved');}sv('crm7_tmpls',TMPLS);renderTmpls();buildTmplSelects();closeTmplModal();document.getElementById('nb-tmpl').textContent=TMPLS.length;}
 function deleteTmpl(){const idx=parseInt(document.getElementById('tm-idx').value);if(idx<0)return;if(!confirm(`Delete "${TMPLS[idx].name}"?`))return;TMPLS.splice(idx,1);sv('crm7_tmpls',TMPLS);renderTmpls();buildTmplSelects();closeTmplModal();toast('Deleted');}
-function useTmpl(idx){const t=TMPLS[idx];if(!t)return;document.getElementById('c-subj').value=t.subject;document.getElementById('c-body').value=t.body;nav('compose',document.querySelector('[onclick*=compose]'));toast(`✓ "${t.name}" loaded`);}
+function useTmpl(idx){const t=TMPLS[idx];if(!t)return;document.getElementById('c-subj').value=t.subject;document.getElementById('c-body').value=t.body;nav('compose',document.querySelector('[onclick*=compose]'));fillPrev();toast(`✓ "${t.name}" loaded`);}
 
 // ═══════════════ IMPORT ═══════════════
 let pR=[],fH=[];
@@ -1944,14 +1969,15 @@ function saveSettings(){
   const em =document.getElementById('s-email')?.value.trim()||'';
   const sn =document.getElementById('s-sender')?.value.trim()||'';
   const sig=document.getElementById('s-signature')?.value||'';
+  const sigHtml=document.getElementById('s-signature-html')?.value||'';
   const m=_ensureTeamMemberObj();
   if(m){
     // Save EmailJS credentials + from-address to the currently logged-in user's slot
-    m.emailjsSvc=svc;m.emailjsTpl=tpl;m.emailjsKey=key;m.email=em;m.sender=sn;m.signature=sig;
+    m.emailjsSvc=svc;m.emailjsTpl=tpl;m.emailjsKey=key;m.email=em;m.sender=sn;m.signature=sig;m.signatureHtml=sigHtml;
     m._updatedAt=Date.now();
   } else {
     // No active user yet — fall back to legacy global settings
-    SETTINGS.emailjsSvc=svc;SETTINGS.emailjsTpl=tpl;SETTINGS.emailjsKey=key;SETTINGS.email=em;SETTINGS.sender=sn;SETTINGS.signature=sig;
+    SETTINGS.emailjsSvc=svc;SETTINGS.emailjsTpl=tpl;SETTINGS.emailjsKey=key;SETTINGS.email=em;SETTINGS.sender=sn;SETTINGS.signature=sig;SETTINGS.signatureHtml=sigHtml;
   }
   SETTINGS.googleClientId=document.getElementById('s-goog-cid')?.value.trim()||'';
   SETTINGS._updatedAt=Date.now();
@@ -1988,7 +2014,7 @@ function nav(id,el){
   if(id==='export')updEx();
   if(id==='templates')renderTmpls();
   if(id==='dashboard'){renderDash();updDueCounts();}
-  if(id==='compose'){renderRcptBox();buildTmplSelects();}
+  if(id==='compose'){renderRcptBox();buildTmplSelects();fillPrev();}
   if(id==='campaigns'){renderCampaigns();}
   if(id==='pipeline'){renderPipeline();}
   if(id==='reengage'){renderReengage();}
@@ -2326,24 +2352,34 @@ async function sendEmailJS(){
   try{emailjs.init({publicKey:key});}catch(e){}
   if(!recipients.length){toast('Add recipients first');return;}
   const subj=document.getElementById('c-subj').value.trim();
-  const body=document.getElementById('c-body').value.trim();
+  const body=ensureSig(document.getElementById('c-body').value.trim());
   if(!subj||!body){toast('Subject and body required');return;}
 
   const statusEl=document.getElementById('send-status');
   statusEl.textContent=`Sending as ${cfg.email||who||'you'} to ${recipients.length} recipient(s)…`;
   statusEl.style.color='var(--tx2)';
 
+  const _hasHtmlSig=!!(cfg.signatureHtml||SETTINGS.signatureHtml);
   let sent=0,failed=0;
   for(const r of recipients){
-    const filled=(t)=>t.replace(/\{first_name\}/g,r.firstName||'').replace(/\{last_name\}/g,r.lastName||'').replace(/\{company\}/g,r.company||'').replace(/\{position\}/g,r.pos||'').replace(/\{your_org\}/g,SETTINGS.org||'').replace(/\{mmk_count\}/g,r.mmk||'').replace(/\{rehab_fee\}/g,r.rehab||'').replace(/\{sender_name\}/g,cfg.sender||'').replace(/\{signature\}/g,cfg.signature||SETTINGS.signature||'');
+    const fillVars=(t)=>t.replace(/\{first_name\}/g,r.firstName||'').replace(/\{last_name\}/g,r.lastName||'').replace(/\{company\}/g,r.company||'').replace(/\{position\}/g,r.pos||'').replace(/\{your_org\}/g,SETTINGS.org||'').replace(/\{mmk_count\}/g,r.mmk||'').replace(/\{rehab_fee\}/g,r.rehab||'');
+    const filledSubj=fillVars(subj).replace(/\{sender_name\}/g,cfg.sender||'').replace(/\{signature\}/g,cfg.signature||SETTINGS.signature||'');
+    let filledMsg;
+    if(_hasHtmlSig){
+      // Build HTML message: plain body → HTML paragraphs + HTML signature block
+      const bodyWithVars=fillVars(body).replace(/\{sender_name\}/g,cfg.sender||'');
+      filledMsg=_buildHtmlMessage(bodyWithVars);
+    }else{
+      filledMsg=fillVars(body).replace(/\{sender_name\}/g,cfg.sender||'').replace(/\{signature\}/g,cfg.signature||SETTINGS.signature||'');
+    }
     try{
       await emailjs.send(svc,tpl,{
         to_email:r.email,
         to_name:r.name||r.email,
         from_name:cfg.sender||SETTINGS.org||'',
         from_email:cfg.email||'',
-        subject:filled(subj),
-        message:filled(body),
+        subject:filledSubj,
+        message:filledMsg,
         reply_to:cfg.email||''
       });
       sent++;
@@ -3035,7 +3071,7 @@ function renderCampaigns(){
 function saveAsCampaign(){
   if(!recipients.length){toast('Add recipients first');return;}
   const subj=document.getElementById('c-subj').value.trim();
-  const body=document.getElementById('c-body').value.trim();
+  const body=ensureSig(document.getElementById('c-body').value.trim());
   if(!subj||!body){toast('Subject and body required');return;}
   const defaultName=`${new Date().toISOString().slice(0,10)} · ${recipients.length} recipients`;
   const name=prompt('Name this campaign:',defaultName)||defaultName;
@@ -3143,6 +3179,7 @@ function campaignLoadToCompose(){
   const c=_cmpGet(id);if(!c)return;
   document.getElementById('c-subj').value=c.subject||'';
   document.getElementById('c-body').value=c.body||'';
+  fillPrev();
   if(c.lang)emailLang=c.lang;
   // Rebuild recipients list from campaign's PENDING entries (so you can re-send only to pending)
   recipients=c.recipients.filter(r=>r.status==='pending').map(r=>({
@@ -3211,16 +3248,17 @@ async function campaignStart(){
       const r=c.recipients[i];
       if(r.status!=='pending')continue;
 
-      const filled=t=>String(t||'')
+      const fillVars=t=>String(t||'')
         .replace(/\{first_name\}/g,r.firstName||'')
         .replace(/\{last_name\}/g,r.lastName||'')
         .replace(/\{company\}/g,r.company||'')
         .replace(/\{position\}/g,r.pos||'')
         .replace(/\{your_org\}/g,SETTINGS.org||'')
         .replace(/\{mmk_count\}/g,r.mmk||'')
-        .replace(/\{rehab_fee\}/g,r.rehab||'')
-        .replace(/\{sender_name\}/g,cfg.sender||'')
-        .replace(/\{signature\}/g,cfg.signature||SETTINGS.signature||'');
+        .replace(/\{rehab_fee\}/g,r.rehab||'');
+      const filled=t=>fillVars(t).replace(/\{sender_name\}/g,cfg.sender||'').replace(/\{signature\}/g,cfg.signature||SETTINGS.signature||'');
+      const _hasHtmlSig=!!(cfg.signatureHtml||SETTINGS.signatureHtml);
+      const filledMsg=_hasHtmlSig?_buildHtmlMessage(fillVars(c.body).replace(/\{sender_name\}/g,cfg.sender||'')):filled(c.body);
 
       setRt(`Sending to ${r.email} (${i+1}/${c.recipients.length})…`);
       try{
@@ -3230,7 +3268,7 @@ async function campaignStart(){
           from_name:cfg.sender||SETTINGS.org||'',
           from_email:cfg.email||'',
           subject:filled(c.subject),
-          message:filled(c.body),
+          message:filledMsg,
           reply_to:cfg.email||''
         });
         r.status='sent';r.sentAt=Date.now();r.sentBy=who||cfg.sender||'';r.error=undefined;
@@ -3517,7 +3555,7 @@ function _mergeSettings(remote){
   // to clobber an active user's slot. If there's no active user locally, we take remote's.
   const hasActiveUser=!!getCurrentUser();
   if(!hasActiveUser){
-    const legacyKeys=['email','sender','emailjsSvc','emailjsTpl','emailjsKey','signature'];
+    const legacyKeys=['email','sender','emailjsSvc','emailjsTpl','emailjsKey','signature','signatureHtml'];
     if(remoteSU>=localSU){
       for(const k of legacyKeys){if(remote[k]!==undefined)SETTINGS[k]=remote[k];}
     }
@@ -3544,7 +3582,7 @@ function getActiveTeamMember(){
 function getActiveEmailConfig(){
   const m=getActiveTeamMember();
   const pick=k=>(m&&m[k])||SETTINGS[k]||'';
-  return {email:pick('email'),sender:pick('sender'),emailjsSvc:pick('emailjsSvc'),emailjsTpl:pick('emailjsTpl'),emailjsKey:pick('emailjsKey'),signature:pick('signature')};
+  return {email:pick('email'),sender:pick('sender'),emailjsSvc:pick('emailjsSvc'),emailjsTpl:pick('emailjsTpl'),emailjsKey:pick('emailjsKey'),signature:pick('signature'),signatureHtml:pick('signatureHtml')};
 }
 
 // Return the current user's team object, creating/upgrading as needed. Returns null if no user logged in.
@@ -3567,6 +3605,8 @@ function _loadEmailFormForActiveUser(){
   set('s-email',cfg.email);
   set('s-sender',cfg.sender);
   set('s-signature',cfg.signature);
+  set('s-signature-html',cfg.signatureHtml);
+  if(typeof renderSigHtmlPreview==='function')renderSigHtmlPreview();
   if(cfg.emailjsKey){try{emailjs.init({publicKey:cfg.emailjsKey});}catch(e){}}
   const ind=document.getElementById('ejs-active-user');
   if(ind){
