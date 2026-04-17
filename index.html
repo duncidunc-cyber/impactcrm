@@ -427,6 +427,16 @@ select.fs:focus{border-color:var(--acc)}
 
     <!-- COMPANIES & CONTACTS -->
     <div class="page" id="page-companies">
+      <div class="page-head">
+        <div>
+          <div class="page-h1">Companies &amp; Contacts</div>
+          <div class="page-sub">Browse, filter, and manage every partner company and contact person.</div>
+        </div>
+        <div class="page-actions">
+          <button class="btn" onclick="selectAll()">Select all</button>
+          <button class="btn btn-p" onclick="openCoModal(null)">+ Add company</button>
+        </div>
+      </div>
       <!-- BULK ACTION BAR -->
       <div class="bulk-bar" id="bulk-bar">
         <span id="bulk-count">0 selected</span>
@@ -442,10 +452,8 @@ select.fs:focus{border-color:var(--acc)}
         <select class="fs" id="co-ind" onchange="renderCo()"><option value="">All industries</option></select>
         <select class="fs" id="co-cult" onchange="renderCo()"><option value="">All cultures</option><option>Mature</option><option>Promising</option><option>Novice</option><option>Unknown</option><option>Hostile</option></select>
         <select class="fs" id="co-status" onchange="renderCo()"><option value="">All statuses</option><option value="offer_sent">Offer sent</option><option value="email_sent">Email sent</option><option value="followup_sent">Follow-up sent</option><option value="replied">Replied</option><option value="off">Closed / off</option><option value="none">Not contacted</option></select>
-        <button class="btn" onclick="selectAll()">Select all</button>
-        <button class="btn btn-p" onclick="openCoModal(null)">+ Add</button>
       </div>
-      <div style="font-size:11px;color:var(--tx2);margin-bottom:9px" id="co-lbl"></div>
+      <div style="font-size:12px;color:var(--tx2);margin-bottom:12px;font-weight:500" id="co-lbl"></div>
       <div id="co-list"></div>
       <div class="pg" id="co-pg" style="display:none">
         <button class="pg-btn" onclick="coPg(-1)">← Prev</button>
@@ -457,18 +465,26 @@ select.fs:focus{border-color:var(--acc)}
 
     <!-- IMPORT -->
     <div class="page" id="page-import">
-      <div class="uz" id="uz">
-        <input type="file" accept=".xlsx,.xls,.csv" onchange="handleFile(this.files[0])">
-        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" style="display:block;margin:0 auto 9px;color:var(--tx2)"><rect x="4" y="5" width="24" height="22" rx="2.5" stroke="currentColor" stroke-width="1.4"/><path d="M4 11h24" stroke="currentColor" stroke-width="1.4"/><path d="M16 17v8M13 22l3 3 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <div style="font-size:13px;font-weight:600;margin-bottom:3px">Drop your Excel or CSV file here</div>
-        <div style="font-size:11px;color:var(--tx2)">Supports .xlsx, .xls, .csv · Data stays on your device</div>
+      <div class="page-head">
+        <div>
+          <div class="page-h1">Import Excel / CSV</div>
+          <div class="page-sub">Upload a spreadsheet of companies or contacts, map the columns, and import in one click.</div>
+        </div>
       </div>
-      <div id="import-section" style="display:none">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px"><div style="font-size:12px;font-weight:600">Map columns</div><div style="font-size:11px;color:var(--tx2)" id="import-info"></div></div>
-        <div style="background:var(--sur);border:.5px solid var(--brd);border-radius:var(--rl);padding:13px 15px">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px" id="map-rows"></div>
-          <div style="background:var(--bg2);border-radius:var(--r);padding:8px;font-size:10px;font-family:var(--fm);color:var(--tx2);margin-bottom:9px;max-height:54px;overflow-y:auto;white-space:nowrap;overflow-x:auto" id="import-prev"></div>
-          <div style="display:flex;gap:7px"><button class="btn btn-p" onclick="doImport()">Import</button><button class="btn" onclick="resetImport()">Cancel</button></div>
+      <div style="max-width:720px">
+        <div class="uz" id="uz" style="padding:36px 24px;margin-bottom:18px">
+          <input type="file" accept=".xlsx,.xls,.csv" onchange="handleFile(this.files[0])">
+          <svg width="40" height="40" viewBox="0 0 32 32" fill="none" style="display:block;margin:0 auto 12px;color:var(--acc)"><rect x="4" y="5" width="24" height="22" rx="2.5" stroke="currentColor" stroke-width="1.4"/><path d="M4 11h24" stroke="currentColor" stroke-width="1.4"/><path d="M16 17v8M13 22l3 3 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div style="font-size:14px;font-weight:700;margin-bottom:4px">Drop your Excel or CSV file here</div>
+          <div style="font-size:12px;color:var(--tx2)">Supports .xlsx, .xls, .csv · data stays on your device</div>
+        </div>
+        <div id="import-section" style="display:none">
+          <div class="dash-section-h"><div class="bar"></div><div class="label">Map columns</div><span style="font-size:11px;color:var(--tx2);margin-left:auto" id="import-info"></span></div>
+          <div class="st-card">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px" id="map-rows"></div>
+            <div style="background:var(--bg2);border-radius:var(--r);padding:10px;font-size:11px;font-family:var(--fm);color:var(--tx2);margin-bottom:12px;max-height:68px;overflow-y:auto;white-space:nowrap;overflow-x:auto" id="import-prev"></div>
+            <div style="display:flex;gap:8px"><button class="btn btn-p" onclick="doImport()">Import</button><button class="btn" onclick="resetImport()">Cancel</button></div>
+          </div>
         </div>
       </div>
     </div>
