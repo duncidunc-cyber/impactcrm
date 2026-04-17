@@ -48,6 +48,11 @@ body{font-family:var(--f);font-size:14px;background:var(--bg);color:var(--tx);ov
 .nb{margin-left:auto;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--t50);color:var(--t600)}
 .nb-w{background:var(--a50);color:var(--a800)}
 .sb-ft{margin-top:auto;padding:14px 16px;border-top:.5px solid var(--brd);font-size:11px}
+.sb-utils{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px}
+.sb-util{background:transparent;border:.5px solid var(--brd);border-radius:var(--r);padding:7px 4px;cursor:pointer;color:var(--tx2);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-family:var(--f);transition:all .12s}
+.sb-util svg{width:13px;height:13px}
+.sb-util:hover{background:var(--bg2);color:var(--tx);border-color:var(--t100)}
+.sb-util.active{background:var(--t50);color:var(--t600);border-color:var(--t100);font-weight:600}
 .sf-o{font-weight:600;color:var(--tx)}
 .sf-s{color:var(--tx2);margin-top:2px}
 /* MAIN */
@@ -315,30 +320,19 @@ select.fs:focus{border-color:var(--acc)}
     <div class="fa-sub">Partner CRM</div>
   </div>
   <div class="ns">
-    <div class="nl">Overview</div>
-    <div class="ni active" onclick="nav('dashboard',this)"><svg viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" fill="currentColor" opacity=".8"/><rect x="8" y="1" width="5" height="5" rx="1" fill="currentColor" opacity=".4"/><rect x="1" y="8" width="5" height="5" rx="1" fill="currentColor" opacity=".4"/><rect x="8" y="8" width="5" height="5" rx="1" fill="currentColor" opacity=".4"/></svg>Dashboard</div>
-  </div>
-  <div class="ns">
-    <div class="nl">Database</div>
-    <div class="ni" onclick="nav('pipeline',this)"><svg viewBox="0 0 14 14" fill="none"><rect x="1" y="3" width="3" height="8" rx="1" fill="currentColor" opacity=".5"/><rect x="5.5" y="1.5" width="3" height="9.5" rx="1" fill="currentColor" opacity=".7"/><rect x="10" y="4" width="3" height="7" rx="1" fill="currentColor" opacity=".4"/></svg>Pipeline <span class="nb nb-w" id="nb-due">0</span></div>
-    <div class="ni" onclick="nav('reengage',this)"><svg viewBox="0 0 14 14" fill="none"><path d="M2 7a5 5 0 1 0 1.5-3.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><path d="M2 3.5V7h3.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>Re-engage <span class="nb nb-w" id="nb-reengage"></span></div>
-    <div class="ni" onclick="nav('deals',this)"><svg viewBox="0 0 14 14" fill="none"><path d="M2 12l2.5-2.5M7 2l5 5-5.5 5.5-5-5 .5-5.5 5-.5z" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="9" cy="5" r="1" fill="currentColor"/></svg>Deals &amp; Revenue <span class="nb" id="nb-deals"></span></div>
-    <div class="ni" onclick="nav('companies',this)"><svg viewBox="0 0 14 14" fill="none"><rect x="2" y="1" width="10" height="12" rx="1.2" stroke="currentColor" stroke-width="1.1" fill="none"/><path d="M4.5 4h5M4.5 6.5h5M4.5 9h3" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>Companies &amp; Contacts <span class="nb" id="nb-co">0</span></div>
-    <div class="ni" onclick="nav('import',this)"><svg viewBox="0 0 14 14" fill="none"><path d="M2.5 11h9M7 2.5v7M4.5 7l2.5 2.5 2.5-2.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>Import Excel / CSV</div>
-  </div>
-  <div class="ns">
-    <div class="nl">Outreach</div>
-    <div class="ni" onclick="nav('compose',this)"><svg viewBox="0 0 14 14" fill="none"><path d="M2 11l1.8-1.8 7-7 1.8 1.8-7 7L2 11z" stroke="currentColor" stroke-width="1.1" fill="none" stroke-linejoin="round"/><path d="M9 3.2l1.8 1.8" stroke="currentColor" stroke-width="1.1"/></svg>Compose Email</div>
-    <div class="ni" onclick="nav('campaigns',this)"><svg viewBox="0 0 14 14" fill="none"><path d="M1.5 3.5l5.5 4 5.5-4M1.5 3.5v7a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-7M1.5 3.5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1" stroke="currentColor" stroke-width="1.1" fill="none" stroke-linejoin="round"/><circle cx="11.5" cy="3" r="2" fill="currentColor"/></svg>Campaigns <span class="nb" id="nb-camp"></span></div>
-    <div class="ni" onclick="nav('templates',this)"><svg viewBox="0 0 14 14" fill="none"><rect x="1.5" y="2" width="11" height="10" rx="1.2" stroke="currentColor" stroke-width="1.1" fill="none"/><path d="M4 5h6M4 7.5h6M4 10h4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>Email Templates <span class="nb" id="nb-tmpl">0</span></div>
-    <div class="ni" onclick="nav('export',this)"><svg viewBox="0 0 14 14" fill="none"><path d="M2.5 11h9M7 9V2.5M4.5 5l2.5-2.5 2.5 2.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>Export CSV</div>
-  </div>
-  <div class="ns">
-    <div class="nl">System</div>
-    <div class="ni" onclick="nav('settings',this)"><svg viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="2.2" stroke="currentColor" stroke-width="1.1" fill="none"/><path d="M7 1v2M7 11v2M1 7h2M11 7h2M3 3l1.4 1.4M9.6 9.6L11 11M11 3l-1.4 1.4M4.4 9.6L3 11" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>Settings</div>
+    <div class="ni active" data-nav="dashboard" onclick="nav('dashboard',this)"><svg viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" fill="currentColor" opacity=".8"/><rect x="8" y="1" width="5" height="5" rx="1" fill="currentColor" opacity=".4"/><rect x="1" y="8" width="5" height="5" rx="1" fill="currentColor" opacity=".4"/><rect x="8" y="8" width="5" height="5" rx="1" fill="currentColor" opacity=".4"/></svg>Dashboard</div>
+    <div class="ni" data-nav="pipeline" onclick="nav('pipeline',this)"><svg viewBox="0 0 14 14" fill="none"><rect x="1" y="3" width="3" height="8" rx="1" fill="currentColor" opacity=".5"/><rect x="5.5" y="1.5" width="3" height="9.5" rx="1" fill="currentColor" opacity=".7"/><rect x="10" y="4" width="3" height="7" rx="1" fill="currentColor" opacity=".4"/></svg>Pipeline <span class="nb nb-w" id="nb-due">0</span></div>
+    <div class="ni" data-nav="campaigns" onclick="nav('campaigns',this)"><svg viewBox="0 0 14 14" fill="none"><path d="M1.5 3.5l5.5 4 5.5-4M1.5 3.5v7a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-7M1.5 3.5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1" stroke="currentColor" stroke-width="1.1" fill="none" stroke-linejoin="round"/><circle cx="11.5" cy="3" r="2" fill="currentColor"/></svg>Campaigns <span class="nb" id="nb-camp"></span></div>
+    <div class="ni" data-nav="companies" onclick="nav('companies',this)"><svg viewBox="0 0 14 14" fill="none"><rect x="2" y="1" width="10" height="12" rx="1.2" stroke="currentColor" stroke-width="1.1" fill="none"/><path d="M4.5 4h5M4.5 6.5h5M4.5 9h3" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>Companies &amp; Contacts <span class="nb" id="nb-co">0</span></div>
+    <div class="ni" data-nav="deals" onclick="nav('deals',this)"><svg viewBox="0 0 14 14" fill="none"><path d="M2 12l2.5-2.5M7 2l5 5-5.5 5.5-5-5 .5-5.5 5-.5z" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="9" cy="5" r="1" fill="currentColor"/></svg>Deals &amp; Revenue <span class="nb" id="nb-deals"></span></div>
   </div>
   <div class="sb-ft">
-    <div style="display:flex;align-items:center;gap:7px;cursor:pointer" onclick="openUserModal()" title="Change your name">
+    <div class="sb-utils">
+      <button class="sb-util" data-nav="import" onclick="nav('import',null)" title="Import Excel / CSV"><svg viewBox="0 0 14 14" fill="none"><path d="M2.5 11h9M7 2.5v7M4.5 7l2.5 2.5 2.5-2.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Import</span></button>
+      <button class="sb-util" data-nav="export" onclick="nav('export',null)" title="Export CSV / Backup"><svg viewBox="0 0 14 14" fill="none"><path d="M2.5 11h9M7 9V2.5M4.5 5l2.5-2.5 2.5 2.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Export</span></button>
+      <button class="sb-util" data-nav="settings" onclick="nav('settings',null)" title="Settings"><svg viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="2.2" stroke="currentColor" stroke-width="1.1" fill="none"/><path d="M7 1v2M7 11v2M1 7h2M11 7h2M3 3l1.4 1.4M9.6 9.6L11 11M11 3l-1.4 1.4M4.4 9.6L3 11" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg><span>Settings</span></button>
+    </div>
+    <div style="display:flex;align-items:center;gap:7px;cursor:pointer;margin-top:12px;padding-top:12px;border-top:.5px solid var(--brd)" onclick="openUserModal()" title="Change your name">
       <div id="sb-user-av" style="width:22px;height:22px;border-radius:50%;background:var(--acc);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0">?</div>
       <span id="sb-user-name" style="font-size:11px;color:var(--tx);flex:1;font-weight:600">Set your name →</span>
     </div>
@@ -571,23 +565,31 @@ select.fs:focus{border-color:var(--acc)}
           <div class="page-sub">Queue bulk emails with throttling, pause / resume, and per-recipient tracking.</div>
         </div>
         <div class="page-actions">
-          <button class="btn btn-p" onclick="nav('compose',document.querySelector('[onclick*=compose]'))">+ Build in Compose</button>
+          <button class="btn btn-p" onclick="openCompose()">+ Build in Compose</button>
         </div>
+      </div>
+      <div class="pl-view-toggle" data-tabs="campaigns">
+        <button class="pl-vbtn active" data-tab="campaigns" onclick="nav('campaigns',null)">Campaigns</button>
+        <button class="pl-vbtn" data-tab="templates" onclick="nav('templates',null)">Templates <span class="nb" id="nb-tmpl-tab" style="margin-left:4px"></span></button>
       </div>
       <div id="campaign-list"></div>
     </div>
 
-    <!-- TEMPLATES -->
+    <!-- TEMPLATES (sub-page of Campaigns) -->
     <div class="page" id="page-templates">
       <div class="page-head">
         <div>
-          <div class="page-h1"><span id="tmpl-lbl">Email templates</span></div>
-          <div class="page-sub">Reusable email drafts with placeholders — pick from Compose or save a draft you've written.</div>
+          <div class="page-h1">Campaigns</div>
+          <div class="page-sub"><span id="tmpl-lbl">Email templates</span> — reusable drafts with placeholders. Pick from Compose or save a draft you've written.</div>
         </div>
         <div class="page-actions">
           <input class="si" type="text" id="tmpl-q" placeholder="Search templates…" oninput="renderTmpls()" style="flex:none;width:200px">
           <button class="btn btn-p" onclick="openTmplModal(null)">+ New template</button>
         </div>
+      </div>
+      <div class="pl-view-toggle" data-tabs="campaigns">
+        <button class="pl-vbtn" data-tab="campaigns" onclick="nav('campaigns',null)">Campaigns</button>
+        <button class="pl-vbtn active" data-tab="templates" onclick="nav('templates',null)">Templates <span class="nb" id="nb-tmpl" style="margin-left:4px"></span></button>
       </div>
       <div id="tmpl-list"></div>
     </div>
@@ -714,16 +716,17 @@ select.fs:focus{border-color:var(--acc)}
           <div class="page-sub">Track deals by stage, see what's due this week, and keep your outreach cadence on target.</div>
         </div>
         <div class="page-actions">
-          <div class="pl-view-toggle" style="margin:0">
-            <button class="pl-vbtn active" id="pl-kanban-btn" onclick="switchPipelineView('kanban')">Kanban</button>
-            <button class="pl-vbtn" id="pl-list-btn" onclick="switchPipelineView('list')">Due list</button>
-            <button class="pl-vbtn" id="pl-outreach-btn" onclick="switchPipelineView('outreach')">Outreach tracker</button>
-          </div>
           <select class="fs" id="pl-owner-filter" onchange="renderPipeline()">
             <option value="">All team members</option>
           </select>
           <span style="font-size:11px;color:var(--tx2)" id="pl-filter-info"></span>
         </div>
+      </div>
+      <div class="pl-view-toggle" data-tabs="pipeline">
+        <button class="pl-vbtn active" data-tab="kanban" id="pl-kanban-btn" onclick="switchPipelineView('kanban')">Kanban</button>
+        <button class="pl-vbtn" data-tab="list" id="pl-list-btn" onclick="switchPipelineView('list')">Due list</button>
+        <button class="pl-vbtn" data-tab="outreach" id="pl-outreach-btn" onclick="switchPipelineView('outreach')">Outreach tracker</button>
+        <button class="pl-vbtn" data-tab="reengage" onclick="nav('reengage',null)">Re-engage <span class="nb nb-w" id="nb-reengage-tab" style="margin-left:4px"></span></button>
       </div>
       <div id="pipeline-kanban"></div>
       <div id="pipeline-due" style="display:none">
@@ -736,11 +739,11 @@ select.fs:focus{border-color:var(--acc)}
       </div>
     </div>
 
-    <!-- RE-ENGAGE -->
+    <!-- RE-ENGAGE (sub-page of Pipeline) -->
     <div class="page" id="page-reengage">
       <div class="page-head">
         <div>
-          <div class="page-h1">Re-engagement queue</div>
+          <div class="page-h1">Pipeline</div>
           <div class="page-sub">Contacts with no response for 180+ days, not marked as closed or do-not-contact.</div>
         </div>
         <div class="page-actions">
@@ -752,6 +755,12 @@ select.fs:focus{border-color:var(--acc)}
           <button class="btn btn-sm" onclick="reengageSelectAll()">Select all</button>
           <button class="btn btn-sm btn-p" onclick="reengageBulkCompose()">✉ Compose to selected</button>
         </div>
+      </div>
+      <div class="pl-view-toggle" data-tabs="pipeline">
+        <button class="pl-vbtn" data-tab="kanban" onclick="nav('pipeline',null);setTimeout(()=>switchPipelineView('kanban'),0)">Kanban</button>
+        <button class="pl-vbtn" data-tab="list" onclick="nav('pipeline',null);setTimeout(()=>switchPipelineView('list'),0)">Due list</button>
+        <button class="pl-vbtn" data-tab="outreach" onclick="nav('pipeline',null);setTimeout(()=>switchPipelineView('outreach'),0)">Outreach tracker</button>
+        <button class="pl-vbtn active" data-tab="reengage" onclick="nav('reengage',null)">Re-engage <span class="nb nb-w" id="nb-reengage" style="margin-left:4px"></span></button>
       </div>
       <div id="re-list"></div>
     </div>
@@ -1123,7 +1132,7 @@ function refreshCounts(){
   const noe=COS.reduce((a,c)=>a+(c.people||[]).filter(p=>!p.email).length,0);
   const today=new Date().toISOString().slice(0,10);
   const due=COS.filter(c=>c.next_action_date&&c.next_action_date<=today&&c.stage!=='active'&&c.stage!=='closed_lost').length;
-  [['nb-co',total],['d-co',total],['d-ppl',ppl],['d-csr',csr],['d-noemail',noe],['nb-tmpl',TMPLS.length],['nb-due',due||'']].forEach(([id,v])=>{const e=document.getElementById(id);if(e)e.textContent=v;});
+  [['nb-co',total],['d-co',total],['d-ppl',ppl],['d-csr',csr],['d-noemail',noe],['nb-tmpl',TMPLS.length],['nb-tmpl-tab',TMPLS.length],['nb-due',due||'']].forEach(([id,v])=>{const e=document.getElementById(id);if(e)e.textContent=v;});
 }
 
 function buildInds(){
@@ -1891,13 +1900,21 @@ function saveSettings(){
 function syncKey(){const k=document.getElementById('s-key')?.value.trim();if(k)localStorage.setItem('crm7_key',k);}
 
 // ═══════════════ NAV ═══════════════
+const NAV_PARENT={reengage:'pipeline',templates:'campaigns'};
 function nav(id,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
-  document.getElementById('page-'+id).classList.add('active');
-  if(el)el.classList.add('active');
+  document.querySelectorAll('.sb-util').forEach(n=>n.classList.remove('active'));
+  const pg=document.getElementById('page-'+id);if(pg)pg.classList.add('active');
+  // Sidebar highlight: for sub-pages, light up the parent item
+  const sbId=NAV_PARENT[id]||id;
+  const sbEl=document.querySelector('.ni[data-nav="'+sbId+'"]')||document.querySelector('.sb-util[data-nav="'+sbId+'"]');
+  if(sbEl)sbEl.classList.add('active');
+  else if(el)el.classList.add('active');
   const T={dashboard:'Dashboard',pipeline:'Pipeline & Follow-ups',companies:'Companies & Contacts',import:'Import Excel / CSV',compose:'Compose Email',templates:'Email Templates',campaigns:'Campaigns',export:'Export CSV',settings:'Settings',reengage:'Re-engagement queue',deals:'Deals & Revenue'};
   document.getElementById('page-title').textContent=T[id]||id;
+  // Keep sub-page tab bars in sync with current page
+  syncSubTabs(id);
   if(id==='export')updEx();
   if(id==='templates')renderTmpls();
   if(id==='dashboard'){renderDash();updDueCounts();}
@@ -1906,6 +1923,22 @@ function nav(id,el){
   if(id==='pipeline'){renderPipeline();}
   if(id==='reengage'){renderReengage();}
   if(id==='deals'){renderDeals();}
+}
+function syncSubTabs(id){
+  // Pipeline group tabs
+  const plGroup=['pipeline','reengage'];
+  if(plGroup.includes(id)){
+    document.querySelectorAll('[data-tabs="pipeline"] .pl-vbtn').forEach(b=>{
+      b.classList.toggle('active',b.dataset.tab===(id==='reengage'?'reengage':pipelineView));
+    });
+  }
+  // Campaigns group tabs
+  const cpGroup=['campaigns','templates'];
+  if(cpGroup.includes(id)){
+    document.querySelectorAll('[data-tabs="campaigns"] .pl-vbtn').forEach(b=>{
+      b.classList.toggle('active',b.dataset.tab===id);
+    });
+  }
 }
 
 ['co-modal','p-modal','picker-modal','tmpl-modal','bulk-status-modal','act-modal','na-modal','deal-modal','dupe-modal','campaign-modal'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});});
@@ -3595,6 +3628,7 @@ refreshCounts=function(){
   const days=parseInt(document.getElementById('re-days')?.value||180);
   const stale=getStaleContacts(days).length;
   const nb=document.getElementById('nb-reengage');if(nb)nb.textContent=stale||'';
+  const nbt=document.getElementById('nb-reengage-tab');if(nbt)nbt.textContent=stale||'';
   const ds=document.getElementById('d-stale');if(ds)ds.textContent=stale;
   // Deals dashboard stats
   const totalVal=DEALS.reduce((a,d)=>a+(parseFloat(d.value)||0),0);
