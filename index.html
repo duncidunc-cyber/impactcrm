@@ -270,6 +270,7 @@ select.fs{padding:6px 8px;border-radius:var(--r);border:.5px solid var(--brd2);b
   <div class="ns">
     <div class="nl">Outreach</div>
     <div class="ni" onclick="nav('compose',this)"><svg viewBox="0 0 14 14" fill="none"><path d="M2 11l1.8-1.8 7-7 1.8 1.8-7 7L2 11z" stroke="currentColor" stroke-width="1.1" fill="none" stroke-linejoin="round"/><path d="M9 3.2l1.8 1.8" stroke="currentColor" stroke-width="1.1"/></svg>Compose Email</div>
+    <div class="ni" onclick="nav('campaigns',this)"><svg viewBox="0 0 14 14" fill="none"><path d="M1.5 3.5l5.5 4 5.5-4M1.5 3.5v7a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-7M1.5 3.5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1" stroke="currentColor" stroke-width="1.1" fill="none" stroke-linejoin="round"/><circle cx="11.5" cy="3" r="2" fill="currentColor"/></svg>Campaigns <span class="nb" id="nb-camp"></span></div>
     <div class="ni" onclick="nav('templates',this)"><svg viewBox="0 0 14 14" fill="none"><rect x="1.5" y="2" width="11" height="10" rx="1.2" stroke="currentColor" stroke-width="1.1" fill="none"/><path d="M4 5h6M4 7.5h6M4 10h4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>Email Templates <span class="nb" id="nb-tmpl">0</span></div>
     <div class="ni" onclick="nav('export',this)"><svg viewBox="0 0 14 14" fill="none"><path d="M2.5 11h9M7 9V2.5M4.5 5l2.5-2.5 2.5 2.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>Export CSV</div>
   </div>
@@ -412,7 +413,8 @@ select.fs{padding:6px 8px;border-radius:var(--r);border:.5px solid var(--brd2);b
           </div>
           <div class="ail" id="ai-load"><div class="dots"><span></span><span></span><span></span></div><span>Generating…</span></div>
           <div style="margin-top:10px;padding-top:10px;border-top:.5px solid var(--brd)">
-            <button class="btn btn-p" onclick="sendEmailJS()" style="width:100%;font-size:12px">📤 Send via Hostinger email</button>
+            <button class="btn btn-p" onclick="sendEmailJS()" style="width:100%;font-size:12px">📤 Send now (immediate)</button>
+            <button class="btn" onclick="saveAsCampaign()" style="width:100%;font-size:12px;margin-top:5px">📋 Save as campaign (throttled, pausable)</button>
             <div id="send-status" style="font-size:11px;color:var(--tx2);margin-top:5px;text-align:center"></div>
           </div>
         </div>
@@ -429,6 +431,7 @@ select.fs{padding:6px 8px;border-radius:var(--r);border:.5px solid var(--brd2);b
               <button class="ph-btn" onclick="iPH('c-body','{mmk_count}')">mmk_count</button>
               <button class="ph-btn" onclick="iPH('c-body','{rehab_fee}')">rehab_fee</button>
               <button class="ph-btn" onclick="iPH('c-body','{sender_name}')">sender_name</button>
+              <button class="ph-btn" onclick="iPH('c-body','{signature}')">signature</button>
             </div>
           </div>
           <div class="cg" style="margin-top:4px"><div class="cl">Preview — <span style="color:var(--tx3);font-weight:400;text-transform:none;letter-spacing:0">sample values, click button below to fill</span></div>
@@ -437,6 +440,20 @@ select.fs{padding:6px 8px;border-radius:var(--r);border:.5px solid var(--brd2);b
           <button class="btn btn-sm btn-p" onclick="fillPrev()" style="margin-top:5px">Preview with sample values ↗</button>
         </div>
       </div>
+    </div>
+
+    <!-- CAMPAIGNS -->
+    <div class="page" id="page-campaigns">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:13px">
+        <div>
+          <div style="font-size:12px;font-weight:600">Campaigns</div>
+          <div style="font-size:10px;color:var(--tx2);margin-top:3px">Queue bulk emails with throttling, pause / resume, and per-recipient tracking.</div>
+        </div>
+        <div style="display:flex;gap:7px">
+          <button class="btn btn-sm" onclick="nav('compose',document.querySelector('[onclick*=compose]'))">+ Build in Compose</button>
+        </div>
+      </div>
+      <div id="campaign-list"></div>
     </div>
 
     <!-- TEMPLATES -->
@@ -510,6 +527,10 @@ select.fs{padding:6px 8px;border-radius:var(--r);border:.5px solid var(--brd2);b
               <div class="cg"><div class="cl">From email address</div><input class="ci" id="s-email" type="email" placeholder="you@yourdomain.com" oninput="updBrand()"></div>
               <div class="cg"><div class="cl">Sender name</div><input class="ci" id="s-sender" placeholder="Your name · Your NGO"></div>
             </div>
+            <div class="cg" style="margin-bottom:8px">
+              <div class="cl">Email signature <span style="color:var(--tx3);font-weight:400">— used by the <code style="font-family:var(--fm)">{signature}</code> placeholder in templates</span></div>
+              <textarea class="ci" id="s-signature" rows="4" style="font-family:var(--f);line-height:1.5;resize:vertical" placeholder="Kind regards,&#10;Anna Kovács&#10;Partnerships Lead · Your NGO&#10;+36 30 000 0000"></textarea>
+            </div>
             <button class="btn btn-sm" onclick="testEmailJS()">Send test email ↗</button>
             <div id="ejs-status" style="font-size:11px;color:var(--tx2);margin-top:6px"></div>
           </div>
@@ -552,6 +573,12 @@ select.fs{padding:6px 8px;border-radius:var(--r);border:.5px solid var(--brd2);b
               <input class="ci" id="team-add-input" placeholder="Add team member name…" style="flex:1" onkeydown="if(event.key==='Enter')addTeamMember()">
               <button class="btn btn-sm btn-p" onclick="addTeamMember()">+ Add</button>
             </div>
+          </div>
+          <div style="font-size:12px;font-weight:600;margin:12px 0 8px">Maintenance</div>
+          <div style="background:var(--sur);border:.5px solid var(--brd);border-radius:var(--rl);padding:13px 15px;margin-bottom:12px">
+            <div style="font-size:11px;color:var(--tx2);line-height:1.6;margin-bottom:10px">Clean up your database by finding and merging duplicate companies (e.g. "Diageo" and "Diageo Hungary"). The comparison is fuzzy and strips suffixes like Kft / Zrt / Bank / Hungary.</div>
+            <button class="btn btn-sm" onclick="openDupeFinder()">🔍 Find duplicate companies</button>
+            <div id="dupe-status" style="font-size:11px;color:var(--tx2);margin-top:6px"></div>
           </div>
           <div style="display:flex;gap:7px;margin-top:4px">
             <button class="btn btn-p" onclick="saveSettings()" style="flex:1">Save all settings</button>
@@ -726,6 +753,7 @@ select.fs{padding:6px 8px;border-radius:var(--r);border:.5px solid var(--brd2);b
           <button class="ph-btn" onclick="iPH('tm-body','{mmk_count}')">mmk_count</button>
           <button class="ph-btn" onclick="iPH('tm-body','{rehab_fee}')">rehab_fee</button>
           <button class="ph-btn" onclick="iPH('tm-body','{sender_name}')">sender_name</button>
+          <button class="ph-btn" onclick="iPH('tm-body','{signature}')">signature</button>
         </div>
       </div>
       <textarea class="ci" id="tm-body" style="min-height:150px;font-family:var(--fm);font-size:11px;line-height:1.7" placeholder="Template body…" oninput="updTmPrev()"></textarea>
@@ -844,6 +872,49 @@ select.fs{padding:6px 8px;border-radius:var(--r);border:.5px solid var(--brd2);b
   </div>
 </div>
 
+<div class="modal-bg" id="dupe-modal" style="z-index:100">
+  <div class="modal" style="width:720px;max-height:88vh;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <h3 style="flex:1">🔍 Duplicate companies</h3>
+      <button class="btn btn-sm" onclick="document.getElementById('dupe-modal').classList.remove('open')">Close ✕</button>
+    </div>
+    <div style="font-size:11px;color:var(--tx2);line-height:1.6;margin-bottom:10px;background:var(--b50);border-radius:var(--r);padding:8px 10px">Merging keeps all contacts and activity from both sides. The <strong>primary</strong> record keeps its name and profile fields; the secondary record is removed and its people + activity are appended to the primary.</div>
+    <div id="dupe-list" style="overflow:auto;flex:1;min-height:200px"></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="campaign-modal" style="z-index:100">
+  <div class="modal" style="width:840px;max-height:92vh;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <h3 style="flex:1" id="cmp-ttl">Campaign</h3>
+      <span id="cmp-status-badge" class="badge" style="font-size:10px"></span>
+      <button class="btn btn-sm" onclick="document.getElementById('campaign-modal').classList.remove('open')">Close ✕</button>
+    </div>
+    <input type="hidden" id="cmp-id">
+    <div class="fg2" style="margin-bottom:8px">
+      <div class="cg"><div class="cl">Campaign name</div><input class="ci" id="cmp-name" placeholder="e.g. Q2 outreach — banking"></div>
+      <div class="cg"><div class="cl">Throttle between sends (seconds)</div><input class="ci" id="cmp-throttle" type="number" min="1" step="1" placeholder="8"></div>
+    </div>
+    <div class="cg" style="margin-bottom:8px"><div class="cl">Subject</div><input class="ci" id="cmp-subj"></div>
+    <div class="cg" style="margin-bottom:8px"><div class="cl">Body</div><textarea class="ci" id="cmp-body" style="min-height:130px;font-family:var(--fm);font-size:11px;line-height:1.7"></textarea></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+      <div style="font-size:11px;font-weight:600">Recipients <span id="cmp-rcpt-count" style="color:var(--tx2);font-weight:400"></span></div>
+      <div id="cmp-progress-bar" style="flex:1;height:6px;background:var(--bg2);border-radius:3px;overflow:hidden"><div id="cmp-progress-fill" style="height:100%;background:var(--acc);width:0%;transition:width .2s"></div></div>
+      <div id="cmp-stats" style="font-size:10px;color:var(--tx2);white-space:nowrap"></div>
+    </div>
+    <div id="cmp-rcpt-list" style="overflow:auto;flex:1;min-height:120px;max-height:280px;background:var(--bg2);border-radius:var(--r);padding:6px 8px;font-size:11px"></div>
+    <div id="cmp-runtime" style="font-size:11px;color:var(--tx2);margin-top:8px;min-height:16px"></div>
+    <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+      <button class="btn btn-p" id="cmp-start-btn" onclick="campaignStart()">▶ Start</button>
+      <button class="btn btn-p" id="cmp-pause-btn" onclick="campaignPause()" style="display:none">⏸ Pause</button>
+      <button class="btn btn-p" id="cmp-resume-btn" onclick="campaignStart()" style="display:none">▶ Resume</button>
+      <button class="btn btn-sm" onclick="campaignSave()">Save changes</button>
+      <button class="btn btn-sm" onclick="campaignLoadToCompose()">Load into Compose</button>
+      <button class="btn btn-sm btn-del" onclick="campaignDelete()" style="margin-left:auto">Delete</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -877,7 +948,7 @@ const TB=t=>({Business:'b-business',CSR:'b-csr',Civil:'b-civil',Other:'b-other'}
 const SB=s=>({offer_sent:'b-offer',email_sent:'b-email',followup_sent:'b-fu',replied:'b-replied',meeting:'b-replied',off:'b-off'}[s]||'b-unknown');
 const SL=s=>({offer_sent:'Offer sent',email_sent:'Email sent',followup_sent:'Follow-up sent',replied:'Replied',meeting:'Meeting','':'Not contacted',off:'Closed'}[s]||s);
 const avCol=n=>['#1D9E75','#378ADD','#D4537E','#BA7517','#5F5E5A','#D85A30','#534AB7','#639922'][(n||'A').charCodeAt(0)%8];
-const fillPH=(t,s={})=>{const _cfg=(typeof getActiveEmailConfig==='function'?getActiveEmailConfig():{});const d={first_name:'Anna',last_name:'Kovács',company:'Erste Bank',position:'HR Manager',your_org:SETTINGS.org||'Your NGO',mmk_count:'25',rehab_fee:'121.8',sender_name:_cfg.sender||SETTINGS.sender||getCurrentUser()||'Your Name',...s};return t.replace(/\{(\w+)\}/g,(_,k)=>d[k]!==undefined?d[k]:'{'+k+'}');};
+const fillPH=(t,s={})=>{const _cfg=(typeof getActiveEmailConfig==='function'?getActiveEmailConfig():{});const d={first_name:'Anna',last_name:'Kovács',company:'Erste Bank',position:'HR Manager',your_org:SETTINGS.org||'Your NGO',mmk_count:'25',rehab_fee:'121.8',sender_name:_cfg.sender||SETTINGS.sender||getCurrentUser()||'Your Name',signature:_cfg.signature||SETTINGS.signature||'',...s};return t.replace(/\{(\w+)\}/g,(_,k)=>d[k]!==undefined?d[k]:'{'+k+'}');};
 const iPH=(id,ph)=>{const ta=document.getElementById(id);if(!ta)return;const s=ta.selectionStart,e=ta.selectionEnd;ta.value=ta.value.slice(0,s)+ph+ta.value.slice(e);ta.selectionStart=ta.selectionEnd=s+ph.length;ta.focus();};
 
 // ═══════════════ SELECTION STATE ═══════════════
@@ -910,8 +981,16 @@ function init(){
   }
   // Render team list in settings
   renderTeamList();
+  // Campaigns badge + list
+  refreshCampaignsBadge();
   // Check first use — prompt for name if not set
   _checkFirstUse();
+  // If any campaign was stuck in 'sending' (tab was closed mid-run), flip it to 'paused'
+  if(Array.isArray(SETTINGS.campaigns)){
+    let dirty=false;
+    for(const c of SETTINGS.campaigns){if(c.status==='sending'){c.status='paused';dirty=true;}}
+    if(dirty){sv('crm7_set',SETTINGS);}
+  }
 }
 
 // init() called at end of script after all const declarations
@@ -1326,7 +1405,7 @@ function applyPicker(){
   renderRcptBox();closePickerModal();toast(`✓ ${pickerSel.size} recipients added`);
 }
 
-function selLang(el,l){emailLang=l;document.querySelectorAll('.chip[onclick*=selLang]').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');}
+function selLang(el,l){emailLang=l;document.querySelectorAll('.chip[onclick*=selLang]').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');buildTmplSelects();}
 function loadTmpl(){const idx=document.getElementById('tmpl-sel').value;if(!idx)return;const t=TMPLS[parseInt(idx)];if(!t)return;document.getElementById('c-subj').value=t.subject;document.getElementById('c-body').value=t.body;toast(`✓ "${t.name}" loaded`);}
 function fillPrev(){const s=document.getElementById('c-subj').value,b=document.getElementById('c-body').value;document.getElementById('c-prev-subj').textContent=fillPH(s);document.getElementById('c-prev-body').textContent=fillPH(b);}
 function copyEmail(){const s=document.getElementById('c-subj').value,b=document.getElementById('c-body').value;if(!s&&!b){toast('Write something first');return;}navigator.clipboard.writeText(`Subject: ${s}\n\n${b}`).then(()=>toast('✓ Copied')).catch(()=>toast('Select & copy manually'));}
@@ -1352,7 +1431,26 @@ BODY:
 }
 
 // ═══════════════ TEMPLATES ═══════════════
-function buildTmplSelects(){[document.getElementById('tmpl-sel')].forEach(s=>{if(!s)return;s.innerHTML='<option value="">— or write from scratch —</option>';TMPLS.forEach((t,i)=>{const o=document.createElement('option');o.value=i;o.textContent=t.name;s.appendChild(o);});});}
+function buildTmplSelects(){
+  const s=document.getElementById('tmpl-sel');if(!s)return;
+  const prev=s.value;
+  // Filter by current Compose language; fall back to language-less templates too
+  const inLang=TMPLS.map((t,i)=>({t,i})).filter(({t})=>!t.lang||t.lang===emailLang);
+  const other =TMPLS.map((t,i)=>({t,i})).filter(({t})=>t.lang&&t.lang!==emailLang);
+  s.innerHTML='<option value="">— or write from scratch —</option>';
+  if(inLang.length){
+    const og=document.createElement('optgroup');og.label=emailLang==='hu'?'Magyar sablonok':'English templates';
+    inLang.forEach(({t,i})=>{const o=document.createElement('option');o.value=i;o.textContent=t.name;og.appendChild(o);});
+    s.appendChild(og);
+  }
+  if(other.length){
+    const og=document.createElement('optgroup');og.label=emailLang==='hu'?'Other languages':'Más nyelv';
+    other.forEach(({t,i})=>{const o=document.createElement('option');o.value=i;o.textContent=`${t.name}  (${(t.lang||'').toUpperCase()})`;og.appendChild(o);});
+    s.appendChild(og);
+  }
+  // Restore prior selection if still valid
+  if(prev&&[...s.options].some(o=>o.value===prev))s.value=prev;
+}
 function renderTmpls(){
   const q=(document.getElementById('tmpl-q')?.value||'').toLowerCase();
   const list=document.getElementById('tmpl-list');if(!list)return;
@@ -1431,6 +1529,136 @@ function restoreBackup(input){
 }
 function clearAll(){if(!confirm('Reset ALL data to defaults?'))return;COS.length=0;TMPLS.length=0;COS.push(...D_COMPANIES);TMPLS.push(...D_TMPLS);sv('crm7_co',COS);sv('crm7_tmpls',TMPLS);buildInds();refreshCounts();renderDash();renderCo();renderTmpls();updEx();buildTmplSelects();toast('Reset to defaults');}
 
+// ═══════════════ DUPLICATE COMPANY FINDER ═══════════════
+// Normalize a company name for fuzzy comparison. Strips common corporate suffixes
+// (Kft, Zrt, Rt, Bt, Nyrt, Ltd, LLC, Inc, GmbH, AG, SA, SpA), country suffixes
+// (Hungary, Hungária, Magyar, Magyarország), and generic descriptors (Bank, Group,
+// Holding, Company) so "Diageo" and "Diageo Hungary" collapse to the same key.
+function _normCoName(name){
+  if(!name)return '';
+  let n=String(name).toLowerCase();
+  // Hungarian accents → ASCII
+  n=n.replace(/[áàâä]/g,'a').replace(/[éèêë]/g,'e').replace(/[íìîï]/g,'i').replace(/[óòôöő]/g,'o').replace(/[úùûüű]/g,'u');
+  // Strip trailing punctuation and parentheticals
+  n=n.replace(/\([^)]*\)/g,' ').replace(/[.,&/+\-]+/g,' ');
+  // Remove stopword suffixes (whole-word)
+  const stop=['kft','zrt','rt','bt','nyrt','ltd','llc','inc','gmbh','ag','sa','spa','plc','bv','nv','srl','oy','as','ab','corp','corporation','company','co','group','holding','holdings','hungary','hungaria','hungarian','magyar','magyarorszag','magyarorszagi','hu','bank','finance','financial','services','technologies','technology','solutions','systems'];
+  const tokens=n.split(/\s+/).filter(t=>t&&!stop.includes(t));
+  return tokens.join(' ').trim();
+}
+
+// Simple Levenshtein ratio for strings that collide after normalization
+function _nameSim(a,b){
+  a=_normCoName(a);b=_normCoName(b);
+  if(!a||!b)return 0;
+  if(a===b)return 1;
+  if(a.includes(b)||b.includes(a))return 0.95;
+  // Token overlap ratio
+  const at=new Set(a.split(' ')),bt=new Set(b.split(' '));
+  let inter=0;at.forEach(t=>{if(bt.has(t))inter++;});
+  return inter/Math.max(at.size,bt.size);
+}
+
+function findDuplicateCompanies(threshold=0.9){
+  const pairs=[];
+  for(let i=0;i<COS.length;i++){
+    for(let j=i+1;j<COS.length;j++){
+      const s=_nameSim(COS[i].company,COS[j].company);
+      if(s>=threshold)pairs.push({i,j,sim:s});
+    }
+  }
+  pairs.sort((a,b)=>b.sim-a.sim);
+  return pairs;
+}
+
+function openDupeFinder(){
+  const pairs=findDuplicateCompanies();
+  const box=document.getElementById('dupe-list');
+  if(!pairs.length){
+    box.innerHTML='<div style="text-align:center;padding:40px 20px;color:var(--tx2);font-size:13px">✓ No duplicate companies found.</div>';
+  } else {
+    box.innerHTML=pairs.map((p,pi)=>{
+      const a=COS[p.i],b=COS[p.j];
+      const descA=`${(a.people||[]).length} contact${(a.people||[]).length===1?'':'s'}, ${(a.activity||[]).length} activity`;
+      const descB=`${(b.people||[]).length} contact${(b.people||[]).length===1?'':'s'}, ${(b.activity||[]).length} activity`;
+      const meta=x=>[x.industry||'—',x.partnership||'—',x.category||'—'].join(' · ');
+      return `
+      <div data-pair-idx="${pi}" style="border:.5px solid var(--brd);border-radius:var(--rl);padding:10px 12px;margin-bottom:8px;background:var(--sur)">
+        <div style="font-size:10px;color:var(--tx3);margin-bottom:6px">Match score: ${(p.sim*100).toFixed(0)}%</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="padding:8px 10px;background:var(--bg2);border-radius:var(--r)">
+            <div style="font-size:12px;font-weight:600">${a.company}</div>
+            <div style="font-size:10px;color:var(--tx2);margin-top:2px">${meta(a)}</div>
+            <div style="font-size:10px;color:var(--tx3);margin-top:2px">${descA}</div>
+          </div>
+          <div style="padding:8px 10px;background:var(--bg2);border-radius:var(--r)">
+            <div style="font-size:12px;font-weight:600">${b.company}</div>
+            <div style="font-size:10px;color:var(--tx2);margin-top:2px">${meta(b)}</div>
+            <div style="font-size:10px;color:var(--tx3);margin-top:2px">${descB}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+          <button class="btn btn-sm" onclick="mergeCompanies(${p.i},${p.j})">← Keep "${(a.company||'').replace(/"/g,'&quot;')}", merge in "${(b.company||'').replace(/"/g,'&quot;')}"</button>
+          <button class="btn btn-sm" onclick="mergeCompanies(${p.j},${p.i})">→ Keep "${(b.company||'').replace(/"/g,'&quot;')}", merge in "${(a.company||'').replace(/"/g,'&quot;')}"</button>
+          <button class="btn btn-sm" onclick="this.closest('[data-pair-idx]').style.display='none'" style="color:var(--tx3)">Skip</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('dupe-modal').classList.add('open');
+  const st=document.getElementById('dupe-status');if(st)st.textContent=pairs.length?`${pairs.length} possible duplicate${pairs.length===1?'':'s'} found.`:'No duplicates found.';
+}
+
+// Merge company at index srcIdx INTO company at index dstIdx.
+// Primary (dst) keeps name + profile; its people/activity get the src entries appended,
+// de-duplicated by email (for people) and by id/timestamp+text (for activity).
+function mergeCompanies(dstIdx,srcIdx){
+  // Because indexes can shift after a splice, resolve to refs first
+  const dst=COS[dstIdx],src=COS[srcIdx];
+  if(!dst||!src||dst===src){toast('✗ Could not merge');return;}
+  if(!confirm(`Merge "${src.company}" INTO "${dst.company}"?\n\n"${src.company}" will be removed; its contacts and activity will be appended to "${dst.company}".`))return;
+
+  // Merge people by email (case-insensitive), falling back to name
+  const srcPeople=Array.isArray(src.people)?src.people:[];
+  const dstPeople=Array.isArray(dst.people)?dst.people:(dst.people=[]);
+  const seen=new Map();
+  for(const p of dstPeople){const k=(p.email||'').toLowerCase()||`n:${(p.firstName||'')+(p.lastName||'')}`.toLowerCase();seen.set(k,p);}
+  for(const p of srcPeople){
+    const k=(p.email||'').toLowerCase()||`n:${(p.firstName||'')+(p.lastName||'')}`.toLowerCase();
+    const ex=seen.get(k);
+    if(!ex){dstPeople.push(p);seen.set(k,p);}
+    else{
+      // Fill any empty fields on the existing record from the src record
+      for(const kk of Object.keys(p||{})){if((ex[kk]===undefined||ex[kk]==='')&&p[kk]!=='')ex[kk]=p[kk];}
+    }
+  }
+
+  // Merge activity, de-dupe by (date, type, text)
+  const srcAct=Array.isArray(src.activity)?src.activity:[];
+  const dstAct=Array.isArray(dst.activity)?dst.activity:(dst.activity=[]);
+  const sig=a=>`${a.date||''}|${a.type||''}|${(a.text||'').slice(0,80)}`;
+  const actSeen=new Set(dstAct.map(sig));
+  for(const a of srcAct){if(!actSeen.has(sig(a))){dstAct.push(a);actSeen.add(sig(a));}}
+  // Re-sort activity newest-first if they have dates
+  dstAct.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+
+  // Fill empty profile fields on dst from src (don't overwrite)
+  for(const k of Object.keys(src||{})){
+    if(k==='people'||k==='activity'||k==='company')continue;
+    if((dst[k]===undefined||dst[k]===''||dst[k]===null)&&src[k]!==undefined&&src[k]!=='')dst[k]=src[k];
+  }
+
+  // Remove the src company from COS
+  const realSrcIdx=COS.indexOf(src);
+  if(realSrcIdx>=0)COS.splice(realSrcIdx,1);
+
+  sv('crm7_co',COS);
+  buildInds();refreshCounts();renderDash();renderCo();renderPipeline();
+  toast(`✓ Merged into "${dst.company}"`);
+  // Refresh the dupe finder so the merged pair is gone
+  openDupeFinder();
+}
+
 // ═══════════════ SETTINGS ═══════════════
 function applySettings(){
   const nm=SETTINGS.crmName||'ImpactCRM',tg=SETTINGS.tag||'NGO Partner Suite',org=SETTINGS.org||'Your Organization';
@@ -1444,7 +1672,7 @@ function applySettings(){
   ['sb-ico'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.background=acc;});
   setAccCSS(acc,SETTINGS.rgb||'29,158,117');
 }
-function updBrand(){SETTINGS.crmName=document.getElementById('s-crm')?.value||'ImpactCRM';SETTINGS.tag=document.getElementById('s-tag')?.value||'NGO Partner Suite';SETTINGS.org=document.getElementById('s-org')?.value||'Your Organization';const _em=document.getElementById('s-email')?.value||'';const _m=_ensureTeamMemberObj();if(_m){_m.email=_em;}else{SETTINGS.email=_em;}applySettings();}
+function updBrand(){SETTINGS.crmName=document.getElementById('s-crm')?.value||'ImpactCRM';SETTINGS.tag=document.getElementById('s-tag')?.value||'NGO Partner Suite';SETTINGS.org=document.getElementById('s-org')?.value||'Your Organization';const _em=document.getElementById('s-email')?.value||'';const _m=_ensureTeamMemberObj();if(_m){_m.email=_em;_m._updatedAt=Date.now();}else{SETTINGS.email=_em;}applySettings();}
 function setAcc(el,c,rgb){SETTINGS.acc=c;SETTINGS.rgb=rgb;document.querySelectorAll('.chip[onclick*=setAcc]').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');['sb-ico','bp-ico'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.background=c;});setAccCSS(c,rgb);}
 function setAccCSS(c,rgb){const d=h=>{const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgb(${Math.round(r*.75)},${Math.round(g*.75)},${Math.round(b*.75)})`;};const ra=(rgb,a)=>`rgba(${rgb},${a})`;document.documentElement.style.setProperty('--acc',c);document.documentElement.style.setProperty('--acc2',d(c));document.documentElement.style.setProperty('--t400',c);document.documentElement.style.setProperty('--t600',d(c));document.documentElement.style.setProperty('--t50',ra(rgb,.13));document.documentElement.style.setProperty('--t100',ra(rgb,.28));document.documentElement.style.setProperty('--acc-r',rgb.split(',')[0]);document.documentElement.style.setProperty('--acc-g',rgb.split(',')[1]);document.documentElement.style.setProperty('--acc-b',rgb.split(',')[2]);}
 function saveSettings(){
@@ -1454,15 +1682,18 @@ function saveSettings(){
   const key=document.getElementById('s-ejs-key')?.value.trim()||'';
   const em =document.getElementById('s-email')?.value.trim()||'';
   const sn =document.getElementById('s-sender')?.value.trim()||'';
+  const sig=document.getElementById('s-signature')?.value||'';
   const m=_ensureTeamMemberObj();
   if(m){
     // Save EmailJS credentials + from-address to the currently logged-in user's slot
-    m.emailjsSvc=svc;m.emailjsTpl=tpl;m.emailjsKey=key;m.email=em;m.sender=sn;
+    m.emailjsSvc=svc;m.emailjsTpl=tpl;m.emailjsKey=key;m.email=em;m.sender=sn;m.signature=sig;
+    m._updatedAt=Date.now();
   } else {
     // No active user yet — fall back to legacy global settings
-    SETTINGS.emailjsSvc=svc;SETTINGS.emailjsTpl=tpl;SETTINGS.emailjsKey=key;SETTINGS.email=em;SETTINGS.sender=sn;
+    SETTINGS.emailjsSvc=svc;SETTINGS.emailjsTpl=tpl;SETTINGS.emailjsKey=key;SETTINGS.email=em;SETTINGS.sender=sn;SETTINGS.signature=sig;
   }
   SETTINGS.googleClientId=document.getElementById('s-goog-cid')?.value.trim()||'';
+  SETTINGS._updatedAt=Date.now();
   sv('crm7_set',SETTINGS);
   const k=document.getElementById('s-key')?.value.trim();if(k)localStorage.setItem('crm7_key',k);
   document.getElementById('s-status') && (document.getElementById('s-status').textContent='✓ Settings saved');
@@ -1483,18 +1714,19 @@ function nav(id,el){
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   if(el)el.classList.add('active');
-  const T={dashboard:'Dashboard',pipeline:'Pipeline & Follow-ups',companies:'Companies & Contacts',import:'Import Excel / CSV',compose:'Compose Email',templates:'Email Templates',export:'Export CSV',settings:'Settings',reengage:'Re-engagement queue',deals:'Deals & Revenue'};
+  const T={dashboard:'Dashboard',pipeline:'Pipeline & Follow-ups',companies:'Companies & Contacts',import:'Import Excel / CSV',compose:'Compose Email',templates:'Email Templates',campaigns:'Campaigns',export:'Export CSV',settings:'Settings',reengage:'Re-engagement queue',deals:'Deals & Revenue'};
   document.getElementById('page-title').textContent=T[id]||id;
   if(id==='export')updEx();
   if(id==='templates')renderTmpls();
   if(id==='dashboard'){renderDash();updDueCounts();}
   if(id==='compose'){renderRcptBox();buildTmplSelects();}
+  if(id==='campaigns'){renderCampaigns();}
   if(id==='pipeline'){renderPipeline();}
   if(id==='reengage'){renderReengage();}
   if(id==='deals'){renderDeals();}
 }
 
-['co-modal','p-modal','picker-modal','tmpl-modal','bulk-status-modal','act-modal','na-modal','deal-modal'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});});
+['co-modal','p-modal','picker-modal','tmpl-modal','bulk-status-modal','act-modal','na-modal','deal-modal','dupe-modal','campaign-modal'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});});
 document.getElementById('ex-type')?.addEventListener('change',updEx);
 document.getElementById('ex-ind')?.addEventListener('change',updEx);
 document.getElementById('tm-subj')?.addEventListener('input',updTmPrev);
@@ -1818,7 +2050,7 @@ async function sendEmailJS(){
 
   let sent=0,failed=0;
   for(const r of recipients){
-    const filled=(t)=>t.replace(/\{first_name\}/g,r.firstName||'').replace(/\{last_name\}/g,r.lastName||'').replace(/\{company\}/g,r.company||'').replace(/\{position\}/g,r.pos||'').replace(/\{your_org\}/g,SETTINGS.org||'').replace(/\{mmk_count\}/g,r.mmk||'').replace(/\{rehab_fee\}/g,r.rehab||'').replace(/\{sender_name\}/g,cfg.sender||'');
+    const filled=(t)=>t.replace(/\{first_name\}/g,r.firstName||'').replace(/\{last_name\}/g,r.lastName||'').replace(/\{company\}/g,r.company||'').replace(/\{position\}/g,r.pos||'').replace(/\{your_org\}/g,SETTINGS.org||'').replace(/\{mmk_count\}/g,r.mmk||'').replace(/\{rehab_fee\}/g,r.rehab||'').replace(/\{sender_name\}/g,cfg.sender||'').replace(/\{signature\}/g,cfg.signature||SETTINGS.signature||'');
     try{
       await emailjs.send(svc,tpl,{
         to_email:r.email,
@@ -2086,9 +2318,11 @@ async function gdriveDownload(silent=false){
       COS.length=0;COS.push(...data.companies);
       if(data.templates){TMPLS.length=0;TMPLS.push(...data.templates);}
       if(data.deals){DEALS.length=0;DEALS.push(...data.deals);}
-      if(data.settings){Object.assign(SETTINGS,data.settings);}
+      if(data.settings){_mergeSettings(data.settings);}
       try{localStorage.setItem('crm7_co',JSON.stringify(COS));localStorage.setItem('crm7_tmpls',JSON.stringify(TMPLS));localStorage.setItem('crm7_set',JSON.stringify(SETTINGS));localStorage.setItem('crm9_deals',JSON.stringify(DEALS));}catch{}
-      buildInds();refreshCounts();renderDash();renderCo();renderTmpls();buildTmplSelects();applySettings();
+      buildInds();refreshCounts();renderDash();renderCo();renderTmpls();buildTmplSelects();applySettings();refreshCampaignsBadge();
+      // Re-render campaigns page if it's currently visible
+      if(document.getElementById('page-campaigns')?.classList.contains('active'))renderCampaigns();
       const t=new Date().toLocaleTimeString();
       _setDriveStatus(`✓ Loaded from Drive at ${t} — ${data.companies.length} companies`,false);
       if(!silent)toast(`✓ Loaded ${data.companies.length} companies from Drive`);
@@ -2415,6 +2649,346 @@ function _autoLogOutreachAfterSend(rcpts,subject){
   }
 }
 
+// ═══════════════ CAMPAIGNS (Phase A) ═══════════════
+// A campaign is a queued, throttled, pausable bulk-send. It stores every recipient
+// with per-recipient status so it can be resumed safely — even across page reloads
+// or from another device (because the state is synced via Google Drive).
+//
+// Data model (one entry in SETTINGS.campaigns[]):
+//   { id, name, status:'draft'|'sending'|'paused'|'done',
+//     subject, body, lang, throttleMs,
+//     recipients:[{email,name,coIdx,firstName,lastName,company,pos,mmk,rehab,
+//                  status:'pending'|'sent'|'failed'|'skipped', sentAt, sentBy, error}],
+//     stats:{total,sent,failed,skipped},
+//     createdBy, createdAt, lastSendAt, _updatedAt }
+
+if(!Array.isArray(SETTINGS.campaigns))SETTINGS.campaigns=[];
+
+let _runningCampaignId=null; // only one campaign runs at a time (per device)
+let _cmpPauseFlag=false;
+
+function _cmpGet(id){return (SETTINGS.campaigns||[]).find(c=>c.id===id);}
+function _cmpSave(c){c._updatedAt=Date.now();sv('crm7_set',SETTINGS);}
+function _cmpRecalcStats(c){
+  const s={total:c.recipients.length,sent:0,failed:0,skipped:0,pending:0};
+  for(const r of c.recipients){if(r.status==='sent')s.sent++;else if(r.status==='failed')s.failed++;else if(r.status==='skipped')s.skipped++;else s.pending++;}
+  c.stats=s;
+}
+
+function refreshCampaignsBadge(){
+  const n=(SETTINGS.campaigns||[]).filter(c=>c.status==='sending'||c.status==='paused'||c.status==='draft').length;
+  const b=document.getElementById('nb-camp');if(b)b.textContent=n||'';
+}
+
+function renderCampaigns(){
+  const list=document.getElementById('campaign-list');if(!list)return;
+  const camps=(SETTINGS.campaigns||[]).slice().sort((a,b)=>(b._updatedAt||b.createdAt||0)-(a._updatedAt||a.createdAt||0));
+  if(!camps.length){
+    list.innerHTML=`<div style="padding:40px 20px;text-align:center;color:var(--tx2);font-size:12px;background:var(--sur);border:.5px dashed var(--brd);border-radius:var(--rl)">No campaigns yet.<br><br>Build an email in <strong>Compose</strong>, add recipients, then click <strong>Save as campaign</strong>.</div>`;
+    refreshCampaignsBadge();return;
+  }
+  const badgeCls={draft:'b-unknown',sending:'b-email',paused:'b-fu',done:'b-mature'};
+  const badgeTxt={draft:'Draft',sending:'Sending…',paused:'Paused',done:'Done'};
+  list.innerHTML=camps.map(c=>{
+    _cmpRecalcStats(c);
+    const pct=c.stats.total?Math.round((c.stats.sent+c.stats.failed+c.stats.skipped)/c.stats.total*100):0;
+    const canRun=c.status!=='sending'&&c.stats.pending>0;
+    const canPause=c.status==='sending';
+    const who=c.createdBy?` · created by ${c.createdBy}`:'';
+    const last=c.lastSendAt?new Date(c.lastSendAt).toLocaleString():'never';
+    return `
+    <div style="background:var(--sur);border:.5px solid var(--brd);border-radius:var(--rl);padding:13px 15px;margin-bottom:9px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600">${c.name||'Untitled campaign'}</div>
+          <div style="font-size:10px;color:var(--tx2);margin-top:2px">${c.stats.total} recipients${who} · last activity ${last}</div>
+        </div>
+        <span class="badge ${badgeCls[c.status]||'b-unknown'}">${badgeTxt[c.status]||c.status}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div style="flex:1;height:6px;background:var(--bg2);border-radius:3px;overflow:hidden"><div style="height:100%;background:var(--acc);width:${pct}%"></div></div>
+        <div style="font-size:10px;color:var(--tx2);white-space:nowrap">${c.stats.sent} sent · ${c.stats.failed} failed · ${c.stats.pending} pending</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-sm" onclick="openCampaignDetail('${c.id}')">Open ↗</button>
+        ${canRun?`<button class="btn btn-sm btn-p" onclick="openCampaignDetail('${c.id}',true)">▶ ${c.status==='paused'?'Resume':c.status==='draft'?'Start':'Continue'}</button>`:''}
+        ${canPause?`<button class="btn btn-sm" onclick="campaignPause('${c.id}')">⏸ Pause</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  refreshCampaignsBadge();
+}
+
+function saveAsCampaign(){
+  if(!recipients.length){toast('Add recipients first');return;}
+  const subj=document.getElementById('c-subj').value.trim();
+  const body=document.getElementById('c-body').value.trim();
+  if(!subj||!body){toast('Subject and body required');return;}
+  const defaultName=`${new Date().toISOString().slice(0,10)} · ${recipients.length} recipients`;
+  const name=prompt('Name this campaign:',defaultName)||defaultName;
+  const c={
+    id:'cmp_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+    name,status:'draft',
+    subject:subj,body,lang:emailLang,
+    throttleMs:8000,
+    recipients:recipients.map(r=>({
+      email:r.email,name:r.name,coIdx:r.coIdx,
+      firstName:r.firstName,lastName:r.lastName,company:r.company,
+      pos:r.pos,mmk:r.mmk,rehab:r.rehab,
+      status:'pending'
+    })),
+    stats:{total:recipients.length,sent:0,failed:0,skipped:0,pending:recipients.length},
+    createdBy:getCurrentUser()||'',
+    createdAt:Date.now(),
+    lastSendAt:null,
+    _updatedAt:Date.now()
+  };
+  SETTINGS.campaigns.push(c);
+  sv('crm7_set',SETTINGS);
+  toast(`✓ Campaign "${name}" saved`);
+  nav('campaigns',document.querySelector('[onclick*=campaigns]'));
+  renderCampaigns();
+  openCampaignDetail(c.id);
+}
+
+function openCampaignDetail(id,autostart){
+  const c=_cmpGet(id);if(!c){toast('Campaign not found');return;}
+  document.getElementById('cmp-id').value=id;
+  document.getElementById('cmp-ttl').textContent=c.name||'Campaign';
+  document.getElementById('cmp-name').value=c.name||'';
+  document.getElementById('cmp-throttle').value=Math.round((c.throttleMs||8000)/1000);
+  document.getElementById('cmp-subj').value=c.subject||'';
+  document.getElementById('cmp-body').value=c.body||'';
+  _renderCampaignModalState(c);
+  document.getElementById('campaign-modal').classList.add('open');
+  if(autostart&&(c.status==='draft'||c.status==='paused')&&c.stats.pending>0){
+    setTimeout(()=>campaignStart(),150);
+  }
+}
+
+function _renderCampaignModalState(c){
+  _cmpRecalcStats(c);
+  const badgeCls={draft:'b-unknown',sending:'b-email',paused:'b-fu',done:'b-mature'};
+  const badgeTxt={draft:'Draft',sending:'Sending…',paused:'Paused',done:'Done'};
+  const b=document.getElementById('cmp-status-badge');
+  if(b){b.className='badge '+(badgeCls[c.status]||'b-unknown');b.textContent=badgeTxt[c.status]||c.status;}
+  const pct=c.stats.total?Math.round((c.stats.sent+c.stats.failed+c.stats.skipped)/c.stats.total*100):0;
+  document.getElementById('cmp-progress-fill').style.width=pct+'%';
+  document.getElementById('cmp-stats').textContent=`${c.stats.sent}✓  ${c.stats.failed}✗  ${c.stats.pending}⏳  / ${c.stats.total}`;
+  document.getElementById('cmp-rcpt-count').textContent=`(${c.recipients.length})`;
+  const startBtn=document.getElementById('cmp-start-btn');
+  const pauseBtn=document.getElementById('cmp-pause-btn');
+  const resumeBtn=document.getElementById('cmp-resume-btn');
+  if(c.status==='sending'){startBtn.style.display='none';resumeBtn.style.display='none';pauseBtn.style.display='';}
+  else if(c.status==='paused'){startBtn.style.display='none';pauseBtn.style.display='none';resumeBtn.style.display='';}
+  else if(c.status==='done'||c.stats.pending===0){startBtn.style.display='none';pauseBtn.style.display='none';resumeBtn.style.display='none';}
+  else {startBtn.style.display='';pauseBtn.style.display='none';resumeBtn.style.display='none';}
+
+  const box=document.getElementById('cmp-rcpt-list');
+  const icon={pending:'⏳',sent:'✓',failed:'✗',skipped:'—'};
+  const color={pending:'var(--tx3)',sent:'var(--t600)',failed:'var(--a400)',skipped:'var(--tx3)'};
+  box.innerHTML=c.recipients.map((r,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:4px 2px;border-bottom:.5px dotted var(--brd)">
+      <span style="width:14px;font-size:11px;color:${color[r.status]||'var(--tx3)'};text-align:center">${icon[r.status]||'?'}</span>
+      <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name||r.email}${r.company?` <span style="color:var(--tx3)">· ${r.company}</span>`:''}</span>
+      <span style="font-size:10px;color:var(--tx3);font-family:var(--fm)">${r.email}</span>
+      ${r.status==='failed'&&r.error?`<span title="${String(r.error).replace(/"/g,'&quot;')}" style="font-size:10px;color:var(--a400);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${String(r.error).slice(0,40)}</span>`:''}
+      ${r.status==='pending'?`<button class="btn btn-sm" style="padding:1px 6px;font-size:10px" onclick="campaignSkipRecipient('${c.id}',${i})">Skip</button>`:''}
+    </div>`).join('');
+}
+
+function campaignSave(){
+  const id=document.getElementById('cmp-id').value;
+  const c=_cmpGet(id);if(!c)return;
+  if(c.status==='sending'){toast('Pause first to edit');return;}
+  c.name=document.getElementById('cmp-name').value.trim()||c.name;
+  const thr=parseInt(document.getElementById('cmp-throttle').value,10);
+  c.throttleMs=(thr>0?thr*1000:8000);
+  c.subject=document.getElementById('cmp-subj').value;
+  c.body=document.getElementById('cmp-body').value;
+  _cmpSave(c);
+  renderCampaigns();
+  _renderCampaignModalState(c);
+  toast('✓ Saved');
+}
+
+function campaignDelete(){
+  const id=document.getElementById('cmp-id').value;
+  const c=_cmpGet(id);if(!c)return;
+  if(c.status==='sending'){toast('Pause first to delete');return;}
+  if(!confirm(`Delete campaign "${c.name}"?\nThis cannot be undone.`))return;
+  const i=SETTINGS.campaigns.indexOf(c);
+  if(i>=0)SETTINGS.campaigns.splice(i,1);
+  sv('crm7_set',SETTINGS);
+  document.getElementById('campaign-modal').classList.remove('open');
+  renderCampaigns();
+  toast('Deleted');
+}
+
+function campaignLoadToCompose(){
+  const id=document.getElementById('cmp-id').value;
+  const c=_cmpGet(id);if(!c)return;
+  document.getElementById('c-subj').value=c.subject||'';
+  document.getElementById('c-body').value=c.body||'';
+  if(c.lang)emailLang=c.lang;
+  // Rebuild recipients list from campaign's PENDING entries (so you can re-send only to pending)
+  recipients=c.recipients.filter(r=>r.status==='pending').map(r=>({
+    name:r.name,email:r.email,company:r.company,coIdx:r.coIdx,
+    firstName:r.firstName,lastName:r.lastName,pos:r.pos,mmk:r.mmk,rehab:r.rehab
+  }));
+  document.getElementById('campaign-modal').classList.remove('open');
+  nav('compose',document.querySelector('[onclick*=compose]'));
+  renderRcptBox();
+  toast(`Loaded ${recipients.length} pending recipient${recipients.length===1?'':'s'}`);
+}
+
+function campaignSkipRecipient(id,i){
+  const c=_cmpGet(id);if(!c)return;
+  const r=c.recipients[i];if(!r||r.status!=='pending')return;
+  r.status='skipped';r.sentAt=Date.now();
+  _cmpRecalcStats(c);_cmpSave(c);
+  _renderCampaignModalState(c);
+  renderCampaigns();
+}
+
+function campaignPause(id){
+  const cid=id||document.getElementById('cmp-id').value;
+  const c=_cmpGet(cid);if(!c)return;
+  if(c.status!=='sending'){return;}
+  // Set flag; the running loop will see it and exit
+  _cmpPauseFlag=true;
+  // Status will flip to 'paused' once loop exits; update UI optimistically
+  const rt=document.getElementById('cmp-runtime');
+  if(rt)rt.textContent='Pausing after current send…';
+}
+
+async function campaignStart(){
+  const id=document.getElementById('cmp-id').value;
+  const c=_cmpGet(id);if(!c)return;
+  if(_runningCampaignId&&_runningCampaignId!==id){toast('Another campaign is running — pause it first');return;}
+  if(c.stats.pending===0){toast('No pending recipients');return;}
+
+  // Per-user EmailJS config — the user who clicks Start is the one sending
+  const cfg=getActiveEmailConfig();
+  const svc=cfg.emailjsSvc,tpl=cfg.emailjsTpl,key=cfg.emailjsKey;
+  const who=getCurrentUser();
+  if(!svc||!tpl||!key){toast(who?`No EmailJS setup for ${who}`:'Set up EmailJS first');return;}
+  try{emailjs.init({publicKey:key});}catch(e){}
+
+  // Commit any unsaved edits before starting
+  const thr=parseInt(document.getElementById('cmp-throttle').value,10);
+  c.throttleMs=(thr>0?thr*1000:8000);
+  c.name=document.getElementById('cmp-name').value.trim()||c.name;
+  c.subject=document.getElementById('cmp-subj').value;
+  c.body=document.getElementById('cmp-body').value;
+  c.status='sending';_cmpSave(c);
+  _runningCampaignId=id;_cmpPauseFlag=false;
+  _renderCampaignModalState(c);
+  renderCampaigns();
+
+  const rt=document.getElementById('cmp-runtime');
+  const setRt=m=>{if(rt&&document.getElementById('cmp-id').value===id)rt.textContent=m;};
+
+  // Per-campaign de-dupe: we only log ONE activity entry per company per campaign
+  if(!c._loggedCos)c._loggedCos={};
+
+  try{
+    for(let i=0;i<c.recipients.length;i++){
+      if(_cmpPauseFlag)break;
+      const r=c.recipients[i];
+      if(r.status!=='pending')continue;
+
+      const filled=t=>String(t||'')
+        .replace(/\{first_name\}/g,r.firstName||'')
+        .replace(/\{last_name\}/g,r.lastName||'')
+        .replace(/\{company\}/g,r.company||'')
+        .replace(/\{position\}/g,r.pos||'')
+        .replace(/\{your_org\}/g,SETTINGS.org||'')
+        .replace(/\{mmk_count\}/g,r.mmk||'')
+        .replace(/\{rehab_fee\}/g,r.rehab||'')
+        .replace(/\{sender_name\}/g,cfg.sender||'')
+        .replace(/\{signature\}/g,cfg.signature||SETTINGS.signature||'');
+
+      setRt(`Sending to ${r.email} (${i+1}/${c.recipients.length})…`);
+      try{
+        await emailjs.send(svc,tpl,{
+          to_email:r.email,
+          to_name:r.name||r.email,
+          from_name:cfg.sender||SETTINGS.org||'',
+          from_email:cfg.email||'',
+          subject:filled(c.subject),
+          message:filled(c.body),
+          reply_to:cfg.email||''
+        });
+        r.status='sent';r.sentAt=Date.now();r.sentBy=who||cfg.sender||'';r.error=undefined;
+        // Log outreach on the company — once per company per campaign
+        if(typeof r.coIdx==='number'&&r.coIdx>=0&&!c._loggedCos[r.coIdx]){
+          _logCampaignOutreachOnCompany(r.coIdx,c,who);
+          c._loggedCos[r.coIdx]=true;
+        }
+      }catch(err){
+        r.status='failed';r.error=(err&&(err.text||err.message))||String(err);
+        console.error('Campaign send failed for',r.email,err);
+      }
+      c.lastSendAt=Date.now();
+      _cmpRecalcStats(c);_cmpSave(c);
+      if(document.getElementById('cmp-id').value===id)_renderCampaignModalState(c);
+      renderCampaigns();
+
+      // Throttle before next send (unless this was the last one or we were paused)
+      if(_cmpPauseFlag)break;
+      const hasMorePending=c.recipients.slice(i+1).some(x=>x.status==='pending');
+      if(hasMorePending){
+        const ms=c.throttleMs||8000;
+        setRt(`Waiting ${Math.round(ms/1000)}s before next send…`);
+        // Check pause flag every 500ms during throttle
+        const start=Date.now();
+        while(Date.now()-start<ms){
+          if(_cmpPauseFlag)break;
+          await new Promise(res=>setTimeout(res,500));
+        }
+        if(_cmpPauseFlag)break;
+      }
+    }
+  } finally {
+    _cmpRecalcStats(c);
+    if(c.stats.pending===0)c.status='done';
+    else if(_cmpPauseFlag)c.status='paused';
+    else c.status='paused'; // defensive: any other exit path → paused
+    _cmpSave(c);
+    _runningCampaignId=null;_cmpPauseFlag=false;
+    setRt(c.status==='done'?`Done — ${c.stats.sent} sent, ${c.stats.failed} failed, ${c.stats.skipped} skipped.`:`Paused — ${c.stats.pending} pending.`);
+    if(document.getElementById('cmp-id').value===id)_renderCampaignModalState(c);
+    renderCampaigns();
+    if(c.status==='done')toast(`✓ Campaign done — ${c.stats.sent}/${c.stats.total} sent`);
+    else toast(`Paused — ${c.stats.sent}/${c.stats.total} sent so far`);
+  }
+}
+
+// Log a campaign-level outreach entry on the company, advance pipeline, set follow-up
+function _logCampaignOutreachOnCompany(coIdx,c,owner){
+  const co=COS[coIdx];if(!co)return;
+  const today=new Date().toISOString().slice(0,10);
+  const nextDate=new Date(Date.now()+7*864e5).toISOString().slice(0,10);
+  if(!co.activity)co.activity=[];
+  co.activity.unshift({
+    type:'outreach',
+    text:`Campaign "${c.name}": "${(c.subject||'').slice(0,80)}"`,
+    date:today,ts:Date.now(),owner:owner||''
+  });
+  const cur=co.stage||'prospecting';
+  if(cur==='prospecting')co.stage='outreach_1';
+  else if(cur==='outreach_1')co.stage='outreach_2';
+  else if(cur==='outreach_2')co.stage='outreach_3';
+  co.last_touchpoint=today;
+  if(!co.next_action_date||co.next_action_date<nextDate){
+    co.next_action_date=nextDate;
+    co.next_action_note=`Follow up on "${c.name}"`;
+    co.next_action_owner=owner||'';
+  }
+  sv('crm7_co',COS);
+}
+
 function _outreachChips(co){
   const n=_outreachCount(co);
   if(!n)return '';
@@ -2543,6 +3117,105 @@ function _migrateTeam(){
   SETTINGS.team=SETTINGS.team.map(m=>typeof m==='string'?{name:m}:m);
 }
 
+// ── Safe merge of remote SETTINGS into local SETTINGS ──
+// Two-writer safety: instead of clobbering local with remote (Object.assign),
+// we merge per-entity. Each team member carries its own _updatedAt timestamp,
+// so the newer copy of THAT member wins — independent of which user just saved.
+// Scalar branding fields use a last-writer-wins rule via SETTINGS._updatedAt.
+function _mergeSettings(remote){
+  if(!remote||typeof remote!=='object')return;
+
+  // Defensive: normalize any legacy string entries before comparing
+  _migrateTeam();
+
+  // ── 1. Team members: merge by name, newer _updatedAt wins ──
+  if(Array.isArray(remote.team)){
+    const remoteTeam=remote.team.map(m=>typeof m==='string'?{name:m}:(m||{}));
+    const localTeam=Array.isArray(SETTINGS.team)?SETTINGS.team.slice():[];
+    const removedLocal=SETTINGS._teamRemoved||{};
+    const removedRemote=remote._teamRemoved||{};
+    // Combined tombstones: remember the latest removal time per name
+    const removed={};
+    for(const k of Object.keys(removedLocal))removed[k]=Math.max(removed[k]||0,removedLocal[k]||0);
+    for(const k of Object.keys(removedRemote))removed[k]=Math.max(removed[k]||0,removedRemote[k]||0);
+
+    const byName=new Map();
+    for(const m of localTeam){if(m&&m.name)byName.set(m.name,m);}
+    for(const rm of remoteTeam){
+      if(!rm.name)continue;
+      const lm=byName.get(rm.name);
+      const lu=(lm&&lm._updatedAt)||0;
+      const ru=rm._updatedAt||0;
+      // If this name has been removed later than its remote _updatedAt, keep it dropped
+      const tombstone=removed[rm.name]||0;
+      if(tombstone>ru&&tombstone>lu){continue;}
+      if(!lm){byName.set(rm.name,rm);}
+      else if(ru>lu){byName.set(rm.name,rm);}
+      // else: local is newer, keep it
+    }
+    // Drop any local member whose tombstone in remote is newer than local _updatedAt
+    for(const name of Array.from(byName.keys())){
+      const lm=byName.get(name);
+      const lu=(lm&&lm._updatedAt)||0;
+      if((removed[name]||0)>lu){byName.delete(name);}
+    }
+    SETTINGS.team=Array.from(byName.values());
+    SETTINGS._teamRemoved=removed;
+    SETTINGS._teamUpdatedAt=Math.max(SETTINGS._teamUpdatedAt||0,remote._teamUpdatedAt||0);
+  }
+
+  // ── 2. Campaigns: merge by id, newer _updatedAt wins ──
+  if(Array.isArray(remote.campaigns)){
+    const local=Array.isArray(SETTINGS.campaigns)?SETTINGS.campaigns:[];
+    const byId=new Map();
+    for(const c of local){if(c&&c.id)byId.set(c.id,c);}
+    for(const rc of remote.campaigns){
+      if(!rc||!rc.id)continue;
+      const lc=byId.get(rc.id);
+      if(!lc||(rc._updatedAt||0)>(lc._updatedAt||0))byId.set(rc.id,rc);
+    }
+    SETTINGS.campaigns=Array.from(byId.values());
+  }
+
+  // ── 3. Segments: same pattern ──
+  if(Array.isArray(remote.segments)){
+    const local=Array.isArray(SETTINGS.segments)?SETTINGS.segments:[];
+    const byId=new Map();
+    for(const s of local){if(s&&s.id)byId.set(s.id,s);}
+    for(const rs of remote.segments){
+      if(!rs||!rs.id)continue;
+      const ls=byId.get(rs.id);
+      if(!ls||(rs._updatedAt||0)>(ls._updatedAt||0))byId.set(rs.id,rs);
+    }
+    SETTINGS.segments=Array.from(byId.values());
+  }
+
+  // ── 4. Scalar branding + global fields: last-writer-wins by SETTINGS._updatedAt ──
+  const localSU=SETTINGS._updatedAt||0;
+  const remoteSU=remote._updatedAt||0;
+  const scalarKeys=['crmName','tag','org','acc','rgb','googleClientId'];
+  // Only overwrite scalar branding if remote is newer (or we have nothing)
+  if(remoteSU>=localSU){
+    for(const k of scalarKeys){if(remote[k]!==undefined)SETTINGS[k]=remote[k];}
+  }
+
+  // ── 5. Legacy global email fields: only adopt if no current user (fallback) ──
+  // A logged-in user writes to their team slot, so we never want a remote legacy-global
+  // to clobber an active user's slot. If there's no active user locally, we take remote's.
+  const hasActiveUser=!!getCurrentUser();
+  if(!hasActiveUser){
+    const legacyKeys=['email','sender','emailjsSvc','emailjsTpl','emailjsKey','signature'];
+    if(remoteSU>=localSU){
+      for(const k of legacyKeys){if(remote[k]!==undefined)SETTINGS[k]=remote[k];}
+    }
+  }
+
+  SETTINGS._updatedAt=Math.max(localSU,remoteSU);
+
+  // Normalize anything remote might have sent in legacy string form
+  _migrateTeam();
+}
+
 // Get the object for the currently logged-in user (or null)
 function getActiveTeamMember(){
   const name=getCurrentUser();if(!name)return null;
@@ -2558,7 +3231,7 @@ function getActiveTeamMember(){
 function getActiveEmailConfig(){
   const m=getActiveTeamMember();
   const pick=k=>(m&&m[k])||SETTINGS[k]||'';
-  return {email:pick('email'),sender:pick('sender'),emailjsSvc:pick('emailjsSvc'),emailjsTpl:pick('emailjsTpl'),emailjsKey:pick('emailjsKey')};
+  return {email:pick('email'),sender:pick('sender'),emailjsSvc:pick('emailjsSvc'),emailjsTpl:pick('emailjsTpl'),emailjsKey:pick('emailjsKey'),signature:pick('signature')};
 }
 
 // Return the current user's team object, creating/upgrading as needed. Returns null if no user logged in.
@@ -2580,6 +3253,7 @@ function _loadEmailFormForActiveUser(){
   set('s-ejs-key',cfg.emailjsKey);
   set('s-email',cfg.email);
   set('s-sender',cfg.sender);
+  set('s-signature',cfg.signature);
   if(cfg.emailjsKey){try{emailjs.init({publicKey:cfg.emailjsKey});}catch(e){}}
   const ind=document.getElementById('ejs-active-user');
   if(ind){
@@ -2623,7 +3297,8 @@ function addTeamMember(){
   if(!name){toast('Enter a name');return;}
   if(!SETTINGS.team)SETTINGS.team=[];
   if(SETTINGS.team.some(m=>(typeof m==='string'?m:m.name)===name)){toast('Already in team');return;}
-  SETTINGS.team.push({name});
+  SETTINGS.team.push({name,_updatedAt:Date.now()});
+  SETTINGS._teamUpdatedAt=Date.now();
   sv('crm7_set',SETTINGS);
   inp.value='';
   renderTeamList();
@@ -2636,7 +3311,11 @@ function removeTeamMember(i){
   const m=SETTINGS.team[i];
   const name=typeof m==='string'?m:(m?.name||'');
   if(!confirm(`Remove ${name} from team?`))return;
+  // Mark tombstone so merge doesn't resurrect the member from a stale remote copy
+  if(!SETTINGS._teamRemoved)SETTINGS._teamRemoved={};
+  SETTINGS._teamRemoved[name]=Date.now();
   SETTINGS.team.splice(i,1);
+  SETTINGS._teamUpdatedAt=Date.now();
   sv('crm7_set',SETTINGS);
   renderTeamList();
   _buildOwnerFilter();
