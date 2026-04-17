@@ -491,71 +491,87 @@ select.fs:focus{border-color:var(--acc)}
 
     <!-- COMPOSE -->
     <div class="page" id="page-compose">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div class="page-head">
         <div>
-          <!-- RECIPIENTS -->
-          <div class="cg">
-            <div class="cl" style="display:flex;align-items:center;justify-content:space-between">
-              Recipients
-              <div style="display:flex;gap:5px">
-                <button class="btn btn-sm" onclick="openPickerModal('manual')">+ Add from contacts</button>
-                <button class="btn btn-sm" onclick="openPickerModal('status')">+ By status / group</button>
+          <div class="page-h1">Compose Email</div>
+          <div class="page-sub">Pick recipients, draft or AI-generate a message, then send immediately or save as a throttled campaign.</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+        <div>
+          <div class="dash-section-h"><div class="bar"></div><div class="label">Setup</div></div>
+          <div class="st-card">
+            <div class="cg">
+              <div class="cl" style="display:flex;align-items:center;justify-content:space-between">
+                Recipients
+                <div style="display:flex;gap:6px">
+                  <button class="btn btn-sm" onclick="openPickerModal('manual')">+ From contacts</button>
+                  <button class="btn btn-sm" onclick="openPickerModal('status')">+ By status</button>
+                </div>
+              </div>
+              <div class="rcpt-box" id="rcpt-box"><span style="font-size:11.5px;color:var(--tx3);padding:4px 2px" id="rcpt-placeholder">No recipients yet — add from contacts or type below</span></div>
+              <div style="display:flex;gap:7px;margin-top:6px">
+                <input class="ci" id="rcpt-manual" placeholder="Or type an email address and press Enter…" style="flex:1" onkeydown="if(event.key==='Enter')addRcptManual()">
+                <button class="btn btn-sm" onclick="addRcptManual()">Add</button>
               </div>
             </div>
-            <div class="rcpt-box" id="rcpt-box"><span style="font-size:11px;color:var(--tx3);padding:4px 2px" id="rcpt-placeholder">No recipients yet — add from contacts or type below</span></div>
-            <div style="display:flex;gap:6px;margin-top:4px">
-              <input class="ci" id="rcpt-manual" placeholder="Or type an email address and press Enter…" style="flex:1;font-size:11px" onkeydown="if(event.key==='Enter')addRcptManual()">
-              <button class="btn btn-sm" onclick="addRcptManual()">Add</button>
+            <div class="fg2">
+              <div class="cg"><div class="cl">Use a saved template</div><select class="ci fs" id="tmpl-sel" style="width:100%" onchange="loadTmpl()"><option value="">— or write from scratch —</option></select></div>
+              <div class="cg"><div class="cl">Language</div><div class="chips"><button class="chip" onclick="selLang(this,'en')">English</button><button class="chip sel" onclick="selLang(this,'hu')">Magyar</button></div></div>
             </div>
+            <div class="cg" style="margin-bottom:0"><div class="cl">Context / key message</div><textarea class="ci" id="c-msg" placeholder="Describe the value proposition, specific angle, or context…"></textarea></div>
+            <div style="display:flex;gap:8px;margin-top:10px">
+              <button class="btn btn-p" onclick="generateEmail()" style="flex:1">Generate with AI ↗</button>
+              <button class="btn" onclick="copyEmail()">Copy ↓</button>
+              <button class="btn" onclick="saveAsTmpl()">Save as template</button>
+            </div>
+            <div class="ail" id="ai-load"><div class="dots"><span></span><span></span><span></span></div><span>Generating…</span></div>
           </div>
-          <div class="cg"><div class="cl">Use a saved template</div><select class="ci fs" id="tmpl-sel" style="width:100%" onchange="loadTmpl()"><option value="">— or write from scratch —</option></select></div>
-          <div class="cg"><div class="cl">Language</div><div class="chips"><button class="chip" onclick="selLang(this,'en')">English</button><button class="chip sel" onclick="selLang(this,'hu')">Magyar</button></div></div>
-          <div class="cg"><div class="cl">Context / key message</div><textarea class="ci" id="c-msg" placeholder="Describe the value proposition, specific angle, or context…"></textarea></div>
-          <div style="display:flex;gap:7px;margin-top:2px">
-            <button class="btn btn-p" onclick="generateEmail()" style="flex:1">Generate with AI ↗</button>
-            <button class="btn" onclick="copyEmail()">Copy ↓</button>
-            <button class="btn" onclick="saveAsTmpl()">Save as template</button>
-          </div>
-          <div class="ail" id="ai-load"><div class="dots"><span></span><span></span><span></span></div><span>Generating…</span></div>
-          <div style="margin-top:10px;padding-top:10px;border-top:.5px solid var(--brd)">
-            <button class="btn btn-p" onclick="sendEmailJS()" style="width:100%;font-size:12px">📤 Send now (immediate)</button>
-            <button class="btn" onclick="saveAsCampaign()" style="width:100%;font-size:12px;margin-top:5px">📋 Save as campaign (throttled, pausable)</button>
-            <div id="send-status" style="font-size:11px;color:var(--tx2);margin-top:5px;text-align:center"></div>
+
+          <div class="dash-section-h"><div class="bar ylw"></div><div class="label">Send</div></div>
+          <div class="st-card">
+            <button class="btn btn-p" onclick="sendEmailJS()" style="width:100%">📤 Send now (immediate)</button>
+            <button class="btn" onclick="saveAsCampaign()" style="width:100%;margin-top:7px">📋 Save as campaign (throttled, pausable)</button>
+            <div id="send-status" style="font-size:12px;color:var(--tx2);margin-top:8px;text-align:center"></div>
           </div>
         </div>
         <div>
-          <div class="cg"><div class="cl">Subject</div><input class="ci" id="c-subj" placeholder="Subject line…"></div>
-          <div class="cg"><div class="cl">Body</div><textarea class="ci" id="c-body" style="min-height:190px;font-family:var(--fm);font-size:11px;line-height:1.7" placeholder="Email body…"></textarea></div>
-          <div class="cg"><div class="cl">Insert placeholder at cursor</div>
-            <div class="chips">
-              <button class="ph-btn" onclick="iPH('c-body','{first_name}')">first_name</button>
-              <button class="ph-btn" onclick="iPH('c-body','{last_name}')">last_name</button>
-              <button class="ph-btn" onclick="iPH('c-body','{company}')">company</button>
-              <button class="ph-btn" onclick="iPH('c-body','{position}')">position</button>
-              <button class="ph-btn" onclick="iPH('c-body','{your_org}')">your_org</button>
-              <button class="ph-btn" onclick="iPH('c-body','{mmk_count}')">mmk_count</button>
-              <button class="ph-btn" onclick="iPH('c-body','{rehab_fee}')">rehab_fee</button>
-              <button class="ph-btn" onclick="iPH('c-body','{sender_name}')">sender_name</button>
-              <button class="ph-btn" onclick="iPH('c-body','{signature}')">signature</button>
+          <div class="dash-section-h"><div class="bar"></div><div class="label">Message</div></div>
+          <div class="st-card">
+            <div class="cg"><div class="cl">Subject</div><input class="ci" id="c-subj" placeholder="Subject line…"></div>
+            <div class="cg" style="margin-bottom:0"><div class="cl">Body</div><textarea class="ci" id="c-body" style="min-height:240px;font-family:var(--f);font-size:13px;line-height:1.7" placeholder="Email body…"></textarea></div>
+            <div class="cg" style="margin-top:10px;margin-bottom:0"><div class="cl">Insert placeholder at cursor</div>
+              <div class="chips">
+                <button class="ph-btn" onclick="iPH('c-body','{first_name}')">first_name</button>
+                <button class="ph-btn" onclick="iPH('c-body','{last_name}')">last_name</button>
+                <button class="ph-btn" onclick="iPH('c-body','{company}')">company</button>
+                <button class="ph-btn" onclick="iPH('c-body','{position}')">position</button>
+                <button class="ph-btn" onclick="iPH('c-body','{your_org}')">your_org</button>
+                <button class="ph-btn" onclick="iPH('c-body','{mmk_count}')">mmk_count</button>
+                <button class="ph-btn" onclick="iPH('c-body','{rehab_fee}')">rehab_fee</button>
+                <button class="ph-btn" onclick="iPH('c-body','{sender_name}')">sender_name</button>
+                <button class="ph-btn" onclick="iPH('c-body','{signature}')">signature</button>
+              </div>
             </div>
           </div>
-          <div class="cg" style="margin-top:4px"><div class="cl">Preview — <span style="color:var(--tx3);font-weight:400;text-transform:none;letter-spacing:0">sample values, click button below to fill</span></div>
-            <div class="prev-box"><div class="prev-subj" id="c-prev-subj"></div><div class="prev-body" id="c-prev-body"></div></div>
+
+          <div class="dash-section-h"><div class="bar"></div><div class="label">Preview</div><button class="btn btn-sm" onclick="fillPrev()" style="margin-left:auto">Fill sample values ↗</button></div>
+          <div class="st-card">
+            <div class="prev-box" style="border:none;padding:0;background:transparent"><div class="prev-subj" id="c-prev-subj"></div><div class="prev-body" id="c-prev-body"></div></div>
           </div>
-          <button class="btn btn-sm btn-p" onclick="fillPrev()" style="margin-top:5px">Preview with sample values ↗</button>
         </div>
       </div>
     </div>
 
     <!-- CAMPAIGNS -->
     <div class="page" id="page-campaigns">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:13px">
+      <div class="page-head">
         <div>
-          <div style="font-size:12px;font-weight:600">Campaigns</div>
-          <div style="font-size:10px;color:var(--tx2);margin-top:3px">Queue bulk emails with throttling, pause / resume, and per-recipient tracking.</div>
+          <div class="page-h1">Campaigns</div>
+          <div class="page-sub">Queue bulk emails with throttling, pause / resume, and per-recipient tracking.</div>
         </div>
-        <div style="display:flex;gap:7px">
-          <button class="btn btn-sm" onclick="nav('compose',document.querySelector('[onclick*=compose]'))">+ Build in Compose</button>
+        <div class="page-actions">
+          <button class="btn btn-p" onclick="nav('compose',document.querySelector('[onclick*=compose]'))">+ Build in Compose</button>
         </div>
       </div>
       <div id="campaign-list"></div>
@@ -563,30 +579,46 @@ select.fs:focus{border-color:var(--acc)}
 
     <!-- TEMPLATES -->
     <div class="page" id="page-templates">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:13px">
-        <div style="font-size:12px;font-weight:600" id="tmpl-lbl">Email templates</div>
-        <div style="display:flex;gap:7px"><input class="si" type="text" id="tmpl-q" placeholder="Search…" oninput="renderTmpls()" style="flex:none;width:155px"><button class="btn btn-p" onclick="openTmplModal(null)">+ New template</button></div>
+      <div class="page-head">
+        <div>
+          <div class="page-h1"><span id="tmpl-lbl">Email templates</span></div>
+          <div class="page-sub">Reusable email drafts with placeholders — pick from Compose or save a draft you've written.</div>
+        </div>
+        <div class="page-actions">
+          <input class="si" type="text" id="tmpl-q" placeholder="Search templates…" oninput="renderTmpls()" style="flex:none;width:200px">
+          <button class="btn btn-p" onclick="openTmplModal(null)">+ New template</button>
+        </div>
       </div>
       <div id="tmpl-list"></div>
     </div>
 
     <!-- EXPORT -->
     <div class="page" id="page-export">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div class="page-head">
         <div>
-          <div style="font-size:12px;font-weight:600;margin-bottom:9px">Export</div>
-          <div style="background:var(--sur);border:.5px solid var(--brd);border-radius:var(--rl);padding:13px 15px;margin-bottom:12px">
-            <div class="fg2"><div class="cg"><div class="cl">Partnership type</div><select class="ci fs" id="ex-type" style="width:100%" onchange="updEx()"><option value="">All</option><option value="Business">Business</option><option value="CSR">CSR</option><option value="Civil">Civil</option><option value="Other">Other</option></select></div><div class="cg"><div class="cl">Industry</div><select class="ci fs" id="ex-ind" style="width:100%" onchange="updEx()"><option value="">All</option></select></div></div>
-            <div style="font-size:10px;color:var(--tx2);margin-bottom:8px" id="ex-count"></div>
-            <div style="display:flex;gap:7px">
-              <button class="btn btn-p" onclick="exportCos()" style="flex:1">Export companies ↓</button>
-              <button class="btn btn-p" onclick="exportPeople()" style="flex:1">Export all contacts ↓</button>
+          <div class="page-h1">Export &amp; Backup</div>
+          <div class="page-sub">Download filtered CSVs for companies or contacts, or a full JSON backup you can restore on any device.</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+        <div>
+          <div class="dash-section-h"><div class="bar"></div><div class="label">Export CSV</div></div>
+          <div class="st-card">
+            <div class="fg2">
+              <div class="cg"><div class="cl">Partnership type</div><select class="ci fs" id="ex-type" style="width:100%" onchange="updEx()"><option value="">All</option><option value="Business">Business</option><option value="CSR">CSR</option><option value="Civil">Civil</option><option value="Other">Other</option></select></div>
+              <div class="cg"><div class="cl">Industry</div><select class="ci fs" id="ex-ind" style="width:100%" onchange="updEx()"><option value="">All</option></select></div>
+            </div>
+            <div style="font-size:11.5px;color:var(--tx2);margin-bottom:10px" id="ex-count"></div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-p" onclick="exportCos()" style="flex:1">Companies ↓</button>
+              <button class="btn btn-p" onclick="exportPeople()" style="flex:1">All contacts ↓</button>
             </div>
           </div>
-          <div style="background:var(--sur);border:.5px solid var(--brd);border-radius:var(--rl);padding:13px 15px">
-            <div style="font-size:12px;font-weight:600;margin-bottom:9px">Backup &amp; restore</div>
-            <div style="font-size:12px;color:var(--tx2);line-height:1.7;margin-bottom:9px">All data saved automatically in browser. Download JSON backup anytime, restore it on any device.</div>
-            <div style="display:flex;gap:7px;flex-wrap:wrap">
+
+          <div class="dash-section-h"><div class="bar ylw"></div><div class="label">Backup &amp; restore</div></div>
+          <div class="st-card">
+            <div style="font-size:12px;color:var(--tx2);line-height:1.6;margin-bottom:10px">Download a JSON snapshot of everything (companies, templates, deals, settings). Restore it on any device.</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
               <button class="btn btn-p" onclick="backupAll()">Download backup ↓</button>
               <label class="btn" style="cursor:pointer">Restore from backup ↑<input type="file" accept=".json" style="display:none" onchange="restoreBackup(this)"></label>
               <button class="btn btn-del" onclick="clearAll()">Reset to defaults</button>
@@ -594,10 +626,10 @@ select.fs:focus{border-color:var(--acc)}
           </div>
         </div>
         <div>
-          <div style="font-size:12px;font-weight:600;margin-bottom:9px">Preview</div>
-          <div style="background:var(--sur);border:.5px solid var(--brd);border-radius:var(--rl);padding:13px 15px">
-            <div style="font-size:11px;color:var(--tx2);margin-bottom:7px" id="ex-lbl">Configure filters to preview.</div>
-            <div style="background:var(--bg2);border-radius:var(--r);padding:9px;font-size:10px;font-family:var(--fm);color:var(--tx2);min-height:90px;max-height:280px;overflow:auto;white-space:pre" id="ex-prev"></div>
+          <div class="dash-section-h"><div class="bar"></div><div class="label">Preview</div></div>
+          <div class="st-card">
+            <div style="font-size:11.5px;color:var(--tx2);margin-bottom:8px" id="ex-lbl">Configure filters to preview.</div>
+            <div style="background:var(--bg2);border-radius:var(--r);padding:11px;font-size:11px;font-family:var(--fm);color:var(--tx2);min-height:120px;max-height:380px;overflow:auto;white-space:pre" id="ex-prev"></div>
           </div>
         </div>
       </div>
@@ -676,36 +708,42 @@ select.fs:focus{border-color:var(--acc)}
 
     <!-- PIPELINE -->
     <div class="page" id="page-pipeline">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-        <div class="pl-view-toggle" style="margin:0">
-          <button class="pl-vbtn active" id="pl-kanban-btn" onclick="switchPipelineView('kanban')">Kanban</button>
-          <button class="pl-vbtn" id="pl-list-btn" onclick="switchPipelineView('list')">Due list</button>
-          <button class="pl-vbtn" id="pl-outreach-btn" onclick="switchPipelineView('outreach')">Outreach tracker</button>
+      <div class="page-head">
+        <div>
+          <div class="page-h1">Pipeline</div>
+          <div class="page-sub">Track deals by stage, see what's due this week, and keep your outreach cadence on target.</div>
         </div>
-        <select class="fs" id="pl-owner-filter" onchange="renderPipeline()" style="font-size:11px">
-          <option value="">All team members</option>
-        </select>
-        <span style="font-size:11px;color:var(--tx2)" id="pl-filter-info"></span>
+        <div class="page-actions">
+          <div class="pl-view-toggle" style="margin:0">
+            <button class="pl-vbtn active" id="pl-kanban-btn" onclick="switchPipelineView('kanban')">Kanban</button>
+            <button class="pl-vbtn" id="pl-list-btn" onclick="switchPipelineView('list')">Due list</button>
+            <button class="pl-vbtn" id="pl-outreach-btn" onclick="switchPipelineView('outreach')">Outreach tracker</button>
+          </div>
+          <select class="fs" id="pl-owner-filter" onchange="renderPipeline()">
+            <option value="">All team members</option>
+          </select>
+          <span style="font-size:11px;color:var(--tx2)" id="pl-filter-info"></span>
+        </div>
       </div>
       <div id="pipeline-kanban"></div>
       <div id="pipeline-due" style="display:none">
-        <div style="font-size:12px;font-weight:600;margin-bottom:10px">Follow-ups due</div>
-        <div id="due-list"></div>
+        <div class="dash-section-h"><div class="bar"></div><div class="label">Follow-ups due</div></div>
+        <div class="st-card" style="padding:14px 16px"><div id="due-list"></div></div>
       </div>
       <div id="pipeline-outreach" style="display:none">
-        <div style="font-size:12px;font-weight:600;margin-bottom:10px">Outreach tracker — who to contact this week</div>
-        <div id="outreach-list"></div>
+        <div class="dash-section-h"><div class="bar ylw"></div><div class="label">Outreach tracker — who to contact this week</div></div>
+        <div class="st-card" style="padding:14px 16px"><div id="outreach-list"></div></div>
       </div>
     </div>
 
     <!-- RE-ENGAGE -->
     <div class="page" id="page-reengage">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div class="page-head">
         <div>
-          <div style="font-size:13px;font-weight:700;margin-bottom:2px">Re-engagement queue</div>
-          <div style="font-size:11px;color:var(--tx2)">Contacts with no response for 180+ days, not marked as closed or do-not-contact.</div>
+          <div class="page-h1">Re-engagement queue</div>
+          <div class="page-sub">Contacts with no response for 180+ days, not marked as closed or do-not-contact.</div>
         </div>
-        <div style="display:flex;gap:7px">
+        <div class="page-actions">
           <select class="fs" id="re-days" onchange="renderReengage()">
             <option value="180">Stale after 180 days</option>
             <option value="90">Stale after 90 days</option>
@@ -720,14 +758,12 @@ select.fs:focus{border-color:var(--acc)}
 
     <!-- DEALS & REVENUE -->
     <div class="page" id="page-deals">
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
-        <div class="sc"><div class="sl">Total deal value</div><div class="sv" style="color:var(--t600)" id="deal-total">0</div><div class="ss">M HUF across all deals</div></div>
-        <div class="sc"><div class="sl">Delivered / invoiced</div><div class="sv" style="color:var(--b600)" id="deal-delivered">0</div><div class="ss">M HUF completed</div></div>
-        <div class="sc"><div class="sl">Active deals</div><div class="sv" id="deal-count">0</div><div class="ss">in progress</div></div>
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
-        <div style="font-size:12px;font-weight:600">All deals</div>
-        <div style="display:flex;gap:7px">
+      <div class="page-head">
+        <div>
+          <div class="page-h1">Deals &amp; revenue</div>
+          <div class="page-sub">Overview of pipeline value, delivered work, and active engagements.</div>
+        </div>
+        <div class="page-actions">
           <select class="fs" id="deal-filter-status" onchange="renderDeals()">
             <option value="">All statuses</option>
             <option value="active">Active</option>
@@ -740,6 +776,12 @@ select.fs:focus{border-color:var(--acc)}
           <button class="btn btn-p btn-sm" onclick="openDealModal(null,null)">+ New deal</button>
         </div>
       </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px">
+        <div class="sc primary"><div class="sl">Total deal value</div><div class="sv big" style="color:var(--t600)" id="deal-total">0</div><div class="ss">M HUF across all deals</div></div>
+        <div class="sc"><div class="sl">Delivered / invoiced</div><div class="sv big" style="color:var(--b600)" id="deal-delivered">0</div><div class="ss">M HUF completed</div></div>
+        <div class="sc"><div class="sl">Active deals</div><div class="sv big" id="deal-count">0</div><div class="ss">in progress</div></div>
+      </div>
+      <div class="dash-section-h"><div class="bar"></div><div class="label">All deals</div></div>
       <div id="deal-list"></div>
     </div>
 
