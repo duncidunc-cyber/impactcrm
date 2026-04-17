@@ -2902,7 +2902,32 @@ function renderCampaigns(){
   const list=document.getElementById('campaign-list');if(!list)return;
   const camps=(SETTINGS.campaigns||[]).slice().sort((a,b)=>(b._updatedAt||b.createdAt||0)-(a._updatedAt||a.createdAt||0));
   if(!camps.length){
-    list.innerHTML=`<div style="padding:40px 20px;text-align:center;color:var(--tx2);font-size:12px;background:var(--sur);border:.5px dashed var(--brd);border-radius:var(--rl)">No campaigns yet.<br><br>Build an email in <strong>Compose</strong>, add recipients, then click <strong>Save as campaign</strong>.</div>`;
+    list.innerHTML=`
+    <div style="background:var(--sur);border:.5px solid var(--brd);border-radius:var(--rl);padding:28px 28px 24px;max-width:720px">
+      <div style="font-size:16px;font-weight:700;color:var(--tx);margin-bottom:6px">Még nincs kampány / No campaigns yet</div>
+      <div style="font-size:12.5px;color:var(--tx2);line-height:1.55;margin-bottom:20px">Egy kampány = címzettlista + email sablon, amit a rendszer throttle-ölve, szüneteltethetően küld ki. A kampányokat a <strong>Compose</strong> oldalon állítod össze, itt pedig elindítod, szünetelteted és követed.</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px">
+        <div style="background:var(--bg2);border-radius:var(--r);padding:14px 14px 12px">
+          <div style="width:22px;height:22px;border-radius:50%;background:var(--acc);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin-bottom:8px">1</div>
+          <div style="font-size:12px;font-weight:700;color:var(--tx);margin-bottom:3px">Nyisd meg a Compose-t</div>
+          <div style="font-size:11px;color:var(--tx2);line-height:1.5">Kattints a <strong>Compose email ↗</strong> gombra jobb fent (minden oldalról elérhető).</div>
+        </div>
+        <div style="background:var(--bg2);border-radius:var(--r);padding:14px 14px 12px">
+          <div style="width:22px;height:22px;border-radius:50%;background:var(--acc);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin-bottom:8px">2</div>
+          <div style="font-size:12px;font-weight:700;color:var(--tx);margin-bottom:3px">Címzettek + üzenet</div>
+          <div style="font-size:11px;color:var(--tx2);line-height:1.5">Adj hozzá címzetteket (<em>+ From contacts</em> vagy <em>+ By status</em>), válassz sablont vagy írd meg az emailt.</div>
+        </div>
+        <div style="background:var(--bg2);border-radius:var(--r);padding:14px 14px 12px">
+          <div style="width:22px;height:22px;border-radius:50%;background:var(--ylw);color:var(--dark);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin-bottom:8px">3</div>
+          <div style="font-size:12px;font-weight:700;color:var(--tx);margin-bottom:3px">Mentés kampányként</div>
+          <div style="font-size:11px;color:var(--tx2);line-height:1.5">A <em>Send</em> szekcióban kattints a <strong>📋 Save as campaign</strong> gombra. Itt jelenik meg, és indíthatod.</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-p" onclick="openCompose()">Open Compose →</button>
+        <span style="font-size:11px;color:var(--tx3)">Egyszeri emailhez használd a <em>Send now</em> gombot a Compose-ban — az nem lesz kampány.</span>
+      </div>
+    </div>`;
     refreshCampaignsBadge();return;
   }
   const badgeCls={draft:'b-unknown',sending:'b-email',paused:'b-fu',done:'b-mature'};
