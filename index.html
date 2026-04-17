@@ -492,10 +492,11 @@ select.fs{padding:6px 8px;border-radius:var(--r);border:.5px solid var(--brd2);b
             <div class="cg"><div class="cl">Organization name</div><input class="ci" id="s-org" placeholder="Your NGO" oninput="updBrand()"></div>
             <div class="cg"><div class="cl">Accent color</div><div class="chips"><button class="chip sel" onclick="setAcc(this,'#1D9E75','29,158,117')">Teal</button><button class="chip" onclick="setAcc(this,'#378ADD','55,138,221')">Blue</button><button class="chip" onclick="setAcc(this,'#D4537E','212,83,126')">Pink</button><button class="chip" onclick="setAcc(this,'#BA7517','186,117,23')">Amber</button><button class="chip" onclick="setAcc(this,'#5F5E5A','95,94,90')">Slate</button></div></div>
           </div>
-          <div style="font-size:12px;font-weight:600;margin-bottom:9px">Email sending — EmailJS</div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:9px">Email sending — EmailJS (per user)</div>
           <div style="background:var(--sur);border:.5px solid var(--brd);border-radius:var(--rl);padding:13px 15px;margin-bottom:12px">
+            <div id="ejs-active-user" style="font-size:11px;color:var(--t600);line-height:1.5;margin-bottom:10px;background:var(--t50);border-radius:var(--r);padding:8px 10px"></div>
             <div style="font-size:11px;color:var(--tx2);line-height:1.65;margin-bottom:10px;background:var(--b50);border-radius:var(--r);padding:8px 10px">
-              <strong>Setup:</strong> Create a free account at <a href="https://emailjs.com" target="_blank" style="color:var(--b600)">emailjs.com</a> → add your Hostinger SMTP service (smtp.hostinger.com, port 465, SSL) → create an email template → paste the IDs below. Emails will send directly from your browser via your Hostinger account.
+              <strong>Setup:</strong> Each teammate creates their own free <a href="https://emailjs.com" target="_blank" style="color:var(--b600)">emailjs.com</a> account and connects their own Hostinger SMTP service — then logs into this CRM with their name and pastes their own IDs here. The app sends emails from whichever user is currently logged in.
             </div>
             <div class="fg2" style="margin-bottom:8px">
               <div class="cg"><div class="cl">EmailJS Service ID</div><input class="ci" id="s-ejs-svc" placeholder="service_xxxxxxx"></div>
@@ -545,7 +546,7 @@ select.fs{padding:6px 8px;border-radius:var(--r);border:.5px solid var(--brd2);b
           <div class="cg"><div class="cl">Anthropic API key (AI email generation)</div><input class="ci" id="s-key" type="password" placeholder="sk-ant-..." oninput="syncKey()"></div>
           <div style="font-size:12px;font-weight:600;margin:12px 0 8px">Team members</div>
           <div style="background:var(--sur);border:.5px solid var(--brd);border-radius:var(--rl);padding:13px 15px;margin-bottom:12px">
-            <div style="font-size:11px;color:var(--tx2);margin-bottom:10px;line-height:1.6">Add your team members here. When someone opens the CRM for the first time, they'll pick their name from this list — no typos possible.</div>
+            <div style="font-size:11px;color:var(--tx2);margin-bottom:10px;line-height:1.6">Add your team members here. When someone opens the CRM, they'll pick their name from this list and the app will automatically use <strong>their own email credentials</strong> (saved in the Email sending section above) to send from.</div>
             <div id="team-list" style="margin-bottom:9px"></div>
             <div style="display:flex;gap:7px">
               <input class="ci" id="team-add-input" placeholder="Add team member name…" style="flex:1" onkeydown="if(event.key==='Enter')addTeamMember()">
@@ -876,7 +877,7 @@ const TB=t=>({Business:'b-business',CSR:'b-csr',Civil:'b-civil',Other:'b-other'}
 const SB=s=>({offer_sent:'b-offer',email_sent:'b-email',followup_sent:'b-fu',replied:'b-replied',meeting:'b-replied',off:'b-off'}[s]||'b-unknown');
 const SL=s=>({offer_sent:'Offer sent',email_sent:'Email sent',followup_sent:'Follow-up sent',replied:'Replied',meeting:'Meeting','':'Not contacted',off:'Closed'}[s]||s);
 const avCol=n=>['#1D9E75','#378ADD','#D4537E','#BA7517','#5F5E5A','#D85A30','#534AB7','#639922'][(n||'A').charCodeAt(0)%8];
-const fillPH=(t,s={})=>{const d={first_name:'Anna',last_name:'Kovács',company:'Erste Bank',position:'HR Manager',your_org:SETTINGS.org||'Your NGO',mmk_count:'25',rehab_fee:'121.8',sender_name:SETTINGS.sender||'Your Name',...s};return t.replace(/\{(\w+)\}/g,(_,k)=>d[k]!==undefined?d[k]:'{'+k+'}');};
+const fillPH=(t,s={})=>{const _cfg=(typeof getActiveEmailConfig==='function'?getActiveEmailConfig():{});const d={first_name:'Anna',last_name:'Kovács',company:'Erste Bank',position:'HR Manager',your_org:SETTINGS.org||'Your NGO',mmk_count:'25',rehab_fee:'121.8',sender_name:_cfg.sender||SETTINGS.sender||getCurrentUser()||'Your Name',...s};return t.replace(/\{(\w+)\}/g,(_,k)=>d[k]!==undefined?d[k]:'{'+k+'}');};
 const iPH=(id,ph)=>{const ta=document.getElementById(id);if(!ta)return;const s=ta.selectionStart,e=ta.selectionEnd;ta.value=ta.value.slice(0,s)+ph+ta.value.slice(e);ta.selectionStart=ta.selectionEnd=s+ph.length;ta.focus();};
 
 // ═══════════════ SELECTION STATE ═══════════════
@@ -889,17 +890,14 @@ const CO_PP=30;
 
 // ═══════════════ INIT ═══════════════
 function init(){
+  _migrateTeam();
   applySettings();buildInds();refreshCounts();
   renderDash();renderCo();renderTmpls();updEx();buildTmplSelects();renderPipeline();
   ['s-crm','s-tag','s-org'].forEach(id=>{const e=document.getElementById(id);if(e&&SETTINGS[{'-crm':'crmName','-tag':'tag','-org':'org'}[id.slice(1)]])e.value=SETTINGS[{'-crm':'crmName','-tag':'tag','-org':'org'}[id.slice(1)]];});
   const k=getKey();if(k&&document.getElementById('s-key'))document.getElementById('s-key').value=k;
-  // Load EmailJS settings
-  if(SETTINGS.emailjsSvc&&document.getElementById('s-ejs-svc'))document.getElementById('s-ejs-svc').value=SETTINGS.emailjsSvc;
-  if(SETTINGS.emailjsTpl&&document.getElementById('s-ejs-tpl'))document.getElementById('s-ejs-tpl').value=SETTINGS.emailjsTpl;
-  if(SETTINGS.emailjsKey&&document.getElementById('s-ejs-key'))document.getElementById('s-ejs-key').value=SETTINGS.emailjsKey;
+  // Load EmailJS settings for the active user (per-user config, falls back to legacy global)
+  _loadEmailFormForActiveUser();
   if(SETTINGS.googleClientId&&document.getElementById('s-goog-cid'))document.getElementById('s-goog-cid').value=SETTINGS.googleClientId;
-  // Init EmailJS
-  if(SETTINGS.emailjsKey){try{emailjs.init({publicKey:SETTINGS.emailjsKey});}catch(e){}}
   // Update Drive button state (token may already be in sessionStorage)
   updDriveStatus();
   // If token was restored from session, verify it's still valid with a lightweight check
@@ -1439,31 +1437,43 @@ function applySettings(){
   ['sb-nm','bp-nm'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=nm;});
   ['sb-tg','bp-tg'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=tg;});
   if(document.getElementById('sb-org'))document.getElementById('sb-org').textContent=org;
-  if(document.getElementById('sb-email'))document.getElementById('sb-email').textContent=SETTINGS.email||'White-label CRM';
+  if(document.getElementById('sb-email'))document.getElementById('sb-email').textContent=(typeof getActiveEmailConfig==='function'?getActiveEmailConfig().email:SETTINGS.email)||'White-label CRM';
   const acc=SETTINGS.acc||'#1D9E75';
   const ini=nm.split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
   ['bp-ico'].forEach(id=>{const e=document.getElementById(id);if(e){e.textContent=ini;e.style.background=acc;}});
   ['sb-ico'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.background=acc;});
   setAccCSS(acc,SETTINGS.rgb||'29,158,117');
 }
-function updBrand(){SETTINGS.crmName=document.getElementById('s-crm')?.value||'ImpactCRM';SETTINGS.tag=document.getElementById('s-tag')?.value||'NGO Partner Suite';SETTINGS.org=document.getElementById('s-org')?.value||'Your Organization';SETTINGS.email=document.getElementById('s-email')?.value||'';applySettings();}
+function updBrand(){SETTINGS.crmName=document.getElementById('s-crm')?.value||'ImpactCRM';SETTINGS.tag=document.getElementById('s-tag')?.value||'NGO Partner Suite';SETTINGS.org=document.getElementById('s-org')?.value||'Your Organization';const _em=document.getElementById('s-email')?.value||'';const _m=_ensureTeamMemberObj();if(_m){_m.email=_em;}else{SETTINGS.email=_em;}applySettings();}
 function setAcc(el,c,rgb){SETTINGS.acc=c;SETTINGS.rgb=rgb;document.querySelectorAll('.chip[onclick*=setAcc]').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');['sb-ico','bp-ico'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.background=c;});setAccCSS(c,rgb);}
 function setAccCSS(c,rgb){const d=h=>{const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return`rgb(${Math.round(r*.75)},${Math.round(g*.75)},${Math.round(b*.75)})`;};const ra=(rgb,a)=>`rgba(${rgb},${a})`;document.documentElement.style.setProperty('--acc',c);document.documentElement.style.setProperty('--acc2',d(c));document.documentElement.style.setProperty('--t400',c);document.documentElement.style.setProperty('--t600',d(c));document.documentElement.style.setProperty('--t50',ra(rgb,.13));document.documentElement.style.setProperty('--t100',ra(rgb,.28));document.documentElement.style.setProperty('--acc-r',rgb.split(',')[0]);document.documentElement.style.setProperty('--acc-g',rgb.split(',')[1]);document.documentElement.style.setProperty('--acc-b',rgb.split(',')[2]);}
 function saveSettings(){
   updBrand();
-  SETTINGS.emailjsSvc=document.getElementById('s-ejs-svc')?.value.trim()||'';
-  SETTINGS.emailjsTpl=document.getElementById('s-ejs-tpl')?.value.trim()||'';
-  SETTINGS.emailjsKey=document.getElementById('s-ejs-key')?.value.trim()||'';
+  const svc=document.getElementById('s-ejs-svc')?.value.trim()||'';
+  const tpl=document.getElementById('s-ejs-tpl')?.value.trim()||'';
+  const key=document.getElementById('s-ejs-key')?.value.trim()||'';
+  const em =document.getElementById('s-email')?.value.trim()||'';
+  const sn =document.getElementById('s-sender')?.value.trim()||'';
+  const m=_ensureTeamMemberObj();
+  if(m){
+    // Save EmailJS credentials + from-address to the currently logged-in user's slot
+    m.emailjsSvc=svc;m.emailjsTpl=tpl;m.emailjsKey=key;m.email=em;m.sender=sn;
+  } else {
+    // No active user yet — fall back to legacy global settings
+    SETTINGS.emailjsSvc=svc;SETTINGS.emailjsTpl=tpl;SETTINGS.emailjsKey=key;SETTINGS.email=em;SETTINGS.sender=sn;
+  }
   SETTINGS.googleClientId=document.getElementById('s-goog-cid')?.value.trim()||'';
   sv('crm7_set',SETTINGS);
   const k=document.getElementById('s-key')?.value.trim();if(k)localStorage.setItem('crm7_key',k);
   document.getElementById('s-status') && (document.getElementById('s-status').textContent='✓ Settings saved');
   toast('✓ Settings saved');
-  // re-init emailjs if key changed
-  if(SETTINGS.emailjsKey) try{emailjs.init({publicKey:SETTINGS.emailjsKey});}catch(e){}
+  // re-init emailjs with this user's key
+  if(key) try{emailjs.init({publicKey:key});}catch(e){}
   // render team list in settings if open
   renderTeamList();
   _buildOwnerFilter();
+  // Refresh sidebar email display
+  applySettings();
 }
 function syncKey(){const k=document.getElementById('s-key')?.value.trim();if(k)localStorage.setItem('crm7_key',k);}
 
@@ -1678,7 +1688,7 @@ function saveActivity(){
   if(!text){toast('Write something first');return;}
   if(!COS[ri])return;
   if(!COS[ri].activity)COS[ri].activity=[];
-  const owner=document.getElementById('act-owner').value.trim()||SETTINGS.sender||'';
+  const owner=document.getElementById('act-owner').value.trim()||getCurrentUser()||getActiveEmailConfig().sender||SETTINGS.sender||'';
   const entry={type:curActType,text,date:document.getElementById('act-date').value,ts:Date.now(),owner};
   COS[ri].activity.unshift(entry);
 
@@ -1783,35 +1793,41 @@ function clearNextAction(){
 
 // ═══════════════ EMAILJS SEND ═══════════════
 async function sendEmailJS(){
-  const svc=SETTINGS.emailjsSvc;
-  const tpl=SETTINGS.emailjsTpl;
-  const key=SETTINGS.emailjsKey;
+  // Use the currently logged-in user's email config (falls back to global legacy settings)
+  const cfg=getActiveEmailConfig();
+  const svc=cfg.emailjsSvc;
+  const tpl=cfg.emailjsTpl;
+  const key=cfg.emailjsKey;
+  const who=getCurrentUser();
   if(!svc||!tpl||!key){
-    toast('Set up EmailJS in Settings first');
+    if(who){toast(`No EmailJS setup for ${who} — open Settings to add it`);}
+    else{toast('Set up EmailJS in Settings first');}
     nav('settings',document.querySelector('[onclick*=settings]'));
     return;
   }
+  // Re-init EmailJS with this user's public key before sending
+  try{emailjs.init({publicKey:key});}catch(e){}
   if(!recipients.length){toast('Add recipients first');return;}
   const subj=document.getElementById('c-subj').value.trim();
   const body=document.getElementById('c-body').value.trim();
   if(!subj||!body){toast('Subject and body required');return;}
 
   const statusEl=document.getElementById('send-status');
-  statusEl.textContent=`Sending to ${recipients.length} recipient(s)…`;
+  statusEl.textContent=`Sending as ${cfg.email||who||'you'} to ${recipients.length} recipient(s)…`;
   statusEl.style.color='var(--tx2)';
 
   let sent=0,failed=0;
   for(const r of recipients){
-    const filled=(t)=>t.replace(/\{first_name\}/g,r.firstName||'').replace(/\{last_name\}/g,r.lastName||'').replace(/\{company\}/g,r.company||'').replace(/\{position\}/g,r.pos||'').replace(/\{your_org\}/g,SETTINGS.org||'').replace(/\{mmk_count\}/g,r.mmk||'').replace(/\{rehab_fee\}/g,r.rehab||'').replace(/\{sender_name\}/g,SETTINGS.sender||'');
+    const filled=(t)=>t.replace(/\{first_name\}/g,r.firstName||'').replace(/\{last_name\}/g,r.lastName||'').replace(/\{company\}/g,r.company||'').replace(/\{position\}/g,r.pos||'').replace(/\{your_org\}/g,SETTINGS.org||'').replace(/\{mmk_count\}/g,r.mmk||'').replace(/\{rehab_fee\}/g,r.rehab||'').replace(/\{sender_name\}/g,cfg.sender||'');
     try{
       await emailjs.send(svc,tpl,{
         to_email:r.email,
         to_name:r.name||r.email,
-        from_name:SETTINGS.sender||SETTINGS.org||'',
-        from_email:SETTINGS.email||'',
+        from_name:cfg.sender||SETTINGS.org||'',
+        from_email:cfg.email||'',
         subject:filled(subj),
         message:filled(body),
-        reply_to:SETTINGS.email||''
+        reply_to:cfg.email||''
       });
       sent++;
       statusEl.textContent=`Sent ${sent}/${recipients.length}…`;
@@ -1838,15 +1854,16 @@ async function testEmailJS(){
   const tpl=document.getElementById('s-ejs-tpl')?.value.trim();
   const key=document.getElementById('s-ejs-key')?.value.trim();
   const email=document.getElementById('s-email')?.value.trim();
+  const sender=document.getElementById('s-sender')?.value.trim()||SETTINGS.sender||'ImpactCRM';
   const statusEl=document.getElementById('ejs-status');
   if(!svc||!tpl||!key||!email){statusEl.textContent='Fill in Service ID, Template ID, Public Key and your email address first.';return;}
   statusEl.textContent='Sending test…';
   try{
     emailjs.init({publicKey:key});
     await emailjs.send(svc,tpl,{
-      to_email:email,to_name:'Test',from_name:SETTINGS.sender||'ImpactCRM',
+      to_email:email,to_name:'Test',from_name:sender,
       from_email:email,subject:'ImpactCRM — test email',
-      message:'This is a test from ImpactCRM. EmailJS is connected correctly!',reply_to:email
+      message:`This is a test from ImpactCRM. EmailJS is connected correctly for ${sender} (${email})!`,reply_to:email
     });
     statusEl.textContent='✓ Test email sent! Check your inbox.';
     statusEl.style.color='var(--t600)';
@@ -2272,7 +2289,7 @@ function openDealModal(dealIdx,coIdx){
   document.getElementById('deal-status').value=d?d.status||'active':'active';
   document.getElementById('deal-start').value=d?d.start||new Date().toISOString().slice(0,10):new Date().toISOString().slice(0,10);
   document.getElementById('deal-close').value=d?d.close||'':'';
-  document.getElementById('deal-owner').value=d?d.owner||SETTINGS.sender||'':'';
+  document.getElementById('deal-owner').value=d?d.owner||getCurrentUser()||getActiveEmailConfig().sender||SETTINGS.sender||'':getCurrentUser()||'';
   document.getElementById('deal-notes').value=d?d.notes||'':'';
   // Build company datalist
   const dl=document.getElementById('dl-deal-co');
@@ -2496,7 +2513,7 @@ openActModal=function(ri){
   const ownerEl=document.getElementById('act-owner');
   if(ownerEl){
     const deviceUser=getCurrentUser();
-    const lastOwner=(COS[ri]?.activity||[]).find(a=>a.owner)?.owner||SETTINGS.sender||'';
+    const lastOwner=(COS[ri]?.activity||[]).find(a=>a.owner)?.owner||getActiveEmailConfig().sender||SETTINGS.sender||'';
     ownerEl.value=deviceUser||lastOwner;
   }
 };
@@ -2520,16 +2537,84 @@ openCoModal=function(idx){
 
 function getTeam(){return SETTINGS.team||[];}
 
+// Normalize legacy string entries in SETTINGS.team into {name, ...} objects
+function _migrateTeam(){
+  if(!Array.isArray(SETTINGS.team))return;
+  SETTINGS.team=SETTINGS.team.map(m=>typeof m==='string'?{name:m}:m);
+}
+
+// Get the object for the currently logged-in user (or null)
+function getActiveTeamMember(){
+  const name=getCurrentUser();if(!name)return null;
+  const team=getTeam();
+  for(const m of team){
+    const mn=typeof m==='string'?m:m.name;
+    if(mn===name)return typeof m==='string'?null:m;
+  }
+  return null;
+}
+
+// Get the email-sending config to use right now — user-specific, with legacy global fallback
+function getActiveEmailConfig(){
+  const m=getActiveTeamMember();
+  const pick=k=>(m&&m[k])||SETTINGS[k]||'';
+  return {email:pick('email'),sender:pick('sender'),emailjsSvc:pick('emailjsSvc'),emailjsTpl:pick('emailjsTpl'),emailjsKey:pick('emailjsKey')};
+}
+
+// Return the current user's team object, creating/upgrading as needed. Returns null if no user logged in.
+function _ensureTeamMemberObj(){
+  const name=getCurrentUser();if(!name)return null;
+  if(!Array.isArray(SETTINGS.team))SETTINGS.team=[];
+  let idx=SETTINGS.team.findIndex(m=>(typeof m==='string'?m:m.name)===name);
+  if(idx===-1){SETTINGS.team.push({name});idx=SETTINGS.team.length-1;}
+  else if(typeof SETTINGS.team[idx]==='string')SETTINGS.team[idx]={name:SETTINGS.team[idx]};
+  return SETTINGS.team[idx];
+}
+
+// Populate the Settings form with the current user's email config + init EmailJS with their key
+function _loadEmailFormForActiveUser(){
+  const cfg=getActiveEmailConfig();
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v||'';};
+  set('s-ejs-svc',cfg.emailjsSvc);
+  set('s-ejs-tpl',cfg.emailjsTpl);
+  set('s-ejs-key',cfg.emailjsKey);
+  set('s-email',cfg.email);
+  set('s-sender',cfg.sender);
+  if(cfg.emailjsKey){try{emailjs.init({publicKey:cfg.emailjsKey});}catch(e){}}
+  const ind=document.getElementById('ejs-active-user');
+  if(ind){
+    const name=getCurrentUser();
+    if(name){
+      ind.innerHTML=`📬 Email settings below apply to <strong>${name}</strong> only. Switch user (sidebar) to edit someone else's.`;
+      ind.style.display='';
+    } else {
+      ind.innerHTML=`No user selected yet — pick your name from the user menu so each teammate can send from their own email.`;
+      ind.style.display='';
+    }
+  }
+}
+
 function renderTeamList(){
   const list=document.getElementById('team-list');if(!list)return;
   const team=getTeam();
   if(!team.length){list.innerHTML='<div style="font-size:11px;color:var(--tx3);padding:4px 0">No team members added yet.</div>';return;}
-  list.innerHTML=team.map((name,i)=>`
+  const cur=getCurrentUser();
+  list.innerHTML=team.map((m,i)=>{
+    const name=typeof m==='string'?m:(m.name||'');
+    const obj=typeof m==='string'?{}:m;
+    const configured=!!(obj.email&&obj.emailjsKey&&obj.emailjsSvc&&obj.emailjsTpl);
+    const badge=configured
+      ?`<span style="font-size:10px;color:var(--t600);font-weight:500;background:var(--t50);padding:2px 6px;border-radius:3px" title="${(obj.email||'').replace(/"/g,'&quot;')}">📧 ${obj.email||''}</span>`
+      :`<span style="font-size:10px;color:var(--a400);font-weight:500;background:var(--a50);padding:2px 6px;border-radius:3px">⚠ no email setup</span>`;
+    const isMe=name===cur?`<span style="font-size:9px;color:var(--t600);font-weight:700;margin-left:4px">you</span>`:'';
+    return `
     <div style="display:flex;align-items:center;gap:8px;padding:5px 8px;background:var(--bg2);border-radius:var(--r);font-size:12px">
-      <div style="width:22px;height:22px;border-radius:50%;background:${avCol(name)};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0">${name[0].toUpperCase()}</div>
-      <span style="flex:1">${name}</span>
+      <div style="width:22px;height:22px;border-radius:50%;background:${avCol(name)};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0">${(name[0]||'?').toUpperCase()}</div>
+      <span style="flex:1">${name}${isMe}</span>
+      ${badge}
       <span style="cursor:pointer;color:var(--tx3);font-size:14px" onclick="removeTeamMember(${i})">×</span>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function addTeamMember(){
@@ -2537,8 +2622,8 @@ function addTeamMember(){
   const name=inp?.value.trim();
   if(!name){toast('Enter a name');return;}
   if(!SETTINGS.team)SETTINGS.team=[];
-  if(SETTINGS.team.includes(name)){toast('Already in team');return;}
-  SETTINGS.team.push(name);
+  if(SETTINGS.team.some(m=>(typeof m==='string'?m:m.name)===name)){toast('Already in team');return;}
+  SETTINGS.team.push({name});
   sv('crm7_set',SETTINGS);
   inp.value='';
   renderTeamList();
@@ -2548,7 +2633,8 @@ function addTeamMember(){
 
 function removeTeamMember(i){
   if(!SETTINGS.team)return;
-  const name=SETTINGS.team[i];
+  const m=SETTINGS.team[i];
+  const name=typeof m==='string'?m:(m?.name||'');
   if(!confirm(`Remove ${name} from team?`))return;
   SETTINGS.team.splice(i,1);
   sv('crm7_set',SETTINGS);
@@ -2586,11 +2672,19 @@ function openUserModal(){
     if(!team.length){
       pickList.innerHTML='<div style="font-size:12px;color:var(--tx2);text-align:center;padding:10px">No team members set up yet.<br>Go to <strong>Settings → Team members</strong> to add your team.</div>';
     } else {
-      pickList.innerHTML=team.map(name=>`
-        <button onclick="pickUser('${name}')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--r);border:.5px solid ${name===cur?'var(--acc)':'var(--brd)'};background:${name===cur?'var(--t50)':'var(--sur)'};cursor:pointer;font-family:var(--f);font-size:13px;font-weight:${name===cur?'700':'500'};color:var(--tx);width:100%;text-align:left;transition:all .1s" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='${name===cur?'var(--acc)':'var(--brd)'}'">
-          <div style="width:30px;height:30px;border-radius:50%;background:${avCol(name)};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">${name[0].toUpperCase()}</div>
-          ${name}${name===cur?' <span style="margin-left:auto;font-size:10px;color:var(--t600)">✓ you</span>':''}
-        </button>`).join('');
+      pickList.innerHTML=team.map(m=>{
+        const name=typeof m==='string'?m:(m.name||'');
+        const obj=typeof m==='string'?{}:m;
+        const hasCfg=!!(obj.email&&obj.emailjsKey);
+        const hint=hasCfg?`<div style="font-size:10px;color:var(--tx2);margin-top:1px">${obj.email}</div>`:`<div style="font-size:10px;color:var(--a400);margin-top:1px">No email setup yet</div>`;
+        const safe=name.replace(/'/g,"\\'");
+        return `
+        <button onclick="pickUser('${safe}')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--r);border:.5px solid ${name===cur?'var(--acc)':'var(--brd)'};background:${name===cur?'var(--t50)':'var(--sur)'};cursor:pointer;font-family:var(--f);font-size:13px;font-weight:${name===cur?'700':'500'};color:var(--tx);width:100%;text-align:left;transition:all .1s" onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='${name===cur?'var(--acc)':'var(--brd)'}'">
+          <div style="width:30px;height:30px;border-radius:50%;background:${avCol(name)};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">${(name[0]||'?').toUpperCase()}</div>
+          <div style="flex:1;min-width:0"><div>${name}</div>${hint}</div>
+          ${name===cur?'<span style="font-size:10px;color:var(--t600)">✓ you</span>':''}
+        </button>`;
+      }).join('');
     }
   }
   document.getElementById('user-modal').classList.add('open');
@@ -2601,14 +2695,19 @@ function _applyUserIdentity(name){
   const nm=document.getElementById('sb-user-name');
   if(av){av.textContent=(name[0]||'?').toUpperCase();av.style.background=avCol(name);}
   if(nm)nm.textContent=name;
+  // Load this user's email config into the Settings form + re-init EmailJS with their key
+  _loadEmailFormForActiveUser();
+  // Refresh sidebar email subtitle
+  applySettings();
 }
 
 function _checkFirstUse(){
   const name=getCurrentUser();
   const team=getTeam();
-  if(name&&team.includes(name)){
+  const names=team.map(m=>typeof m==='string'?m:(m?.name||''));
+  if(name&&names.includes(name)){
     _applyUserIdentity(name);
-  } else if(team.length){
+  } else if(names.length){
     // Team is set up but user not identified — show picker
     setTimeout(openUserModal,600);
   } else if(name){
